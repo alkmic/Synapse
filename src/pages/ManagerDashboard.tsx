@@ -515,7 +515,7 @@ export default function ManagerDashboard() {
             <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="volume" fill="#0066B3" name="Volume (M L)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="volume" fill="#0066B3" name="Volume (M)" radius={[8, 8, 0, 0]} />
             <Bar dataKey="practitioners" fill="#00B5AD" name={getLanguage() === 'en' ? 'Practitioners' : 'Praticiens'} radius={[8, 8, 0, 0]} />
             <Bar dataKey="kols" fill="#F59E0B" name="KOLs" radius={[8, 8, 0, 0]} />
           </BarChart>

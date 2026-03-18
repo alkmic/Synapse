@@ -249,7 +249,7 @@ export const KOLPlanningPage: React.FC = () => {
                       <Droplets className="w-4 h-4 text-blue-500" />
                       <div>
                         <div className="text-xs text-slate-500">{t('manager.kol.annualVolume')}</div>
-                        <div className="text-sm font-bold text-blue-700">{(kol.volumeL / 1000000).toFixed(1)}M L</div>
+                        <div className="text-sm font-bold text-blue-700">{(kol.volumeL / 1000000).toFixed(1)}M</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">

@@ -255,62 +255,62 @@ const newsContentPrefixMap: Array<[string, string]> = [
 
 // Topic translations (all topics from pneumo and generaliste templates)
 const topicMap: Record<string, string> = {
-  // ── Pneumo publication topics (European Respiratory Journal) ──
-  "le sevrage tabagique chez le patient BPCO sous oxygénothérapie": "smoking cessation in COPD patients on oxygen therapy",
-  "l'optimisation des débits d'O2 en fonction de l'activité physique": "optimizing O2 flow rates based on physical activity",
-  "l'impact de l'oxygénothérapie nocturne sur la qualité de vie": "the impact of nocturnal oxygen therapy on quality of life",
-  "les nouvelles recommandations pour l'oxygénothérapie ambulatoire": "new guidelines for ambulatory oxygen therapy",
-  "la place du télésuivi dans le parcours de soins BPCO": "the role of remote monitoring in the COPD care pathway",
-  "l'évaluation de la dyspnée chez les patients sous OLD": "dyspnea assessment in patients on LTOT",
-  "la phénotypisation des patients BPCO pour l'oxygénothérapie personnalisée": "phenotyping COPD patients for personalized oxygen therapy",
-  "les facteurs prédictifs de mauvaise observance de l'OLD": "predictive factors of poor LTOT adherence",
-  // ── Pneumo publication topics (Revue des Maladies Respiratoires) ──
-  "la gestion de l'hypoxémie sévère en ambulatoire": "managing severe hypoxemia in outpatient settings",
-  "l'adaptation des traitements chez les patients BPCO âgés": "treatment adaptation in elderly COPD patients",
-  "les complications de l'oxygénothérapie de longue durée": "complications of long-term oxygen therapy",
-  "l'optimisation de la VNI chez le patient obèse hypercapnique": "optimizing NIV in obese hypercapnic patients",
-  "la réhabilitation respiratoire en post-exacerbation": "pulmonary rehabilitation post-exacerbation",
-  "la prise en charge de l'insuffisance respiratoire aiguë sur chronique": "management of acute-on-chronic respiratory failure",
-  "le suivi à distance des patients sous oxygénothérapie de déambulation": "remote monitoring of patients on ambulatory oxygen therapy",
-  // ── Pneumo publication topics (CHEST) ──
-  "les biomarqueurs prédictifs d'exacerbation BPCO": "predictive biomarkers for COPD exacerbation",
-  "la télémédecine appliquée au suivi des patients sous O2": "telemedicine applied to monitoring patients on O2",
-  "les bénéfices de l'oxygénothérapie de déambulation": "the benefits of ambulatory oxygen therapy",
-  "l'impact de l'activité physique supervisée chez le patient sous OLD": "the impact of supervised physical activity in LTOT patients",
-  // ── Pneumo publication topics (Thorax) ──
-  "les critères de sevrage de l'oxygénothérapie longue durée": "criteria for weaning off long-term oxygen therapy",
-  "l'utilisation du NO exhalé dans le suivi BPCO": "the use of exhaled NO in COPD monitoring",
-  "la place de la réhabilitation pulmonaire précoce": "the role of early pulmonary rehabilitation",
-  "les recommandations ERS sur la VNI à domicile": "ERS guidelines on home NIV",
-  // ── Pneumo publication topics (Respiratory Medicine) ──
-  "l'observance de l'OLD au-delà de 15h/jour et mortalité": "LTOT adherence beyond 15h/day and mortality",
-  "la VNI versus l'O2 seul en BPCO sévère hypercapnique": "NIV versus O2 alone in severe hypercapnic COPD",
-  "les dispositifs connectés en pneumologie ambulatoire": "connected devices in ambulatory pulmonology",
-  "l'évaluation médico-économique du télésuivi respiratoire": "medico-economic evaluation of respiratory remote monitoring",
-  // ── Pneumo publication topics (Pneumologie Clinique) ──
-  "la satisfaction des patients sous concentrateur portable": "patient satisfaction with portable concentrators",
-  "l'adhésion au traitement par PPC chez les patients SAHOS sévères": "CPAP treatment adherence in severe OSAHS patients",
-  "les comorbidités cardiovasculaires des patients BPCO sous OLD": "cardiovascular comorbidities in COPD patients on LTOT",
-  "le rôle de l'infirmier coordinateur dans le parcours BPCO": "the role of the coordinating nurse in the COPD pathway",
-  // ── Pneumo publication topics (EMC) ──
-  "les indications et modalités de l'oxygénothérapie de longue durée": "indications and modalities of long-term oxygen therapy",
-  "la ventilation mécanique à domicile : indications et surveillance": "home mechanical ventilation: indications and monitoring",
-  "le syndrome obésité-hypoventilation : diagnostic et traitement": "obesity hypoventilation syndrome: diagnosis and treatment",
-  // ── Pneumo conference topics ──
-  "les avancées en oxygénothérapie": "advances in oxygen therapy",
-  "la prise en charge des BPCO sévères": "management of severe COPD",
-  "l'éducation thérapeutique du patient respiratoire": "therapeutic education for respiratory patients",
-  "l'observance du traitement par O2 au long cours": "long-term O2 treatment adherence",
-  "les parcours de soins innovants en pneumologie": "innovative care pathways in pulmonology",
-  "le rôle du télésuivi en post-hospitalisation BPCO": "the role of remote monitoring in post-hospitalization COPD",
-  "les nouvelles cibles thérapeutiques dans l'asthme sévère": "new therapeutic targets in severe asthma",
-  // ── Pneumo event topics ──
-  "la gestion de l'oxygénothérapie en ville": "managing oxygen therapy in community practice",
-  "les nouvelles technologies en assistance respiratoire": "new technologies in respiratory support",
-  "le parcours de soins du patient BPCO": "the COPD patient care pathway",
-  "l'interprofessionnalité dans la prise en charge respiratoire": "interprofessional care in respiratory management",
-  "les innovations en ventilation à domicile": "innovations in home ventilation",
-  "l'utilisation des données connectées en pneumologie": "the use of connected data in pulmonology",
+  // ── Diabeto publication topics (Diabetes Care) ──
+  "l'éducation thérapeutique chez le patient DT2 sous antidiabétiques": "therapeutic education in T2D patients on antidiabetics",
+  "l'optimisation des doses d'insuline en fonction de l'activité physique": "optimizing insulin doses based on physical activity",
+  "l'impact de la glycémie continue nocturne sur la qualité de vie": "the impact of continuous nocturnal glucose monitoring on quality of life",
+  "les nouvelles recommandations pour les antidiabétiques en ambulatoire": "new guidelines for outpatient antidiabetics",
+  "la place du télésuivi dans le parcours de soins DT2": "the role of remote monitoring in the T2D care pathway",
+  "l'évaluation de l'HbA1c chez les patients sous antidiabétiques": "HbA1c assessment in patients on antidiabetics",
+  "la personnalisation du traitement chez les patients DT2": "personalized treatment in T2D patients",
+  "les facteurs prédictifs de mauvaise observance des antidiabétiques": "predictive factors of poor antidiabetic adherence",
+  // ── Diabeto publication topics (Médecine des Maladies Métaboliques) ──
+  "la gestion de l'hyperglycémie sévère en ambulatoire": "managing severe hyperglycemia in outpatient settings",
+  "l'adaptation des traitements chez les patients DT2 âgés": "treatment adaptation in elderly T2D patients",
+  "les complications de l'insulinothérapie de longue durée": "complications of long-term insulin therapy",
+  "l'optimisation de l'insulinothérapie chez le patient obèse": "optimizing insulin therapy in obese patients",
+  "la rééducation nutritionnelle en post-décompensation glycémique": "nutritional rehabilitation post-glycemic decompensation",
+  "la prise en charge des complications cardio-rénales du DT2": "management of cardio-renal complications of T2D",
+  "le suivi à distance des patients sous antidiabétiques injectables": "remote monitoring of patients on injectable antidiabetics",
+  // ── Diabeto publication topics (Diabetologia) ──
+  "les biomarqueurs prédictifs de progression du DT2": "predictive biomarkers for T2D progression",
+  "la télémédecine appliquée au suivi des patients sous insuline": "telemedicine applied to monitoring patients on insulin",
+  "les bénéfices de la glycémie continue en ambulatoire": "the benefits of continuous glucose monitoring in outpatient settings",
+  "l'impact de l'activité physique supervisée chez le patient DT2": "the impact of supervised physical activity in T2D patients",
+  // ── Diabeto publication topics (The Lancet Diabetes & Endocrinology) ──
+  "les critères d'arrêt de l'insulinothérapie chez le DT2 stabilisé": "criteria for stopping insulin therapy in stabilized T2D",
+  "l'utilisation du peptide C dans le suivi DT2": "the use of C-peptide in T2D monitoring",
+  "la place de la rééducation nutritionnelle précoce": "the role of early nutritional rehabilitation",
+  "les recommandations ADA/EASD sur les iSGLT2 en première ligne": "ADA/EASD guidelines on first-line SGLT2 inhibitors",
+  // ── Diabeto publication topics (Diabetes & Metabolism) ──
+  "l'observance des antidiabétiques au long cours et mortalité": "long-term antidiabetic adherence and mortality",
+  "les iSGLT2 versus les GLP-1 RA en DT2 avec insuffisance cardiaque": "SGLT2i versus GLP-1 RA in T2D with heart failure",
+  "les dispositifs connectés en diabétologie ambulatoire": "connected devices in ambulatory diabetology",
+  "l'évaluation médico-économique du télésuivi métabolique": "medico-economic evaluation of metabolic remote monitoring",
+  // ── Diabeto publication topics (Diabétologie Clinique) ──
+  "la satisfaction des patients sous pompe à insuline portable": "patient satisfaction with portable insulin pumps",
+  "l'adhésion au traitement par GLP-1 RA chez les patients DT2 obèses": "GLP-1 RA treatment adherence in obese T2D patients",
+  "les comorbidités cardiovasculaires des patients DT2 sous insuline": "cardiovascular comorbidities in T2D patients on insulin",
+  "le rôle de l'infirmier coordinateur dans le parcours DT2": "the role of the coordinating nurse in the T2D pathway",
+  // ── Diabeto publication topics (Traité d'Endocrinologie-Diabétologie EMC) ──
+  "les indications et modalités de l'insulinothérapie au long cours": "indications and modalities of long-term insulin therapy",
+  "la prise en charge du DT2 à domicile : indications et surveillance": "home T2D management: indications and monitoring",
+  "le syndrome métabolique : diagnostic et traitement": "metabolic syndrome: diagnosis and treatment",
+  // ── Diabeto conference topics ──
+  "les avancées en insulinothérapie": "advances in insulin therapy",
+  "la prise en charge des DT2 sévères": "management of severe T2D",
+  "l'éducation thérapeutique du patient DT2": "therapeutic education for T2D patients",
+  "l'observance du traitement antidiabétique au long cours": "long-term antidiabetic treatment adherence",
+  "les parcours de soins innovants en diabétologie": "innovative care pathways in diabetology",
+  "le rôle du télésuivi en post-hospitalisation DT2": "the role of remote monitoring in post-hospitalization T2D",
+  "les nouvelles cibles thérapeutiques dans le DT2 réfractaire": "new therapeutic targets in refractory T2D",
+  // ── Diabeto event topics ──
+  "la gestion des antidiabétiques en ville": "managing antidiabetics in community practice",
+  "les nouvelles technologies en suivi métabolique": "new technologies in metabolic monitoring",
+  "le parcours de soins du patient DT2": "the T2D patient care pathway",
+  "l'interprofessionnalité dans la prise en charge du DT2": "interprofessional care in T2D management",
+  "les innovations en insulinothérapie à domicile": "innovations in home insulin therapy",
+  "l'utilisation des données connectées en diabétologie": "the use of connected data in diabetology",
   // ── Generaliste publication topics (Revue du Praticien) ──
   "le dépistage de la BPCO en soins primaires": "COPD screening in primary care",
   "la coordination ville-hôpital pour les patients sous O2": "community-hospital coordination for patients on O2",

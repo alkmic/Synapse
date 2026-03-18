@@ -250,7 +250,7 @@ export default function TerritoryMap() {
                 <div className="flex justify-between">
                   <span className="text-slate-600">{t('map.totalVolume')}</span>
                   <span className="font-medium">
-                    {(totalVolume / 1000000).toFixed(1)}M L
+                    {(totalVolume / 1000000).toFixed(1)}M
                   </span>
                 </div>
               </div>
