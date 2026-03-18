@@ -7,7 +7,7 @@ export interface Practitioner {
   firstName: string;
   lastName: string;
   title: string; // "Dr." ou "Pr."
-  specialty: 'Médecin généraliste' | 'Endocrinologue-Diabétologue';
+  specialty: 'Médecin généraliste' | 'Endocrinologue-Diabétologue' | 'Néphrologue' | 'Cardiologue';
   practiceType: PracticeType; // ville, hospitalier ou mixte
   isKOL: boolean;
   vingtile: number; // 1-20 (1 = top prescripteur)
@@ -86,7 +86,7 @@ export interface AIInsight {
 }
 
 export interface FilterOptions {
-  specialty?: ('Médecin généraliste' | 'Endocrinologue-Diabétologue')[];
+  specialty?: ('Médecin généraliste' | 'Endocrinologue-Diabétologue' | 'Néphrologue' | 'Cardiologue')[];
   practiceType?: PracticeType[];
   vingtile?: number[];
   vingtileMin?: number;

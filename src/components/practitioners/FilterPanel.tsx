@@ -117,7 +117,9 @@ export function FilterPanel({ isOpen, onClose, filters, onFilterChange }: Filter
                   {([
                     { value: 'Endocrinologue-Diabétologue' as const, labelKey: 'common.specialty.pneumologue' },
                     { value: 'Médecin généraliste' as const, labelKey: 'common.specialty.generaliste' },
-                  ]).map(({ value, labelKey }) => (
+                    { value: 'Néphrologue' as const, label: 'Néphrologue' },
+                    { value: 'Cardiologue' as const, label: 'Cardiologue' },
+                  ] as { value: string; labelKey?: string; label?: string }[]).map(({ value, labelKey, label }) => (
                     <label
                       key={value}
                       className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
@@ -128,7 +130,7 @@ export function FilterPanel({ isOpen, onClose, filters, onFilterChange }: Filter
                         onChange={() => handleSpecialtyChange(value)}
                         className="w-4 h-4 text-al-blue-500 rounded focus:ring-2 focus:ring-al-blue-500"
                       />
-                      <span className="text-sm text-gray-700">{t(labelKey)}</span>
+                      <span className="text-sm text-gray-700">{labelKey ? t(labelKey) : label}</span>
                     </label>
                   ))}
                 </div>
