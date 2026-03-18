@@ -255,20 +255,20 @@ export const UniversalCommandBar: React.FC<UniversalCommandBarProps> = ({ classN
     try {
       // Build context - adapt system prompt based on language
       const stats = DataService.getGlobalStats();
-      const systemPromptFr = `Tu es ARIA, l'assistant IA d'Air Liquide Healthcare.
+      const systemPromptFr = `Tu es SYNAPSE, l'assistant IA de MedVantis Pharma.
 
 DONNEES TERRITOIRE:
-- ${stats.totalPractitioners} praticiens (${stats.pneumologues} pneumologues, ${stats.generalistes} generalistes)
+- ${stats.totalPractitioners} praticiens (${stats.pneumologues} endocrinologues, ${stats.generalistes} generalistes)
 - ${stats.totalKOLs} KOLs
 - Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K L/an
 - Fidelite moyenne: ${stats.averageLoyalty.toFixed(1)}/10
 
 Reponds de maniere TRES CONCISE (1-2 phrases max). Question: ${question}`;
 
-      const systemPromptEn = `You are ARIA, Air Liquide Healthcare's AI assistant.
+      const systemPromptEn = `You are SYNAPSE, MedVantis Pharma's AI assistant.
 
 TERRITORY DATA:
-- ${stats.totalPractitioners} practitioners (${stats.pneumologues} pulmonologists, ${stats.generalistes} GPs)
+- ${stats.totalPractitioners} practitioners (${stats.pneumologues} endocrinologists, ${stats.generalistes} GPs)
 - ${stats.totalKOLs} KOLs
 - Total volume: ${(stats.totalVolume / 1000).toFixed(0)}K L/year
 - Average loyalty: ${stats.averageLoyalty.toFixed(1)}/10

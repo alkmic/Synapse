@@ -1,6 +1,6 @@
 export const voiceReport = {
   title: 'Visit Report',
-  subtitle: 'Dictate or type your report and ARIA will automatically extract key information',
+  subtitle: 'Dictate or type your report and SYNAPSE will automatically extract key information',
   steps: {
     select: 'Select',
     record: 'Record',
@@ -27,7 +27,7 @@ export const voiceReport = {
     competitors: 'Note competitors mentioned',
   },
   aiAnalysis: 'AI Analysis — Validation required',
-  aiAnalysisDesc: 'ARIA analyzed your report and extracted the following information. Review and correct if needed.',
+  aiAnalysisDesc: 'SYNAPSE analyzed your report and extracted the following information. Review and correct if needed.',
   topicsDiscussed: 'Topics discussed',
   productsDiscussed: 'Products discussed',
   nextActions: 'Next actions',
@@ -44,7 +44,7 @@ export const voiceReport = {
     competitorMap: 'Competitive mapping updated',
   },
   aiDeductionsTitle: 'AI Deductions — Profile Enrichment',
-  aiDeductionsDesc: 'Based on your report analysis, ARIA suggests the following enrichments for the practitioner profile.',
+  aiDeductionsDesc: 'Based on your report analysis, SYNAPSE suggests the following enrichments for the practitioner profile.',
   validatedEnrichments: 'Validated enrichments summary',
   validatedEnrichmentsDesc: 'Accepted enrichments will be integrated into the practitioner profile.',
   acceptAll: 'Accept all',
@@ -54,7 +54,7 @@ export const voiceReport = {
   seeProfile: 'See profile',
   newReport: 'New report',
   changePractitioner: 'Change',
-  textPlaceholder: "Or type your report directly here...\n\nEx: Very positive visit, the Dr showed strong interest in NIV. He mentioned having 3 candidate patients. Next step: send technical documentation.",
+  textPlaceholder: "Or type your report directly here...\n\nEx: Very positive visit, the Dr showed strong interest in GlucoStay XR. He mentioned having 3 candidate patients. Next step: send technical documentation.",
   analyzing: 'Analyzing...',
   editableTranscript: 'Transcript (editable)',
   categoryLabels: {
@@ -94,12 +94,12 @@ export const voiceReport = {
 
   // Product suggestions (user-visible labels)
   productSuggestions: {
-    vitalaire: 'VitalAire Comfort+',
-    telesuivi: 'Remote O2 Monitoring',
-    vni: 'NIV DreamStation',
-    freestyle: 'FreeStyle Comfort',
-    ppc: 'CPAP ResMed',
-    o2portable: 'Portable Liquid O2',
+    glucostay: 'GlucoStay XR',
+    telesuivi: 'DiabConnect Remote Monitoring',
+    insupen: 'InsuPen Flex',
+    cardioGlu: 'CardioGlu',
+    glpvita: 'GLP-Vita',
+    diabconnect: 'DiabConnect',
     service247: '24/7 Service',
     formation: 'Patient Training',
   },

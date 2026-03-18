@@ -110,7 +110,7 @@ export function NewsTab({ practitioner }: NewsTabProps) {
       )}
 
       {/* Contextual guidelines — only for pneumologues */}
-      {practitioner.specialty === 'Pneumologue' && (
+      {practitioner.specialty === 'Endocrinologue-Diabétologue' && (
         <div className="glass-card p-4 bg-gradient-to-br from-al-blue-50 to-al-sky/10">
           <h4 className="font-semibold flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-al-blue-500" />

@@ -13,7 +13,7 @@ interface FilterPanelProps {
 export function FilterPanel({ isOpen, onClose, filters, onFilterChange }: FilterPanelProps) {
   const { t } = useTranslation();
 
-  const handleSpecialtyChange = (specialty: 'Médecin généraliste' | 'Pneumologue') => {
+  const handleSpecialtyChange = (specialty: 'Médecin généraliste' | 'Endocrinologue-Diabétologue') => {
     const currentSpecialties = filters.specialty || [];
     const newSpecialties = currentSpecialties.includes(specialty)
       ? currentSpecialties.filter((s) => s !== specialty)
@@ -115,7 +115,7 @@ export function FilterPanel({ isOpen, onClose, filters, onFilterChange }: Filter
                 <h3 className="font-semibold text-gray-900 mb-3">{t('practitioners.filterPanel.specialty')}</h3>
                 <div className="space-y-2">
                   {([
-                    { value: 'Pneumologue' as const, labelKey: 'common.specialty.pneumologue' },
+                    { value: 'Endocrinologue-Diabétologue' as const, labelKey: 'common.specialty.pneumologue' },
                     { value: 'Médecin généraliste' as const, labelKey: 'common.specialty.generaliste' },
                   ]).map(({ value, labelKey }) => (
                     <label

@@ -1,5 +1,5 @@
 /**
- * Service de recherche universelle pour ARIA
+ * Service de recherche universelle pour SYNAPSE
  * Permet de rechercher dans TOUTES les données du site:
  * - Praticiens (nom, prénom, ville, spécialité)
  * - Publications, actualités, certifications, conférences
@@ -107,10 +107,10 @@ const TERRITORY_CITIES = [
   'venissieux', 'voiron', 'bourgoin-jallieu', 'romans-sur-isère', 'montélimar'
 ];
 
-// Produits Air Liquide
+// Produits MedVantis Pharma
 const PRODUCTS = [
-  'vitalaire', 'confort', 'confort+', 'télésuivi', 'telesuivi', 'o2', 'oxygène',
-  'extracteur', 'concentrateur', 'liquide', 'portable', 'service 24/7', 'service'
+  'glucostab', 'insuflex', 'télésuivi', 'telesuivi', 'dt2', 'diabète',
+  'antidiabétique', 'insuline', 'metformine', 'portable', 'service 24/7', 'service'
 ];
 
 // Spécialités (used in analyzeQuery)
@@ -180,8 +180,8 @@ export function analyzeQuery(question: string): QueryAnalysis {
   }
 
   // Extraire les spécialités
-  if (/pneumologue|pneumo/i.test(q)) {
-    analysis.entities.specialties.push('Pneumologue');
+  if (/endocrinologue|diabétologue|diabetologue|endocrino/i.test(q)) {
+    analysis.entities.specialties.push('Endocrinologue-Diabétologue');
   }
   if (/généraliste|generaliste|médecin généraliste/i.test(q)) {
     analysis.entities.specialties.push('Médecin généraliste');
@@ -709,7 +709,7 @@ export function getFullDatabaseContext(): string {
 
   let context = `
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                    BASE DE DONNÉES ARIA - CONTEXTE COMPLET                    ║
+║                    BASE DE DONNÉES SYNAPSE - CONTEXTE COMPLET                    ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 STATISTIQUES GLOBALES:
