@@ -368,45 +368,45 @@ const NEWS_TEMPLATES_GENERALISTE = {
       title: "Article dans la Revue du Praticien",
       contentTemplate: "Publication sur {topic}",
       topics: [
-        "le dépistage de la BPCO en soins primaires",
-        "la coordination ville-hôpital pour les patients sous O2",
-        "les red flags en consultation pour orientation pneumologique",
-        "l'accompagnement du patient BPCO en médecine générale",
-        "le rôle du médecin traitant dans le renouvellement de l'OLD",
-        "la gestion du sevrage tabagique en cabinet de ville",
-        "les critères d'adressage au pneumologue pour bilan respiratoire",
+        "le dépistage du DT2 et du pré-diabète en soins primaires",
+        "la coordination ville-endocrinologue pour les patients DT2 complexes",
+        "les signaux d'alerte en consultation pour adressage vers l'endocrinologue",
+        "l'accompagnement du patient DT2 en médecine générale",
+        "le rôle du médecin traitant dans le suivi ALD30 diabète",
+        "la gestion des règles hygiéno-diététiques chez le patient DT2",
+        "les critères d'initiation de l'insulinothérapie par le MG",
       ],
     },
     {
       title: "Publication dans Exercer - Revue de médecine générale",
       contentTemplate: "Retour d'expérience sur {topic}",
       topics: [
-        "l'organisation de la consultation BPCO en cabinet libéral",
-        "la place de la spirométrie au cabinet du généraliste",
-        "l'éducation thérapeutique du patient insuffisant respiratoire",
-        "le suivi à domicile des patients sous assistance respiratoire",
-        "l'intégration du télésuivi dans la pratique de médecine générale",
-        "le parcours patient BPCO vu depuis les soins primaires",
+        "l'organisation de la consultation DT2 en cabinet libéral",
+        "la place du dosage HbA1c trimestriel dans le suivi du DT2",
+        "l'éducation thérapeutique du patient diabétique en soins primaires",
+        "le suivi des indicateurs ROSP diabète en pratique quotidienne",
+        "l'intégration du CGM dans la pratique de médecine générale",
+        "le parcours patient DT2 vu depuis les soins primaires",
       ],
     },
     {
       title: "Contribution au Quotidien du Médecin",
       contentTemplate: "Tribune sur {topic}",
       topics: [
-        "l'enjeu du dépistage précoce de la BPCO en France",
-        "la prise en charge ambulatoire de l'insuffisance respiratoire chronique",
-        "l'apport du numérique dans le suivi des maladies chroniques",
-        "le rôle du généraliste dans la prévention de l'aggravation BPCO",
+        "l'enjeu du dépistage précoce du DT2 en France (700 000 non diagnostiqués)",
+        "la prise en charge ambulatoire du DT2 avec complications cardio-rénales",
+        "l'apport du numérique dans le suivi glycémique des patients chroniques",
+        "le rôle du généraliste dans la prévention des complications du DT2",
       ],
     },
     {
       title: "Article dans Médecine - Revue de l'UNAFORMEC",
       contentTemplate: "Synthèse pratique sur {topic}",
       topics: [
-        "la prescription d'oxygénothérapie de longue durée en ville",
-        "les outils d'évaluation de la dyspnée utilisables en consultation",
-        "le suivi post-hospitalisation du patient BPCO exacerbé",
-        "l'accompagnement du patient insuffisant respiratoire chronique et de son aidant",
+        "la prescription de metformine en ville : initiation et titration",
+        "les outils d'évaluation du risque cardiovasculaire chez le DT2",
+        "le suivi post-hospitalisation du patient DT2 décompensé",
+        "l'accompagnement du patient DT2 et de son aidant dans l'auto-surveillance",
       ],
     },
   ],
@@ -416,14 +416,14 @@ const NEWS_TEMPLATES_GENERALISTE = {
       contentTemplate: "Obtention d'un {cert} en {domain}",
       certs: ["DU", "DIU", "Attestation", "DPC"],
       domains: [
-        "éducation thérapeutique du patient",
-        "tabacologie",
-        "médecine du sommeil",
+        "éducation thérapeutique du patient diabétique",
+        "diabétologie pratique pour le MG",
+        "nutrition et maladies métaboliques",
         "gérontologie et polypathologies",
-        "coordination des soins à domicile",
-        "maladies respiratoires chroniques",
-        "soins palliatifs et accompagnement",
-        "médecine d'urgence ambulatoire",
+        "coordination des soins chroniques",
+        "maladies cardiovasculaires et métaboliques",
+        "prescription et suivi de l'insulinothérapie",
+        "médecine préventive et dépistage",
       ],
     },
   ],
@@ -432,20 +432,20 @@ const NEWS_TEMPLATES_GENERALISTE = {
       title: "Participation à un congrès",
       contentTemplate: "Intervention sur {topic} au {event}",
       topics: [
-        "le repérage des maladies respiratoires en soins primaires",
-        "les outils numériques pour le médecin traitant",
-        "la coordination des acteurs du domicile (HAD, PSAD, IDE)",
-        "l'optimisation du suivi des patients chroniques",
-        "les parcours de soins des patients insuffisants respiratoires",
-        "la téléconsultation et le télésuivi en médecine générale",
-        "l'impact de la pollution atmosphérique sur les pathologies respiratoires",
+        "le repérage du DT2 et du pré-diabète en soins primaires",
+        "les outils numériques pour le suivi glycémique",
+        "la coordination MG-endocrinologue pour les cas complexes",
+        "l'optimisation du suivi des patients DT2 chroniques",
+        "les parcours de soins des patients DT2 avec complications",
+        "la téléconsultation et le suivi glycémique à distance",
+        "l'impact de l'alimentation ultra-transformée sur le DT2",
       ],
       events: [
         "Congrès de la Médecine Générale France",
         "Journées Nationales de Médecine Générale (JNMG)",
-        "Journées régionales de FMC",
+        "Journées régionales de FMC Diabète",
         "Rencontres de la HAS",
-        "Colloque Soins Primaires et Coordination",
+        "Colloque Soins Primaires et Maladies Chroniques",
         "Assises de la Médecine Générale",
         "Congrès WONCA France",
       ],
@@ -456,12 +456,12 @@ const NEWS_TEMPLATES_GENERALISTE = {
       title: "Distinction professionnelle",
       contentTemplate: "Reconnaissance pour {achievement}",
       achievements: [
-        "son engagement dans le dépistage des maladies respiratoires",
-        "sa qualité de coordination avec les prestataires de santé à domicile",
+        "son engagement dans le dépistage du diabète et du pré-diabète",
+        "sa qualité de coordination avec les endocrinologues et diabétologues",
         "son rôle de maître de stage universitaire",
         "son implication dans la maison de santé pluriprofessionnelle",
-        "sa participation active au réseau de soins respiratoire régional",
-        "son travail sur l'amélioration du parcours BPCO en soins primaires",
+        "sa participation active au réseau de soins diabète régional",
+        "son travail sur l'amélioration du parcours DT2 en soins primaires",
         "sa contribution à la formation des internes en médecine générale",
       ],
     },
@@ -472,14 +472,14 @@ const NEWS_TEMPLATES_GENERALISTE = {
       contentTemplate: "{event} sur {topic}",
       events: ["Soirée FMC", "Atelier pratique", "Groupe de pairs", "Journée MSP", "Réunion pluriprofessionnelle", "Séminaire DPC", "Staff paramédical"],
       topics: [
-        "le bon usage des dispositifs médicaux respiratoires",
-        "la prise en charge du patient BPCO en médecine de ville",
-        "les innovations du PSAD et télésuivi",
-        "la prévention et le sevrage tabagique",
-        "la gestion des poly-pathologies chez le sujet âgé",
-        "l'organisation du maintien à domicile des patients chroniques",
-        "l'utilisation de la spirométrie en cabinet de ville",
-        "la coordination IDE-MG pour le suivi des patients sous O2",
+        "le bon usage des antidiabétiques oraux et injectables",
+        "la prise en charge du patient DT2 en médecine de ville",
+        "les innovations en suivi glycémique continu et CGM",
+        "la prévention du DT2 et règles hygiéno-diététiques",
+        "la gestion des poly-pathologies chez le sujet DT2 âgé",
+        "l'éducation nutritionnelle du patient diabétique",
+        "l'utilisation du CGM en cabinet de médecine générale",
+        "la coordination IDE-MG pour le suivi des patients DT2 sous insuline",
       ],
     },
   ],
@@ -489,49 +489,49 @@ const NEWS_TEMPLATES_GENERALISTE = {
 // TEMPLATES D'HISTORIQUE DE VISITE (variés et uniques)
 // ═══════════════════════════════════════════════════════════
 const VISIT_NOTES_PNEUMO = [
-  "Présentation des résultats du télésuivi sur le trimestre. {count} patients suivis à distance avec 0 hospitalisations évitables. {title} {lastName} très satisfait(e).",
-  "Discussion sur les critères d'éligibilité à l'O2 de déambulation. Revue de {count} dossiers patients. 2 candidats identifiés pour passage au portable.",
-  "Évaluation conjointe de la satisfaction des patients sous concentrateur. Taux de satisfaction > 90%. Discussion sur les améliorations possibles du service de livraison.",
-  "Présentation des nouvelles gammes de masques pour VNI. Test de 3 modèles sur mannequin. {title} {lastName} retient le modèle ComfortGel pour ses patients.",
-  "Visite de suivi post-installation chez {count} patients. Tous les équipements fonctionnent correctement. Un patient demande un changement d'horaire de livraison.",
-  "Réunion de coordination avec l'équipe paramédicale. Formation des IDE du service sur les alertes du télésuivi. Très bon accueil.",
-  "Point sur les renouvellements d'ordonnances à venir. {count} patients à renouveler dans les 30 prochains jours. Planning établi avec le secrétariat.",
-  "Entretien avec {title} {lastName} sur un cas complexe : patient sous O2 + VNI avec syndrome obésité-hypoventilation. Proposition d'un suivi renforcé avec BiPAP adaptée.",
+  "Présentation des données DiabConnect CGM sur le trimestre. {count} patients suivis avec amélioration du Time in Range de +18%. {title} {lastName} très satisfait(e) de l'IA prédictive.",
+  "Discussion sur les critères d'escalade thérapeutique chez {count} patients DT2 sous bithérapie orale. Analyse des profils pour orientation vers CardioGlu ou GLP-Vita selon comorbidités.",
+  "Évaluation conjointe de la satisfaction des patients sous InsuPen Flex. Taux de satisfaction 93%. Le profil PK ultra-plat réduit significativement l'anxiété liée aux hypoglycémies.",
+  "Présentation des nouvelles données ADA/EASD 2024 sur le positionnement des iSGLT2. {title} {lastName} confirme son intérêt pour CardioGlu en 2ème ligne chez les patients à risque CV.",
+  "Visite de suivi post-initiation GLP-Vita chez {count} patients. Tolérance digestive satisfaisante après titration. Perte de poids moyenne -4.2 kg à 3 mois.",
+  "Réunion de coordination avec l'équipe d'éducation thérapeutique. Formation des IDE sur l'utilisation du capteur DiabConnect et l'interprétation des rapports AGP.",
+  "Point sur les renouvellements d'ordonnances à venir. {count} patients à renouveler dans les 30 prochains jours. Discussion sur l'optimisation thérapeutique à l'occasion des renouvellements.",
+  "Entretien avec {title} {lastName} sur un cas complexe : patient DT2 avec néphropathie stade 3b et insuffisance cardiaque. Proposition CardioGlu 10 mg + InsuPen Flex avec suivi DiabConnect.",
 ];
 
 const VISIT_NOTES_GENERALISTE = [
-  "Visite de suivi chez {title} {lastName}. Discussion sur le patient Mme D. sous O2 depuis 3 mois. Amélioration nette des symptômes. Pas de modification de débit nécessaire.",
-  "Échange bref mais efficace. {title} {lastName} confirme la bonne observance de son patient M. L. sous concentrateur fixe. Demande de documentation sur les consignes de sécurité.",
-  "Passage au cabinet pour présenter la nouvelle plaquette d'éducation thérapeutique BPCO. {title} {lastName} apprécie le format simplifié pour ses patients.",
-  "Accompagnement pour une première mise sous O2. Patient anxieux, {title} {lastName} demande un appel de suivi à J+7 par notre équipe. Mise en place effectuée sans incident.",
-  "Visite de courtoisie. Pas de nouveau patient à équiper. {title} {lastName} mentionne une formation DPC à venir sur les pathologies respiratoires. Proposition d'intervenir en tant que partenaire.",
-  "Discussion sur les critères d'alerte pour les patients BPCO en médecine de ville. Remise d'un protocole simplifié d'évaluation de la dyspnée (échelle mMRC).",
+  "Visite de suivi chez {title} {lastName}. Discussion sur le patient M. D. sous GlucoStay XR depuis 3 mois. HbA1c passée de 8.1% à 7.2%. Bonne tolérance digestive confirmée.",
+  "Échange bref mais efficace. {title} {lastName} confirme la bonne observance de son patient M. L. sous GlucoStay XR 1000 mg. Demande de documentation sur les interactions médicamenteuses.",
+  "Passage au cabinet pour présenter le nouveau kit d'éducation thérapeutique DT2 MedVantis. {title} {lastName} apprécie le format simplifié avec fiches patient détachables.",
+  "Accompagnement pour une première prescription de CardioGlu 10 mg. Patient DT2 avec microalbuminurie. {title} {lastName} demande un appel de suivi à J+15 pour vérifier la tolérance.",
+  "Visite de courtoisie. {title} {lastName} mentionne une formation DPC diabète à venir. Proposition d'intervenir comme partenaire avec un atelier pratique sur l'escalade thérapeutique.",
+  "Discussion sur les indicateurs ROSP diabète et les objectifs HbA1c. Remise d'un protocole simplifié de suivi du DT2 en médecine de ville (HbA1c, fond d'œil, microalbuminurie).",
 ];
 
 // ═══════════════════════════════════════════════════════════
 // COMBINAISONS DE PRODUITS RÉALISTES
 // ═══════════════════════════════════════════════════════════
 const PRODUCT_COMBOS_PNEUMO = [
-  ['VitalAire Confort+', 'Télésuivi O2 Connect'],
-  ['Concentrateur portable FreeStyle', 'Oxymètre connecté'],
-  ['VNI DreamStation', 'Formation patient'],
-  ['Station extracteur fixe', 'Service 24/7'],
-  ['Oxygène liquide portable', 'Télésuivi O2 Connect'],
-  ['PPC ResMed AirSense', 'Masques VNI'],
-  ['Nébuliseur ultrasonique', 'Aérosol doseur'],
-  ['BPAP BiLevel', 'Oxymètre connecté', 'Télésuivi O2 Connect'],
-  ['VitalAire Confort+', 'Kit éducation thérapeutique', 'Service 24/7'],
-  ['Concentrateur portable FreeStyle', 'Oxygène liquide portable'],
+  ['CardioGlu 25mg', 'DiabConnect CGM'],
+  ['GLP-Vita 1mg', 'DiabConnect App Pro'],
+  ['InsuPen Flex 300 UI/mL', 'DiabConnect CGM'],
+  ['GlucoStay XR 1000mg', 'CardioGlu 10mg'],
+  ['GLP-Vita 0.5mg', 'GlucoStay XR 1000mg'],
+  ['InsuPen Flex 100 UI/mL', 'GlucoStay XR 750mg'],
+  ['CardioGlu 25mg', 'GLP-Vita 1mg'],
+  ['DiabConnect CGM', 'DiabConnect App Pro', 'InsuPen Flex 300 UI/mL'],
+  ['GlucoStay XR 1000mg', 'CardioGlu 25mg', 'DiabConnect CGM'],
+  ['GLP-Vita 1mg', 'InsuPen Flex 100 UI/mL'],
 ];
 
 const PRODUCT_COMBOS_GENERALISTE = [
-  ['Concentrateur fixe standard', 'Service technique SAV'],
-  ['Oxygène bouteille gazeux', 'Formation patient OLD'],
-  ['VitalAire Confort+', 'Service 24/7'],
-  ['Kit éducation thérapeutique', 'Oxymètre de pouls'],
-  ['Concentrateur fixe standard', 'Télésuivi O2 basique'],
-  ['Oxygène bouteille gazeux', 'Service 24/7'],
-  ['Formation patient OLD', 'Kit éducation thérapeutique'],
+  ['GlucoStay XR 500mg', 'Kit éducation DT2'],
+  ['GlucoStay XR 1000mg', 'CardioGlu 10mg'],
+  ['GlucoStay XR 1000mg', 'Programme accompagnement'],
+  ['CardioGlu 10mg', 'DiabConnect CGM'],
+  ['GlucoStay XR 500mg', 'DiabConnect CGM'],
+  ['InsuPen Flex 100 UI/mL', 'GlucoStay XR 1000mg'],
+  ['Kit éducation DT2', 'Programme accompagnement'],
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -562,18 +562,32 @@ function randomInt(min: number, max: number, rng: () => number = Math.random): n
 function generateRealisticVolume(vingtile: number, specialty: string, isKOL: boolean, rng: () => number): number {
   let baseVolume: number;
 
-  if (specialty === 'Pneumologue') {
-    if (vingtile <= 2) baseVolume = randomInt(200000, 300000, rng);
-    else if (vingtile <= 5) baseVolume = randomInt(120000, 200000, rng);
-    else if (vingtile <= 10) baseVolume = randomInt(60000, 120000, rng);
-    else if (vingtile <= 15) baseVolume = randomInt(30000, 60000, rng);
-    else baseVolume = randomInt(10000, 30000, rng);
+  if (specialty === 'Endocrinologue-Diabétologue') {
+    // Endocrinologues: 15 000 - 55 000 boîtes/an
+    if (vingtile <= 2) baseVolume = randomInt(40000, 55000, rng);
+    else if (vingtile <= 5) baseVolume = randomInt(28000, 40000, rng);
+    else if (vingtile <= 10) baseVolume = randomInt(18000, 28000, rng);
+    else if (vingtile <= 15) baseVolume = randomInt(12000, 18000, rng);
+    else baseVolume = randomInt(8000, 12000, rng);
+  } else if (specialty === 'Néphrologue') {
+    // Néphrologues: 8 000 - 30 000 boîtes/an
+    if (vingtile <= 2) baseVolume = randomInt(25000, 30000, rng);
+    else if (vingtile <= 5) baseVolume = randomInt(18000, 25000, rng);
+    else if (vingtile <= 10) baseVolume = randomInt(12000, 18000, rng);
+    else baseVolume = randomInt(8000, 12000, rng);
+  } else if (specialty === 'Cardiologue') {
+    // Cardiologues: 5 000 - 20 000 boîtes/an
+    if (vingtile <= 2) baseVolume = randomInt(15000, 20000, rng);
+    else if (vingtile <= 5) baseVolume = randomInt(10000, 15000, rng);
+    else if (vingtile <= 10) baseVolume = randomInt(7000, 10000, rng);
+    else baseVolume = randomInt(5000, 7000, rng);
   } else {
-    if (vingtile <= 2) baseVolume = randomInt(50000, 80000, rng);
-    else if (vingtile <= 5) baseVolume = randomInt(30000, 50000, rng);
-    else if (vingtile <= 10) baseVolume = randomInt(15000, 30000, rng);
-    else if (vingtile <= 15) baseVolume = randomInt(8000, 15000, rng);
-    else baseVolume = randomInt(3000, 8000, rng);
+    // Médecins généralistes: 3 000 - 15 000 boîtes/an
+    if (vingtile <= 2) baseVolume = randomInt(12000, 15000, rng);
+    else if (vingtile <= 5) baseVolume = randomInt(8000, 12000, rng);
+    else if (vingtile <= 10) baseVolume = randomInt(5000, 8000, rng);
+    else if (vingtile <= 15) baseVolume = randomInt(3500, 5000, rng);
+    else baseVolume = randomInt(2000, 3500, rng);
   }
 
   if (isKOL) {
@@ -592,19 +606,20 @@ function generateNews(
   globalUsedNews?: Set<string>,
 ): PractitionerNews[] {
   const news: PractitionerNews[] = [];
-  // KOLs: 3-6, non-KOL pneumologues: 1-3, non-KOL generalistes: 0-2
+  // KOLs: 3-6, non-KOL spécialistes: 1-3, non-KOL MG: 0-2
+  const isSpecialist = specialty !== 'Médecin généraliste';
   const newsCount = isKOL
     ? randomInt(3, 6, rng)
-    : specialty === 'Pneumologue'
+    : isSpecialist
       ? randomInt(1, 3, rng)
       : randomInt(0, 2, rng);
   const usedTitles = globalUsedNews || new Set<string>();
 
   // Select specialty-specific templates
-  const NEWS_TEMPLATES = specialty === 'Pneumologue' ? NEWS_TEMPLATES_PNEUMO : NEWS_TEMPLATES_GENERALISTE;
+  const NEWS_TEMPLATES = specialty !== 'Médecin généraliste' ? NEWS_TEMPLATES_PNEUMO : NEWS_TEMPLATES_GENERALISTE;
 
   // Type distribution per specialty
-  const typeDistribution = specialty === 'Pneumologue'
+  const typeDistribution = specialty !== 'Médecin généraliste'
     ? ['publication', 'publication', 'conference', 'conference', 'certification', 'award', 'event'] as const
     : ['event', 'event', 'certification', 'publication', 'conference', 'award'] as const;
 
@@ -686,7 +701,7 @@ function generateNotes(
 ): PractitionerNote[] {
   const notes: PractitionerNote[] = [];
   const noteCount = randomInt(3, 7, rng);
-  const templates = specialty === 'Pneumologue' ? NOTES_PNEUMO : NOTES_GENERALISTE;
+  const templates = specialty !== 'Médecin généraliste' ? NOTES_PNEUMO : NOTES_GENERALISTE;
   const usedIndices = new Set<number>();
 
   for (let i = 0; i < noteCount; i++) {
@@ -738,8 +753,9 @@ function generateVisitHistory(
 ): VisitRecord[] {
   const visits: VisitRecord[] = [];
   const visitCount = randomInt(4, 10, rng);
-  const visitNoteTemplates = specialty === 'Pneumologue' ? VISIT_NOTES_PNEUMO : VISIT_NOTES_GENERALISTE;
-  const productCombos = specialty === 'Pneumologue' ? PRODUCT_COMBOS_PNEUMO : PRODUCT_COMBOS_GENERALISTE;
+  const isSpecialist = specialty === 'Endocrinologue-Diabétologue' || specialty === 'Néphrologue' || specialty === 'Cardiologue';
+  const visitNoteTemplates = isSpecialist ? VISIT_NOTES_PNEUMO : VISIT_NOTES_GENERALISTE;
+  const productCombos = isSpecialist ? PRODUCT_COMBOS_PNEUMO : PRODUCT_COMBOS_GENERALISTE;
 
   for (let i = 0; i < visitCount; i++) {
     const daysAgo = randomInt(30 + i * 25, 55 + i * 30, rng);
@@ -772,84 +788,64 @@ function generateVisitHistory(
 // ═══════════════════════════════════════════════════════════
 
 const COMPETITOR_BATTLECARDS: Record<string, Omit<CompetitorBattlecard, 'isPrimary'>> = {
-  'Vivisol': {
-    competitor: 'Vivisol',
+  'NovaPharm': {
+    competitor: 'NovaPharm',
     ourAdvantages: [
-      "Réactivité SAV +30% (astreinte 24/7 vs H+8 chez Vivisol)",
-      "Télésuivi O₂ Connect inclus gratuitement (supplément payant chez Vivisol)",
-      "Formation patient à domicile par IDE dédiée",
-      "Gamme complète O2 + VNI + PPC (Vivisol limité en VNI)",
-      "Plateforme Orkyn' patient avec appli mobile",
+      "GLP-Vita : réduction HbA1c -1.8% vs NovaPen Weekly -1.4%, perte de poids -7 kg vs -4.5 kg",
+      "Programme d'accompagnement patient digital inclus (app DiabConnect + coach nutrition)",
+      "Service MSL diabétologie pour formation des équipes médicales",
+      "Prix GLP-Vita 15% inférieur au NovaPen Weekly à efficacité supérieure",
+      "DiabConnect CGM intégré avec IA prédictive d'hypoglycémie — solution unique sur le marché",
     ],
     theirStrengths: [
-      "Tarifs agressifs sur les concentrateurs fixes (-10 à -15%)",
-      "Implantation forte en Italie du Nord (patients frontaliers)",
-      "Bonne relation historique avec certains CHU",
+      "Forte notoriété de marque auprès des KOLs endocrinologues",
+      "Pipeline R&D massif avec plusieurs molécules en phase III",
+      "Présence internationale et publications dans les grands congrès (ADA, EASD)",
     ],
     counterArguments: [
-      "Le coût total de prise en charge (incluant réhospitalisations évitées par le télésuivi) est inférieur chez Air Liquide",
-      "Notre astreinte 24/7 réduit les passages aux urgences — argument décisif pour les pneumologues hospitaliers",
-      "Nos données de télésuivi sont intégrables dans les DPI hospitaliers (interopérabilité HL7/FHIR)",
+      "La notoriété ne garantit pas l'efficacité : les données cliniques de GLP-Vita sont supérieures tête-à-tête",
+      "Notre proximité terrain (180 délégués dédiés diabète) assure un accompagnement que NovaPharm ne peut pas offrir",
+      "DiabConnect intégré offre un suivi glycémique continu que NovaPharm ne propose pas — différenciateur clé",
     ],
   },
-  'Linde Healthcare': {
-    competitor: 'Linde Healthcare',
+  'Seralis': {
+    competitor: 'Seralis',
     ourAdvantages: [
-      "Connectivité IoT native sur tous les dispositifs médicaux",
-      "Chronic Care Connect — suivi digital patient complet",
-      "Plateforme Orkyn' dédiée avec éducation thérapeutique intégrée",
-      "Réseau technicien 2x plus dense en Rhône-Alpes",
-      "R&D interne avec brevets sur l'oxygénothérapie intelligente",
+      "CardioGlu : double bénéfice cardiovasculaire ET rénal prouvé (EMPA-REG OUTCOME) — SeraGlu limité aux données CV",
+      "Données cliniques de protection rénale robustes : réduction néphropathie -39% (CREDENCE)",
+      "Programme cardio-rénal intégré MedVantis : CardioGlu + DiabConnect + suivi néphro",
+      "Réseau MSL diabétologie avec expertise cardio-rénale spécifique",
+      "R&D interne : combinaison GlucoStay + CardioGlu en développement",
     ],
     theirStrengths: [
-      "Adossé au groupe Linde (solidité financière)",
-      "Bonne gamme de gaz médicaux hospitaliers",
-      "Prix compétitifs sur les gros volumes hospitaliers",
+      "Forte proximité terrain dans le réseau MG français",
+      "Prix compétitifs et image de labo français de confiance",
+      "Bonne pénétration historique en cardiologie",
     ],
     counterArguments: [
-      "Linde est un industriel gazier — Air Liquide Santé est un spécialiste du parcours patient à domicile",
-      "Notre plateforme de télésuivi est propriétaire et évolutive, pas un simple rebranding",
-      "Nos IDE formateurs sont salariés (vs sous-traitance chez Linde) — continuité de la relation patient",
+      "Les données CV de SeraGlu sont limitées vs les preuves solides de CardioGlu sur MACE, IC et rein",
+      "Notre programme d'accompagnement patient digital est un différenciateur que Seralis ne peut pas reproduire",
+      "La double protection CV + rénale de CardioGlu justifie pleinement le positionnement premium",
     ],
   },
-  'SOS Oxygène': {
-    competitor: 'SOS Oxygène',
+  'GenBio': {
+    competitor: 'GenBio',
     ourAdvantages: [
-      "Couverture nationale complète (vs implantation régionale Sud)",
-      "Gamme VNI/PPC complète ALMS (SOS limité en ventilation)",
-      "R&D et innovation continue (télésuivi, IoT, IA)",
-      "Capacité de prise en charge multi-pathologies (BPCO + SAS + IRC)",
-      "Interlocuteur unique pour l'ensemble du parcours respiratoire",
+      "GlucoStay XR : formulation brevetée avec tolérance GI prouvée +40% vs metformine standard (étude observance 2024)",
+      "Programme d'accompagnement patient MedVantis inclus : hotline pharma, app coach nutrition, suivi observance",
+      "Observance supérieure : +23% à 12 mois vs générique standard (étude ADHERENCE-MET)",
+      "Force de vente terrain dédiée : support MSL, formation équipes, visite régulière",
+      "Gamme complète DT2 (metformine → insuline → CGM) — GenBio limité à la metformine seule",
     ],
     theirStrengths: [
-      "Forte proximité locale dans le Sud-Est",
-      "Image de PME réactive et à taille humaine",
-      "Bonne notoriété chez les MG de ville dans leur zone",
+      "Prix MetGen XR 40% inférieur à GlucoStay XR",
+      "Pression institutionnelle ROSP favorisant les génériques",
+      "Disponibilité large en pharmacie",
     ],
     counterArguments: [
-      "Notre maillage territorial en Rhône-Alpes est équivalent avec en plus la couverture nationale pour les patients voyageurs",
-      "Notre programme patient Orkyn' offre un suivi plus complet que la simple livraison",
-      "Pour les cas complexes (VNI + O2), un seul prestataire simplifie le parcours vs 2 intervenants",
-    ],
-  },
-  'Bastide Médical': {
-    competitor: 'Bastide Médical',
-    ourAdvantages: [
-      "Expertise respiratoire pure (vs Bastide multi-activité : nutrition, perf, stomie...)",
-      "Forfaits LPPR optimisés pour la pneumologie",
-      "Support technique respiratoire spécialisé 24/7",
-      "Équipes terrain 100% dédiées au respiratoire",
-      "Télésuivi O₂ avec algorithmes prédictifs d'exacerbation",
-    ],
-    theirStrengths: [
-      "Offre globale MAD (oxygène + nutrition + perfusion)",
-      "Réseau de pharmacies affiliées pour la capillarité",
-      "Communication active auprès des MG de ville",
-    ],
-    counterArguments: [
-      "Un généraliste du MAD ne peut pas égaler un spécialiste du respiratoire — nos techniciens sont formés exclusivement à la pneumologie",
-      "La dispersion multi-activité de Bastide impacte les délais d'intervention respiratoire urgente",
-      "Nos concentrateurs et VNI sont de dernière génération — Bastide revend souvent du matériel reconditionné",
+      "Le coût total de prise en charge (incluant inobservance et complications évitées) est inférieur avec GlucoStay XR",
+      "La tolérance GI supérieure réduit les arrêts de traitement — 1 patient sur 4 arrête le générique pour intolérance",
+      "GenBio n'a pas de force de vente terrain — aucun accompagnement prescripteur ni patient",
     ],
   },
 };
@@ -895,7 +891,8 @@ export function generatePractitioner(index: number, globalUsedNews?: Set<string>
   // Ensure unique last names by using index-based selection with rotation
   const lastName = LAST_NAMES[(index * 3 + Math.floor(rng() * 7)) % LAST_NAMES.length];
 
-  const specialty = rng() < 0.20 ? 'Pneumologue' : 'Médecin généraliste';
+  const specRoll = rng();
+  const specialty = specRoll < 0.40 ? 'Endocrinologue-Diabétologue' : specRoll < 0.85 ? 'Médecin généraliste' : specRoll < 0.95 ? 'Néphrologue' : 'Cardiologue';
   const vingtile = rng() < 0.15 ? randomInt(1, 5, rng) : rng() < 0.4 ? randomInt(6, 10, rng) : randomInt(11, 20, rng);
   const isKOL = vingtile <= 5 && rng() < 0.3;
   const volumeL = generateRealisticVolume(vingtile, specialty, isKOL, rng);
@@ -923,24 +920,35 @@ export function generatePractitioner(index: number, globalUsedNews?: Set<string>
   const practTitle = isKOL && rng() < 0.3 ? 'Pr' : 'Dr';
 
   // Déterminer le type d'exercice de manière réaliste :
-  // - Pneumologues : 50% hospitalier, 20% mixte, 30% ville
+  // - Endocrinologues : 50% hospitalier, 20% mixte, 30% ville
   // - MG : 80% ville, 10% mixte, 10% hospitalier
+  // - Néphrologues : 60% hospitalier, 25% mixte, 15% ville
+  // - Cardiologues : 40% hospitalier, 30% mixte, 30% ville
   // - KOLs : plus souvent hospitaliers ou mixtes
   let practiceType: PracticeType;
-  if (specialty === 'Pneumologue') {
+  if (specialty === 'Endocrinologue-Diabétologue') {
     if (isKOL) {
       practiceType = rng() < 0.55 ? 'hospitalier' : rng() < 0.75 ? 'mixte' : 'ville';
     } else {
       const r = rng();
       practiceType = r < 0.50 ? 'hospitalier' : r < 0.70 ? 'mixte' : 'ville';
     }
+  } else if (specialty === 'Néphrologue') {
+    const r = rng();
+    practiceType = r < 0.60 ? 'hospitalier' : r < 0.85 ? 'mixte' : 'ville';
+  } else if (specialty === 'Cardiologue') {
+    const r = rng();
+    practiceType = r < 0.40 ? 'hospitalier' : r < 0.70 ? 'mixte' : 'ville';
   } else {
     // Médecin généraliste
     const r = rng();
     practiceType = r < 0.80 ? 'ville' : r < 0.90 ? 'mixte' : 'hospitalier';
   }
 
-  const subSpecialtyOptions = ['Allergologie respiratoire', 'Oncologie thoracique', 'Réhabilitation respiratoire', 'Sommeil et ventilation', 'Pneumologie interventionnelle'];
+  const subSpecialtyOptionsEndocrino = ['Diabète gestationnel', 'Obésité & Métabolisme', 'Endocrinologie pédiatrique', 'Néphro-diabétologie'];
+  const subSpecialtyOptionsNephro = ['Dialyse', 'Transplantation', 'Néphro-diabétologie'];
+  const subSpecialtyOptionsCardio = ['Insuffisance cardiaque', 'Rythmologie', 'Cardio-diabétologie'];
+  const subSpecialtyOptionsMG = ['DPC Diabète', 'Maison de santé', 'Cabinet de groupe', 'Médecine du sport'];
 
   return {
     id: `pract-${String(index + 1).padStart(3, '0')}`,
@@ -949,7 +957,10 @@ export function generatePractitioner(index: number, globalUsedNews?: Set<string>
     lastName,
     specialty,
     practiceType,
-    subSpecialty: specialty === 'Pneumologue' ? randomChoice([...subSpecialtyOptions, undefined, undefined], rng) as string | undefined : undefined,
+    subSpecialty: specialty === 'Endocrinologue-Diabétologue' ? randomChoice([...subSpecialtyOptionsEndocrino, undefined, undefined], rng) as string | undefined
+      : specialty === 'Néphrologue' ? randomChoice([...subSpecialtyOptionsNephro, undefined], rng) as string | undefined
+      : specialty === 'Cardiologue' ? randomChoice([...subSpecialtyOptionsCardio, undefined], rng) as string | undefined
+      : rng() < 0.3 ? randomChoice(subSpecialtyOptionsMG, rng) : undefined,
     avatarUrl: `https://i.pravatar.cc/150?img=${index + 1}`,
 
     address: {
@@ -1001,7 +1012,7 @@ interface NewPractitionerTemplate {
   firstName: string;
   lastName: string;
   isMale: boolean;
-  specialty: 'Pneumologue' | 'Médecin généraliste';
+  specialty: 'Endocrinologue-Diabétologue' | 'Médecin généraliste' | 'Néphrologue' | 'Cardiologue';
   city: typeof CITIES_RHONE_ALPES[number];
   vingtile: number;
   isKOL: boolean;
@@ -1018,31 +1029,31 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
     firstName: 'Alexandre',
     lastName: 'Delorme',
     isMale: true,
-    specialty: 'Pneumologue',
+    specialty: 'Endocrinologue-Diabétologue',
     city: CITIES_RHONE_ALPES[0], // Lyon
     vingtile: 2,
     isKOL: false,                // Pas encore KOL pour nous — à conquérir
     titleOverride: 'Pr',         // Titre académique (PU-PH), indépendant du statut KOL
-    subSpecialty: 'Réhabilitation respiratoire',
+    subSpecialty: 'Obésité & Métabolisme',
     practiceType: 'hospitalier',
     detectedDaysAgo: 5,
-    previousProvider: 'Vivisol',
+    previousProvider: 'NovaPharm',
     newsOverrides: [
       {
         id: 'news-delorme-1',
         date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Nomination comme chef de service pneumologie au CHU Lyon-Sud",
-        content: "Nommé chef du service de pneumologie au CHU Lyon-Sud, succédant au Pr Étienne qui part en retraite. Prend en charge un service de 45 lits avec une unité de soins intensifs respiratoires. Fort potentiel prescripteur — pas encore dans notre réseau.",
+        title: "Nomination comme chef de service endocrinologie-diabétologie au CHU Lyon-Sud",
+        content: "Nommé chef du service d'endocrinologie-diabétologie au CHU Lyon-Sud, succédant au Pr Étienne qui part en retraite. Prend en charge un service de 40 lits avec une unité d'éducation thérapeutique. Fort potentiel prescripteur — pas encore dans notre réseau.",
         type: 'event',
-        relevance: "Opportunité majeure : nouveau chef de service = nouvelles décisions d'approvisionnement. Profil haut potentiel KOL à conquérir.",
+        relevance: "Opportunité majeure : nouveau chef de service = nouvelles décisions de référencement produits. Profil haut potentiel KOL à conquérir.",
       },
       {
         id: 'news-delorme-2',
         date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Publication dans The Lancet Respiratory Medicine",
-        content: "Co-auteur principal d'une étude randomisée sur l'impact du télésuivi SpO2 continu sur la réduction des hospitalisations chez les patients BPCO sévères. Résultats : -42% de réhospitalisations à 6 mois.",
+        title: "Publication dans The Lancet Diabetes & Endocrinology",
+        content: "Co-auteur principal d'une étude randomisée sur l'impact du CGM continu sur la réduction des hypoglycémies sévères chez les patients DT2 sous insuline. Résultats : -52% d'hypoglycémies nocturnes à 6 mois.",
         type: 'publication',
-        relevance: "Sa publication porte EXACTEMENT sur le télésuivi O2 — notre produit phare. Levier de discussion idéal pour un premier contact.",
+        relevance: "Sa publication porte EXACTEMENT sur le CGM — notre produit DiabConnect. Levier de discussion idéal pour un premier contact.",
         source: 'PubMed',
       },
     ],
@@ -1051,30 +1062,30 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
     firstName: 'Émilie',
     lastName: 'Beaumont',
     isMale: false,
-    specialty: 'Pneumologue',
+    specialty: 'Endocrinologue-Diabétologue',
     city: CITIES_RHONE_ALPES[2], // Grenoble
     vingtile: 15,               // Installation récente — patientèle en construction, volume faible
     isKOL: false,
-    subSpecialty: 'Sommeil et ventilation',
+    subSpecialty: 'Diabète gestationnel',
     practiceType: 'mixte',
     detectedDaysAgo: 8,
-    previousProvider: 'Linde Healthcare',
+    previousProvider: 'Seralis',
     newsOverrides: [
       {
         id: 'news-beaumont-1',
         date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Ouverture d'un cabinet de pneumologie à Grenoble Europole",
-        content: "Installation récente dans le quartier Europole de Grenoble, spécialisée en pathologies du sommeil et ventilation non invasive. Patientèle en construction, réfère actuellement au CHU de Grenoble.",
+        title: "Ouverture d'un cabinet d'endocrinologie-diabétologie à Grenoble Europole",
+        content: "Installation récente dans le quartier Europole de Grenoble, spécialisée en diabète gestationnel et diabétologie. Patientèle en construction, réfère actuellement au CHU de Grenoble pour les cas complexes.",
         type: 'event',
-        relevance: "Nouvelle installation = recherche active de prestataire. Fenêtre de captation très courte avant que la concurrence ne s'installe.",
+        relevance: "Nouvelle installation = recherche active de partenaires pharma. Fenêtre de captation très courte avant que la concurrence ne s'installe.",
       },
       {
         id: 'news-beaumont-2',
         date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "DIU Sommeil et Ventilation obtenu à Paris-Descartes",
-        content: "Obtention du DIU de pathologies du sommeil et ventilation, formation reconnue comme référence en France. Spécialisation en SAHOS et overlap syndrome.",
+        title: "DIU Diabétologie pratique obtenu à Paris-Descartes",
+        content: "Obtention du DIU de diabétologie pratique, formation reconnue comme référence en France. Spécialisation en insulinothérapie fonctionnelle et suivi CGM.",
         type: 'certification',
-        relevance: "Certification récente = praticienne à jour, réceptive aux innovations. Proposer notre gamme PPC/VNI complète.",
+        relevance: "Certification récente = praticienne à jour, réceptive aux innovations. Proposer notre gamme complète GLP-Vita + DiabConnect.",
       },
     ],
   },
@@ -1093,9 +1104,9 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
         id: 'news-fontanelli-1',
         date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         title: "Création d'une maison de santé pluriprofessionnelle à Annecy-le-Vieux",
-        content: "Cofondateur de la MSP des Aravis avec 4 MG, 2 IDE, 1 kiné et 1 pharmacien. Structure orientée parcours de soins chroniques avec un accent sur les pathologies respiratoires (zone de montagne).",
+        content: "Cofondateur de la MSP des Aravis avec 4 MG, 2 IDE, 1 diététicien et 1 pharmacien. Structure orientée parcours de soins chroniques avec un accent sur le DT2 et les maladies métaboliques.",
         type: 'event',
-        relevance: "MSP = fort volume potentiel (4 MG prescripteurs). Si on capte la MSP, on capte tous les médecins. Priorité absolue.",
+        relevance: "MSP = fort volume potentiel (4 MG prescripteurs DT2). Si MedVantis devient partenaire de la MSP, accès à tous les prescripteurs. Priorité absolue.",
       },
     ],
   },
@@ -1103,30 +1114,30 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
     firstName: 'Nadia',
     lastName: 'Khelifi',
     isMale: false,
-    specialty: 'Pneumologue',
+    specialty: 'Néphrologue',
     city: CITIES_RHONE_ALPES[3], // Saint-Étienne
     vingtile: 5,
     isKOL: false,
-    subSpecialty: 'Oncologie thoracique',
+    subSpecialty: 'Néphro-diabétologie',
     practiceType: 'hospitalier',
     detectedDaysAgo: 3,
-    previousProvider: 'SOS Oxygène',
+    previousProvider: 'Seralis',
     newsOverrides: [
       {
         id: 'news-khelifi-1',
         date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Recrutement au CHU de Saint-Étienne — Service pneumo-oncologie",
-        content: "Nouvellement recrutée comme PH en pneumo-oncologie au CHU de Saint-Étienne. Arrive du CHU de Toulouse où elle était assistante. Spécialisation dans la prise en charge palliative des cancers bronchiques avec oxygénothérapie.",
+        title: "Recrutement au CHU de Saint-Étienne — Service néphro-diabétologie",
+        content: "Nouvellement recrutée comme PH en néphro-diabétologie au CHU de Saint-Étienne. Arrive du CHU de Toulouse où elle était assistante. Spécialisation dans la protection rénale chez le patient DT2 avec néphropathie.",
         type: 'event',
-        relevance: "Venue d'un autre CHU = pas de prestataire local attitré. Fenêtre de premier contact cruciale cette semaine.",
+        relevance: "Venue d'un autre CHU = pas de partenaire pharma local attitré. Fenêtre de premier contact cruciale cette semaine. Profil CardioGlu idéal.",
       },
       {
         id: 'news-khelifi-2',
         date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Communication orale au Congrès de Pneumologie de Langue Française 2025",
-        content: "Présentation sur l'optimisation de l'oxygénothérapie palliative chez les patients atteints de cancer bronchique non à petites cellules. Focus sur la qualité de vie et le maintien à domicile.",
+        title: "Communication orale au Congrès de la SFD 2025",
+        content: "Présentation sur l'utilisation des iSGLT2 dans la néphroprotection du patient DT2 avec DFG 30-60. Focus sur les données de l'étude CREDENCE et l'extension d'indication aux patients non diabétiques.",
         type: 'conference',
-        relevance: "Sujet directement lié à nos solutions de maintien à domicile. Point d'accroche parfait pour une première visite.",
+        relevance: "Sujet directement lié à CardioGlu. Point d'accroche parfait pour une première visite avec nos données EMPA-REG/CREDENCE.",
       },
     ],
   },
@@ -1136,19 +1147,19 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
     isMale: true,
     specialty: 'Médecin généraliste',
     city: CITIES_RHONE_ALPES[6], // Valence
-    vingtile: 10,               // Reprise cabinet avec 15 patients O2 — volume correct mais pas top prescripteur
+    vingtile: 10,               // Reprise cabinet avec 120+ patients DT2 — volume correct mais pas top prescripteur
     isKOL: false,
     practiceType: 'ville',
     detectedDaysAgo: 15,
-    previousProvider: 'Bastide Médical',
+    previousProvider: 'GenBio',
     newsOverrides: [
       {
         id: 'news-joubert-1',
         date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         title: "Reprise du cabinet du Dr Maurin à Valence (départ en retraite)",
-        content: "Reprend le cabinet du Dr Maurin qui comptait 15 patients sous oxygénothérapie suivis par Bastide Médical. Le Dr Joubert souhaite réévaluer les contrats fournisseurs et moderniser les équipements.",
+        content: "Reprend le cabinet du Dr Maurin qui comptait 120+ patients DT2 sous metformine générique GenBio. Le Dr Joubert souhaite réévaluer les traitements et moderniser la prise en charge avec des outils connectés.",
         type: 'event',
-        relevance: "15 patients sous O2 à récupérer ! Le Dr Joubert est ouvert au changement de prestataire. Visite de captation prioritaire.",
+        relevance: "120+ patients DT2 sous générique à convertir vers GlucoStay XR ! Le Dr Joubert est ouvert au changement. Visite de captation prioritaire avec argumentaire tolérance GI.",
       },
     ],
   },
@@ -1156,29 +1167,29 @@ const NEW_PRACTITIONERS: NewPractitionerTemplate[] = [
     firstName: 'Camille',
     lastName: 'Ravier',
     isMale: false,
-    specialty: 'Pneumologue',
+    specialty: 'Endocrinologue-Diabétologue',
     city: CITIES_RHONE_ALPES[5], // Chambéry
     vingtile: 3,
     isKOL: true,
-    subSpecialty: 'Allergologie respiratoire',
-    practiceType: 'mixte',       // Coordonne réseau ville-hôpital (12 MG + 3 pneumo)
+    subSpecialty: 'Néphro-diabétologie',
+    practiceType: 'mixte',       // Coordonne réseau ville-hôpital (12 MG + 3 endocrino)
     detectedDaysAgo: 7,
     newsOverrides: [
       {
         id: 'news-ravier-1',
         date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Lancement du réseau Respir'Alpes (réseau sentinelle BPCO)",
-        content: "Initiatrice et coordinatrice du réseau Respir'Alpes, premier réseau sentinelle de dépistage et suivi BPCO en Savoie. 12 MG et 3 pneumologues impliqués. Objectif : 500 spirométries de dépistage en 2026.",
+        title: "Lancement du réseau DiabèteConnect Savoie (réseau de dépistage DT2)",
+        content: "Initiatrice et coordinatrice du réseau DiabèteConnect Savoie, premier réseau de dépistage et suivi du DT2 en Savoie. 12 MG et 3 endocrinologues impliqués. Objectif : 500 dépistages glycémiques en 2026.",
         type: 'event',
-        relevance: "Réseau de 12 MG + 3 pneumo = multiplicateur d'impact. Si Air Liquide devient partenaire du réseau, accès à tous les prescripteurs impliqués.",
+        relevance: "Réseau de 12 MG + 3 endocrino = multiplicateur d'impact. Si MedVantis devient partenaire du réseau, accès à tous les prescripteurs impliqués.",
       },
       {
         id: 'news-ravier-2',
         date: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        title: "Étude dans la Revue des Maladies Respiratoires",
-        content: "Publication sur le sous-diagnostic de la BPCO en zones rurales et de montagne. Données sur 800 patients en Savoie montrant un retard diagnostique moyen de 5 ans. Plaidoyer pour le dépistage systématique en médecine de ville.",
+        title: "Étude dans Médecine des Maladies Métaboliques",
+        content: "Publication sur le sous-diagnostic du DT2 en zones rurales et de montagne. Données sur 800 patients en Savoie montrant un retard diagnostique moyen de 4 ans. Plaidoyer pour le dépistage systématique de l'HbA1c en médecine de ville.",
         type: 'publication',
-        relevance: "Publication très alignée avec notre mission de dépistage. Proposer un partenariat de dépistage spirométrique avec notre matériel.",
+        relevance: "Publication très alignée avec notre mission de dépistage. Proposer un partenariat DiabConnect pour le suivi glycémique du réseau.",
         source: 'PubMed',
       },
     ],
