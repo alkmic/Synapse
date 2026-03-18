@@ -127,7 +127,7 @@ function getRelevantRAGKnowledge(
   };
 
   // 1. Connaissances cliniques selon la spécialité
-  if (practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue' || config.tone === 'technical') {
+  if (practitioner.specialty === 'Endocrinologue-Diabétologue' || config.tone === 'technical') {
     addChunks(searchByCategory('dt2_guidelines'), 2);
     addChunks(searchByCategory('dt2_clinical'), 2);
     addChunks(searchByTag('hba1c'), 1);
@@ -1095,7 +1095,7 @@ function getLocalPitchData(practitioner: Practitioner) {
     ? Math.floor((Date.now() - new Date(profile.lastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
     : null;
   const isKOL = profile?.metrics.isKOL || practitioner.isKOL;
-  const isPneumo = practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue';
+  const isPneumo = practitioner.specialty === 'Endocrinologue-Diabétologue';
   const churnRisk = profile?.metrics.churnRisk || 'low';
   const city = profile?.address?.city || practitioner.city;
   const titre = `${practitioner.title} ${practitioner.lastName}`;

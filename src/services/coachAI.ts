@@ -356,8 +356,8 @@ function handleCountQuery(queryResult: ReturnType<typeof executeQuery>, analysis
   const stats = DataService.getGlobalStats();
   return {
     message: lang === 'en'
-      ? `**${stats.totalPractitioners} practitioners** in your territory:\n\n- **${stats.endocrinologues}** endocrinologists\n- **${stats.generalistes}** general practitioners\n- **${stats.totalKOLs}** KOLs`
-      : `**${stats.totalPractitioners} praticiens** dans votre territoire :\n\n- **${stats.endocrinologues}** endocrinologues\n- **${stats.generalistes}** médecins généralistes\n- **${stats.totalKOLs}** KOLs`,
+      ? `**${stats.totalPractitioners} practitioners** in your territory:\n\n- **${stats.pneumologues}** endocrinologists-diabetologists\n- **${stats.generalistes}** general practitioners\n- **${stats.nephrologues}** nephrologists\n- **${stats.cardiologues}** cardiologists\n- **${stats.totalKOLs}** KOLs`
+      : `**${stats.totalPractitioners} praticiens** dans votre territoire :\n\n- **${stats.pneumologues}** endocrinologues-diabétologues\n- **${stats.generalistes}** médecins généralistes\n- **${stats.nephrologues}** néphrologues\n- **${stats.cardiologues}** cardiologues\n- **${stats.totalKOLs}** KOLs`,
     insights: [
       `${lang === 'en' ? 'Total volume' : 'Volume total'}: ${(stats.totalVolume / 1000).toFixed(0)}${volUnit()}`,
       `${lang === 'en' ? 'Average loyalty' : 'Fidélité moyenne'}: ${stats.averageLoyalty.toFixed(1)}/10`
