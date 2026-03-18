@@ -239,7 +239,7 @@ function generateAIJustification(
   }
 
   if (type === 'risk') {
-    risks.push(txt(`Volume à risque: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an`, `Volume at risk: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year`));
+    risks.push(txt(`Volume à risque: ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an`, `Volume at risk: ${(p.metrics.volumeL / 1000).toFixed(0)}K units/year`));
     if (context.loyaltyTrend === 'declining') {
       risks.push(txt('Tendance de fidélité en baisse sur les 90 derniers jours', 'Loyalty trend declining over the last 90 days'));
     }
@@ -480,10 +480,10 @@ export function generateIntelligentActions(
             : txt(`${p.title} ${p.firstName} ${p.lastName} (${p.specialty}${p.metrics.isKOL ? ' - KOL' : ''}) n'a jamais été visité(e)`, `${p.title} ${p.firstName} ${p.lastName} (${locSpec(p.specialty)}${p.metrics.isKOL ? ' - KOL' : ''}) has never been visited`),
           aiJustification: {
             summary: isExplicitlyNew
-              ? txt(`${p.title} ${p.firstName} ${p.lastName} est un nouveau praticien détecté il y a ${detectedDaysAgo} jour(s) sur le territoire de ${p.address.city}. ${p.specialty}${p.subSpecialty ? ` spécialisé(e) en ${p.subSpecialty}` : ''}, Vingtile ${p.metrics.vingtile} (Top ${p.metrics.vingtile * 5}%), volume estimé ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an. ${previousProviderInfo} L'IA recommande un contact dans les 48h pour maximiser les chances de captation avant la concurrence.`, `${p.title} ${p.firstName} ${p.lastName} is a new practitioner detected ${detectedDaysAgo} day(s) ago in the ${p.address.city} territory. ${locSpec(p.specialty)}${p.subSpecialty ? ` specializing in ${p.subSpecialty}` : ''}, Vingtile ${p.metrics.vingtile} (Top ${p.metrics.vingtile * 5}%), estimated volume ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year. ${previousProviderInfo} AI recommends contact within 48h to maximize chances before competition.`)
-              : txt(`${p.title} ${p.firstName} ${p.lastName} est un praticien non visité sur le territoire de ${p.address.city} (Vingtile ${p.metrics.vingtile}, volume estimé ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an). Une première prise de contact est essentielle.`, `${p.title} ${p.firstName} ${p.lastName} is an unvisited practitioner in the ${p.address.city} territory (Vingtile ${p.metrics.vingtile}, estimated volume ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year). A first contact is essential.`),
+              ? txt(`${p.title} ${p.firstName} ${p.lastName} est un nouveau praticien détecté il y a ${detectedDaysAgo} jour(s) sur le territoire de ${p.address.city}. ${p.specialty}${p.subSpecialty ? ` spécialisé(e) en ${p.subSpecialty}` : ''}, Vingtile ${p.metrics.vingtile} (Top ${p.metrics.vingtile * 5}%), volume estimé ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an. ${previousProviderInfo} L'IA recommande un contact dans les 48h pour maximiser les chances de captation avant la concurrence.`, `${p.title} ${p.firstName} ${p.lastName} is a new practitioner detected ${detectedDaysAgo} day(s) ago in the ${p.address.city} territory. ${locSpec(p.specialty)}${p.subSpecialty ? ` specializing in ${p.subSpecialty}` : ''}, Vingtile ${p.metrics.vingtile} (Top ${p.metrics.vingtile * 5}%), estimated volume ${(p.metrics.volumeL / 1000).toFixed(0)}K units/year. ${previousProviderInfo} AI recommends contact within 48h to maximize chances before competition.`)
+              : txt(`${p.title} ${p.firstName} ${p.lastName} est un praticien non visité sur le territoire de ${p.address.city} (Vingtile ${p.metrics.vingtile}, volume estimé ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an). Une première prise de contact est essentielle.`, `${p.title} ${p.firstName} ${p.lastName} is an unvisited practitioner in the ${p.address.city} territory (Vingtile ${p.metrics.vingtile}, estimated volume ${(p.metrics.volumeL / 1000).toFixed(0)}K units/year). A first contact is essential.`),
             metrics: [
-              txt(`Volume estimé: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an`, `Estimated volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year`),
+              txt(`Volume estimé: ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an`, `Estimated volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K units/year`),
               `Vingtile ${p.metrics.vingtile}/20 (Top ${p.metrics.vingtile * 5}%)`,
               txt(`${p.address.city} — ${p.metrics.isKOL ? 'Key Opinion Leader identifié' : p.specialty}`, `${p.address.city} — ${p.metrics.isKOL ? 'Key Opinion Leader identified' : locSpec(p.specialty)}`),
               txt(`Potentiel de croissance: +${p.metrics.potentialGrowth}%`, `Growth potential: +${p.metrics.potentialGrowth}%`),
@@ -495,7 +495,7 @@ export function generateIntelligentActions(
                 ? txt(`URGENT : Chaque jour de retard augmente le risque de captation par un concurrent`, `URGENT: Each day of delay increases the risk of capture by a competitor`)
                 : txt(`Risque d'être capté en premier par un concurrent (NovaPharm, Seralis)`, `Risk of being captured first by a competitor (NovaPharm, Seralis)`),
               txt(`Pas de relation établie — aucun levier de fidélisation en place`, `No established relationship — no loyalty leverage in place`),
-              txt(`Volume potentiel non capté: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an`, `Uncaptured potential volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year`),
+              txt(`Volume potentiel non capté: ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an`, `Uncaptured potential volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K units/year`),
               ...(p.previousProvider
                 ? [txt(`${p.previousProvider} pourrait tenter de le reconquérir rapidement`, `${locComp(p.previousProvider)} may try to win them back quickly`)]
                 : [txt(`Les concurrents locaux pourraient aussi l'avoir identifié`, `Local competitors may have also identified them`)]),

@@ -260,7 +260,7 @@ export const UniversalCommandBar: React.FC<UniversalCommandBarProps> = ({ classN
 DONNEES TERRITOIRE:
 - ${stats.totalPractitioners} praticiens (${stats.pneumologues} endocrinologues, ${stats.generalistes} generalistes)
 - ${stats.totalKOLs} KOLs
-- Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K L/an
+- Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an
 - Fidelite moyenne: ${stats.averageLoyalty.toFixed(1)}/10
 
 Reponds de maniere TRES CONCISE (1-2 phrases max). Question: ${question}`;
@@ -270,7 +270,7 @@ Reponds de maniere TRES CONCISE (1-2 phrases max). Question: ${question}`;
 TERRITORY DATA:
 - ${stats.totalPractitioners} practitioners (${stats.pneumologues} endocrinologists, ${stats.generalistes} GPs)
 - ${stats.totalKOLs} KOLs
-- Total volume: ${(stats.totalVolume / 1000).toFixed(0)}K L/year
+- Total volume: ${(stats.totalVolume / 1000).toFixed(0)}K units/year
 - Average loyalty: ${stats.averageLoyalty.toFixed(1)}/10
 
 Answer VERY CONCISELY (1-2 sentences max). Question: ${question}`;

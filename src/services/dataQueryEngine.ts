@@ -256,12 +256,12 @@ export function executeQuery(question: string): QueryResult {
     const p = results[0];
     const publicationCount = p.news?.filter(n => n.type === 'publication').length || 0;
     summary = `Résultat : ${p.title} ${p.firstName} ${p.lastName}, ${p.specialty} à ${p.address.city}. ` +
-      `Volume : ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an, Fidélité : ${p.metrics.loyaltyScore}/10, Vingtile : ${p.metrics.vingtile}` +
+      `Volume : ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an, Fidélité : ${p.metrics.loyaltyScore}/10, Vingtile : ${p.metrics.vingtile}` +
       (p.metrics.isKOL ? ', KOL' : '') +
       (publicationCount > 0 ? `. ${publicationCount} publication(s) référencée(s).` : '');
   } else {
     summary = `${results.length} praticiens trouvés. ` +
-      `Volume total : ${(aggregations.totalVolume / 1000).toFixed(0)}K L/an, ` +
+      `Volume total : ${(aggregations.totalVolume / 1000).toFixed(0)}K boîtes/an, ` +
       `Fidélité moyenne : ${aggregations.avgLoyalty.toFixed(1)}/10, ` +
       `KOLs : ${aggregations.kolCount}`;
   }
@@ -297,7 +297,7 @@ RÉSUMÉ : ${result.summary}
       context += `${idx + 1}. ${p.title} ${p.firstName} ${p.lastName}\n`;
       context += `   • ${en ? 'Specialty' : 'Spécialité'} : ${p.specialty}${p.subSpecialty ? ` (${p.subSpecialty})` : ''}\n`;
       context += `   • ${en ? 'Full address' : 'Adresse complète'} : ${p.address.street}, ${p.address.postalCode} ${p.address.city}\n`;
-      context += `   • ${en ? 'Annual volume' : 'Volume annuel'} : ${(p.metrics.volumeL / 1000).toFixed(1)}K L/${en ? 'yr' : 'an'}\n`;
+      context += `   • ${en ? 'Annual volume' : 'Volume annuel'} : ${(p.metrics.volumeL / 1000).toFixed(1)}K ${en ? 'units/yr' : 'boîtes/an'}\n`;
       context += `   • ${en ? 'Loyalty' : 'Fidélité'} : ${p.metrics.loyaltyScore}/10 | Vingtile : ${p.metrics.vingtile}\n`;
       context += `   • ${en ? 'Status' : 'Statut'} : ${p.metrics.isKOL ? 'KOL' : (en ? 'Standard practitioner' : 'Praticien standard')}\n`;
       context += `   • Contact : ${p.contact.email} | ${p.contact.phone}\n`;
@@ -325,7 +325,7 @@ RÉSUMÉ : ${result.summary}
   if (result.aggregations) {
     context += `${en ? 'AGGREGATE STATISTICS' : 'STATISTIQUES AGRÉGÉES'} :\n`;
     context += `   • ${en ? 'Total practitioners' : 'Total praticiens'} : ${result.aggregations.totalCount}\n`;
-    context += `   • ${en ? 'Total volume' : 'Volume total'} : ${(result.aggregations.totalVolume / 1000).toFixed(0)}K L/${en ? 'yr' : 'an'}\n`;
+    context += `   • ${en ? 'Total volume' : 'Volume total'} : ${(result.aggregations.totalVolume / 1000).toFixed(0)}K ${en ? 'units/yr' : 'boîtes/an'}\n`;
     context += `   • ${en ? 'Average loyalty' : 'Fidélité moyenne'} : ${result.aggregations.avgLoyalty.toFixed(1)}/10\n`;
     context += `   • KOLs : ${result.aggregations.kolCount}\n`;
 
@@ -385,10 +385,10 @@ export function generateFullSiteContext(): string {
 
 STATISTIQUES GLOBALES :
    • Total praticiens : ${stats.totalPractitioners}
-   • Pneumologues : ${stats.pneumologues}
+   • Endocrinologues : ${stats.pneumologues}
    • Médecins généralistes : ${stats.generalistes}
    • KOLs identifiés : ${stats.totalKOLs}
-   • Volume total annuel : ${(stats.totalVolume / 1000).toFixed(0)}K L/an
+   • Volume total annuel : ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an
    • Fidélité moyenne : ${stats.averageLoyalty.toFixed(1)}/10
 
 RÉPARTITION PAR VILLE :
@@ -398,10 +398,10 @@ RÉPARTITION PAR PRÉNOM :
 ${Object.entries(byFirstName).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([name, count]) => `   • ${name}: ${count} praticiens`).join('\n')}
 
 TOP 10 PRATICIENS PAR VOLUME :
-${topPrescribers.map((p, i) => `   ${i + 1}. ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) - ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an${p.metrics.isKOL ? ' [KOL]' : ''}`).join('\n')}
+${topPrescribers.map((p, i) => `   ${i + 1}. ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) - ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an${p.metrics.isKOL ? ' [KOL]' : ''}`).join('\n')}
 
 KEY OPINION LEADERS (${kols.length}) :
-${kols.slice(0, 10).map((p, i) => `   ${i + 1}. ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) - ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an, Fidélité: ${p.metrics.loyaltyScore}/10`).join('\n')}
+${kols.slice(0, 10).map((p, i) => `   ${i + 1}. ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) - ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an, Fidélité: ${p.metrics.loyaltyScore}/10`).join('\n')}
 
 TOP 10 PRATICIENS AVEC LE PLUS DE PUBLICATIONS :
 ${topPublishers.length > 0 ? topPublishers.map((p, i) => {

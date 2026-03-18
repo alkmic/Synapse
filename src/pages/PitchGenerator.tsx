@@ -510,7 +510,7 @@ export function PitchGenerator() {
                         <MapPin className="w-3 h-3" />
                         <span>{p.city}</span>
                         <span className="text-slate-300">|</span>
-                        <span>{(p.volumeL / 1000).toFixed(0)}K {txt('L/an', 'L/yr')}</span>
+                        <span>{(p.volumeL / 1000).toFixed(0)}K {txt('boîtes/an', 'units/yr')}</span>
                       </div>
                       {(pubCount > 0 || noteCount > 0) && (
                         <div className="flex items-center gap-2 mt-2">

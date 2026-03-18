@@ -227,7 +227,7 @@ export function getTopPractitioners(
 
 /**
  * Calcule les données de performance par mois pour les graphiques
- * TOUTES les valeurs sont en litres (L) pour garantir la cohérence des comparaisons
+ * TOUTES les valeurs sont en boîtes pour garantir la cohérence des comparaisons
  */
 export function getPerformanceDataForPeriod(period: TimePeriod) {
   const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -243,8 +243,8 @@ export function getPerformanceDataForPeriod(period: TimePeriod) {
 
   if (period === 'month') {
     // Pour le mois: 4 semaines
-    // Volume hebdomadaire réaliste: ~10-15K L/semaine (territoire Rhône-Alpes)
-    // Objectif hebdomadaire: ~12K L/semaine → ~48K L/mois
+    // Volume hebdomadaire réaliste: ~10-15K boîtes/semaine (territoire Rhône-Alpes)
+    // Objectif hebdomadaire: ~12K boîtes/semaine → ~48K boîtes/mois
     return Array.from({ length: 4 }, (_, i) => ({
       month: `S${i + 1}`,
       yourVolume: 10000 + Math.floor(seededRandom(i + 200) * 5000),
@@ -253,8 +253,8 @@ export function getPerformanceDataForPeriod(period: TimePeriod) {
     }));
   } else if (period === 'quarter') {
     // Pour le trimestre: 3 mois
-    // Volume mensuel réaliste: ~40-60K L/mois
-    // Objectif mensuel: ~48K L/mois
+    // Volume mensuel réaliste: ~40-60K boîtes/mois
+    // Objectif mensuel: ~48K boîtes/mois
     const quarterStart = Math.floor(currentMonth / 3) * 3;
     return Array.from({ length: 3 }, (_, i) => {
       const monthIndex = quarterStart + i;

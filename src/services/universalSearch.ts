@@ -526,7 +526,7 @@ function generateSummary(
     const pubCount = p.news?.filter(n => n.type === 'publication').length || 0;
     parts.push(`**${p.title} ${p.firstName} ${p.lastName}**`);
     parts.push(`${p.specialty} à ${p.address.city}`);
-    parts.push(`Volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an | Fidélité: ${p.metrics.loyaltyScore}/10 | Vingtile: ${p.metrics.vingtile}`);
+    parts.push(`Volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | Fidélité: ${p.metrics.loyaltyScore}/10 | Vingtile: ${p.metrics.vingtile}`);
     if (p.metrics.isKOL) parts.push('**Key Opinion Leader**');
     if (pubCount > 0) parts.push(`${pubCount} publication(s)`);
   } else if (practitioners.length > 1) {
@@ -536,7 +536,7 @@ function generateSummary(
     const kolCount = practitioners.filter(p => p.metrics.isKOL).length;
     const avgLoyalty = practitioners.reduce((sum, p) => sum + p.metrics.loyaltyScore, 0) / practitioners.length;
 
-    parts.push(`Volume total: ${(totalVolume / 1000).toFixed(0)}K L/an`);
+    parts.push(`Volume total: ${(totalVolume / 1000).toFixed(0)}K boîtes/an`);
     parts.push(`${kolCount} KOL(s) | Fidélité moyenne: ${avgLoyalty.toFixed(1)}/10`);
   }
 
@@ -575,7 +575,7 @@ ${en ? 'Question' : 'Question'}: "${question}"
       context += `   ${en ? 'Specialty' : 'Spécialité'}: ${p.specialty}${p.subSpecialty ? ` (${p.subSpecialty})` : ''}\n`;
       context += `   ${en ? 'Address' : 'Adresse'}: ${p.address.street}, ${p.address.postalCode} ${p.address.city}\n`;
       context += `   Contact: ${p.contact.phone} | ${p.contact.email}\n`;
-      context += `   ${en ? 'Metrics' : 'Métriques'}: Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K L/${en ? 'yr' : 'an'} | ${en ? 'Loyalty' : 'Fidélité'} ${p.metrics.loyaltyScore}/10 | V${p.metrics.vingtile}`;
+      context += `   ${en ? 'Metrics' : 'Métriques'}: Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K ${en ? 'units/yr' : 'boîtes/an'} | ${en ? 'Loyalty' : 'Fidélité'} ${p.metrics.loyaltyScore}/10 | V${p.metrics.vingtile}`;
       if (p.metrics.isKOL) context += ' | KOL';
       context += '\n';
       context += `   ${en ? 'Data' : 'Données'}: ${pubCount} pub | ${noteCount} notes | ${visitCount} ${en ? 'visits' : 'visites'}\n`;
@@ -717,7 +717,7 @@ STATISTIQUES GLOBALES:
 • Pneumologues: ${stats.pneumologues}
 • Médecins généralistes: ${stats.generalistes}
 • KOLs: ${stats.totalKOLs}
-• Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K L/an
+• Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an
 • Fidélité moyenne: ${stats.averageLoyalty.toFixed(1)}/10
 
 RÉPARTITION PAR VILLE:

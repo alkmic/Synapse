@@ -173,7 +173,7 @@ function generateMockVisits(practitioners: Practitioner[]): UpcomingVisit[] {
   return visits;
 }
 
-// Mock performance data (toutes les valeurs en litres L — cohérence avec les graphiques)
+// Mock performance data (toutes les valeurs en boîtes — cohérence avec les graphiques)
 // Volume mensuel réaliste pour un territoire Rhône-Alpes: ~40-60K boîtes/mois
 function getMockPerformanceData(): PerformanceData[] {
   const m = (fr: string) => localizeMonth(fr);

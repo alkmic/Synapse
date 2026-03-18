@@ -80,7 +80,7 @@ export const AIInsights: React.FC = () => {
         id: 'churn-risk',
         type: 'alert',
         title: t('dashboard.churnRiskTitle'),
-        message: `${mostAtRisk.title} ${mostAtRisk.lastName} (${(mostAtRisk.metrics.volumeL / 1000).toFixed(0)}K ${txt('L/an', 'L/yr')}) ${t('dashboard.churnMessage', { loyalty: mostAtRisk.metrics.loyaltyScore })}`,
+        message: `${mostAtRisk.title} ${mostAtRisk.lastName} (${(mostAtRisk.metrics.volumeL / 1000).toFixed(0)}K ${txt('boîtes/an', 'units/yr')}) ${t('dashboard.churnMessage', { loyalty: mostAtRisk.metrics.loyaltyScore })}`,
         priority: mostAtRisk.metrics.volumeL > 100000 ? 'high' : 'medium',
         actionLabel: t('dashboard.seeProfile'),
         practitionerId: mostAtRisk.id

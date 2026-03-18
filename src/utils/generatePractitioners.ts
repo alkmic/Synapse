@@ -187,7 +187,7 @@ export function generatePractitioners(): Practitioner[] {
       city: location.city,
       department: location.department,
       volumeL,
-      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000L/an
+      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000 boîtes/an
       conventionSector: randomItem([1, 2] as const),
       activityType: randomItem(['Libéral intégral', 'Libéral temps partiel', 'Mixte'] as const),
       preferredChannel: randomItem(['Face-to-face', 'Email', 'Téléphone'] as const),
@@ -234,7 +234,7 @@ export function generatePractitioners(): Practitioner[] {
       city: location.city,
       department: location.department,
       volumeL,
-      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000L/an
+      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000 boîtes/an
       conventionSector: randomItem([1, 2] as const),
       activityType: randomItem(['Libéral intégral', 'Libéral temps partiel', 'Mixte'] as const),
       preferredChannel: randomItem(['Face-to-face', 'Email', 'Téléphone'] as const),

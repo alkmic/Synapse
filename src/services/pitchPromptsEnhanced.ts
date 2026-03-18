@@ -1033,8 +1033,8 @@ export function generatePractitionerSummary(practitionerId: string): string {
 
   summary += lang === 'en' ? `**Metrics:**\n` : `**Métriques:**\n`;
   summary += lang === 'en'
-    ? `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K L/yr | Vingtile: V${profile.metrics.vingtile}\n`
-    : `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K L/an | Vingtile: V${profile.metrics.vingtile}\n`;
+    ? `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K units/yr | Vingtile: V${profile.metrics.vingtile}\n`
+    : `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | Vingtile: V${profile.metrics.vingtile}\n`;
   summary += lang === 'en'
     ? `- Loyalty: ${profile.metrics.loyaltyScore}/10 | Potential: +${profile.metrics.potentialGrowth}%\n`
     : `- Fidélité: ${profile.metrics.loyaltyScore}/10 | Potentiel: +${profile.metrics.potentialGrowth}%\n`;

@@ -729,7 +729,7 @@ export default function AICoach() {
                               )}
                             </div>
                             <p className="text-xs sm:text-sm text-slate-500">
-                              {localizeSpecialty(p.specialty)} • {txt('Vingtile', 'Vigintile')} {p.vingtile} • {(p.volumeL / 1000).toFixed(0)}K {txt('L/an', 'L/yr')}
+                              {localizeSpecialty(p.specialty)} • {txt('Vingtile', 'Vigintile')} {p.vingtile} • {(p.volumeL / 1000).toFixed(0)}K {txt('boîtes/an', 'units/yr')}
                             </p>
                           </div>
                           {p.daysSinceVisit !== undefined && p.daysSinceVisit < 999 && (

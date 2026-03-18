@@ -169,15 +169,15 @@ export function localizeConversationSummary(summary: string): string {
 
 // ─── News Title translations ─────────────────────────────────
 const newsTitleMap: Record<string, string> = {
-  // Pneumo publication titles
-  "Publication dans l'European Respiratory Journal": "Publication in the European Respiratory Journal",
-  "Article dans Revue des Maladies Respiratoires": "Article in Revue des Maladies Respiratoires",
-  "Étude multicentrique parue dans CHEST": "Multicenter study published in CHEST",
-  "Lettre à l'éditeur dans Thorax": "Letter to the editor in Thorax",
-  "Revue systématique dans Respiratory Medicine": "Systematic review in Respiratory Medicine",
-  "Article original dans Pneumologie Clinique": "Original article in Clinical Pulmonology",
-  "Chapitre dans le Traité de Pneumologie (EMC)": "Chapter in the Treatise on Pulmonology (EMC)",
-  // Pneumo other titles
+  // Diabeto publication titles
+  "Publication dans Diabetes Care": "Publication in Diabetes Care",
+  "Article dans Médecine des Maladies Métaboliques": "Article in Médecine des Maladies Métaboliques",
+  "Étude multicentrique parue dans Diabetologia": "Multicenter study published in Diabetologia",
+  "Lettre à l'éditeur dans The Lancet Diabetes & Endocrinology": "Letter to the editor in The Lancet Diabetes & Endocrinology",
+  "Revue systématique dans Diabetes & Metabolism": "Systematic review in Diabetes & Metabolism",
+  "Article original dans Diabétologie Clinique": "Original article in Clinical Diabetology",
+  "Chapitre dans le Traité d'Endocrinologie-Diabétologie (EMC)": "Chapter in the Treatise on Endocrinology-Diabetology (EMC)",
+  // Diabeto other titles
   "Certification Universitaire": "University Certification",
   "Intervention au congrès": "Conference presentation",
   "Distinction professionnelle": "Professional distinction",

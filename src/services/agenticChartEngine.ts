@@ -245,9 +245,9 @@ Réponds UNIQUEMENT avec ce bloc JSON, sans texte avant ni après :
     "filters": [],
     "groupBy": "city",
     "metrics": [
-      { "name": "Volume (K L)", "field": "volumeL", "aggregation": "sum", "format": "k" }
+      { "name": "Volume (K)", "field": "volumeL", "aggregation": "sum", "format": "k" }
     ],
-    "sortBy": "Volume (K L)",
+    "sortBy": "Volume (K)",
     "sortOrder": "desc",
     "limit": 10
   },
@@ -282,7 +282,7 @@ Réponds UNIQUEMENT avec ce bloc JSON, sans texte avant ni après :
 
 **"Top 15 praticiens par volume"** :
 - groupBy: null (pas de groupement, individus)
-- metrics: [{ name: "Volume (K L)", field: "volumeL", aggregation: "sum", format: "k" }]
+- metrics: [{ name: "Volume (K)", field: "volumeL", aggregation: "sum", format: "k" }]
 - limit: 15
 - chartType: "bar"
 `;
@@ -327,9 +327,9 @@ Respond ONLY with this JSON block, no text before or after:
     "filters": [],
     "groupBy": "city",
     "metrics": [
-      { "name": "Volume (K L)", "field": "volumeL", "aggregation": "sum", "format": "k" }
+      { "name": "Volume (K)", "field": "volumeL", "aggregation": "sum", "format": "k" }
     ],
-    "sortBy": "Volume (K L)",
+    "sortBy": "Volume (K)",
     "sortOrder": "desc",
     "limit": 10
   },
@@ -353,7 +353,7 @@ Respond ONLY with this JSON block, no text before or after:
 
 **"Compare KOLs to other practitioners by volume"**:
 - groupBy: "isKOL"
-- metrics: [{ name: "Total Volume (K L)", field: "volumeL", aggregation: "sum", format: "k" }]
+- metrics: [{ name: "Total Volume (K)", field: "volumeL", aggregation: "sum", format: "k" }]
 - chartType: "bar"
 
 **"Distribution of KOLs by specialty"**:
@@ -364,7 +364,7 @@ Respond ONLY with this JSON block, no text before or after:
 
 **"Top 15 practitioners by volume"**:
 - groupBy: null (no grouping, individuals)
-- metrics: [{ name: "Volume (K L)", field: "volumeL", aggregation: "sum", format: "k" }]
+- metrics: [{ name: "Volume (K)", field: "volumeL", aggregation: "sum", format: "k" }]
 - limit: 15
 - chartType: "bar"
 `;
@@ -1036,21 +1036,21 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
     spec = {
       chartType: 'bar',
       title: en ? `Top ${limit} prescribers by volume` : `Top ${limit} prescripteurs par volume`,
-      description: en ? `The ${limit} practitioners with the highest oxygen prescription volume` : `Les ${limit} praticiens qui prescrivent le plus en volume d'oxygène`,
+      description: en ? `The ${limit} practitioners with the highest prescription volume` : `Les ${limit} praticiens avec le plus gros volume de prescriptions`,
       query: {
         source: 'practitioners',
         filters: params.wantsKOL ? [{ field: 'isKOL', operator: 'eq', value: true }] : [],
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: loyaltyName, field: 'loyaltyScore', aggregation: 'avg' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc',
         limit: limit
       },
       formatting: {
         xAxisLabel: en ? 'Practitioner' : 'Praticien',
-        yAxisLabel: en ? 'Volume (K L/yr)' : 'Volume (K L/an)',
+        yAxisLabel: en ? 'Volume (K units/yr)' : 'Volume (K boîtes/an)',
         showLegend: true
       }
     };
@@ -1068,15 +1068,15 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         source: 'practitioners',
         groupBy: 'isKOL',
         metrics: [
-          { name: en ? 'Total Volume (K L)' : 'Volume Total (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: en ? 'Total Volume (K)' : 'Volume Total (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: countName, field: 'id', aggregation: 'count' }
         ],
-        sortBy: en ? 'Total Volume (K L)' : 'Volume Total (K L)',
+        sortBy: en ? 'Total Volume (K)' : 'Volume Total (K L)',
         sortOrder: 'desc'
       },
       formatting: {
         xAxisLabel: en ? 'Category' : 'Catégorie',
-        yAxisLabel: 'Volume (K L)',
+        yAxisLabel: 'Volume (K)',
         showLegend: true
       }
     };
@@ -1120,16 +1120,16 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         filters: params.wantsKOL ? [{ field: 'isKOL', operator: 'eq', value: true }] : [],
         groupBy: 'city',
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: countName, field: 'id', aggregation: 'count' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc',
         limit: limit
       },
       formatting: {
         xAxisLabel: en ? 'City' : 'Ville',
-        yAxisLabel: 'Volume (K L)',
+        yAxisLabel: 'Volume (K)',
         showLegend: true
       }
     };
@@ -1148,10 +1148,10 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         filters: params.wantsKOL ? [{ field: 'isKOL', operator: 'eq', value: true }] : [],
         groupBy: 'specialty',
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: countName, field: 'id', aggregation: 'count' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc'
       },
       formatting: {
@@ -1172,10 +1172,10 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         source: 'practitioners',
         groupBy: 'vingtileBucket',
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: countName, field: 'id', aggregation: 'count' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc'
       },
       formatting: {
@@ -1197,7 +1197,7 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         groupBy: 'loyaltyBucket',
         metrics: [
           { name: countName, field: 'id', aggregation: 'count' },
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' }
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' }
         ],
         sortBy: countName,
         sortOrder: 'desc'
@@ -1221,7 +1221,7 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         groupBy: 'riskLevel',
         metrics: [
           { name: countName, field: 'id', aggregation: 'count' },
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' }
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' }
         ],
         sortBy: countName,
         sortOrder: 'desc'
@@ -1244,16 +1244,16 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         source: 'practitioners',
         filters: [{ field: 'isKOL', operator: 'eq', value: true }],
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: loyaltyName, field: 'loyaltyScore', aggregation: 'avg' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc',
         limit: limit
       },
       formatting: {
         xAxisLabel: 'KOL',
-        yAxisLabel: 'Volume (K L)',
+        yAxisLabel: 'Volume (K)',
         showLegend: true
       }
     };
@@ -1270,16 +1270,16 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
       query: {
         source: 'practitioners',
         metrics: [
-          { name: 'Volume (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: 'Volume (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: loyaltyName, field: 'loyaltyScore', aggregation: 'avg' }
         ],
-        sortBy: 'Volume (K L)',
+        sortBy: 'Volume (K)',
         sortOrder: 'desc',
         limit: limit
       },
       formatting: {
         xAxisLabel: en ? 'Practitioner' : 'Praticien',
-        yAxisLabel: en ? 'Volume (K L/yr)' : 'Volume (K L/an)',
+        yAxisLabel: en ? 'Volume (K units/yr)' : 'Volume (K boîtes/an)',
         showLegend: true
       }
     };
