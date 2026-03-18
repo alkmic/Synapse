@@ -14,7 +14,7 @@ const txt = (fr: string, en: string): string => getLanguage() === 'en' ? en : fr
 /** Localize specialty name for display in generated text */
 const locSpec = (spec: string): string => {
   if (getLanguage() !== 'en') return spec;
-  if (spec === 'Pneumologue') return 'Pulmonologist';
+  if (spec === 'Endocrinologue-Diabétologue') return 'Endocrinologist-Diabetologist';
   if (spec === 'Médecin généraliste') return 'General Practitioner';
   return spec;
 };
@@ -22,7 +22,7 @@ const locSpec = (spec: string): string => {
 /** Localize competitor/provider name */
 const locComp = (name: string): string => {
   if (getLanguage() !== 'en') return name;
-  const map: Record<string, string> = { 'Bastide Médical': 'Bastide Medical', 'SOS Oxygène': 'SOS Oxygen' };
+  const map: Record<string, string> = { 'GenBio': 'GenBio', 'NovaPharm': 'NovaPharm', 'Seralis': 'Seralis' };
   return map[name] || name;
 };
 

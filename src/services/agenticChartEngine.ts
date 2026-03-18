@@ -976,12 +976,12 @@ CURRENT DATA CONTEXT:
   return `
 CONTEXTE DONNÉES ACTUELLES :
 - ${stats.totalPractitioners} praticiens au total
-  - ${stats.pneumologues} Pneumologues
+  - ${stats.pneumologues} Endocrinologues-Diabétologues
   - ${stats.generalistes} Médecins généralistes
 - ${stats.totalKOLs} KOLs identifiés
-  - Pneumologues: ${kolsBySpecialty['Pneumologue'] || 0} KOLs
+  - Endocrinologues: ${kolsBySpecialty['Endocrinologue-Diabétologue'] || 0} KOLs
   - Généralistes: ${kolsBySpecialty['Médecin généraliste'] || 0} KOLs
-- Volume total : ${Math.round(stats.totalVolume / 1000)}K L/an
+- Volume total : ${Math.round(stats.totalVolume / 1000)}K boîtes/an
 - Fidélité moyenne : ${stats.averageLoyalty.toFixed(1)}/10
 - Villes présentes : ${cities.slice(0, 8).join(', ')}${cities.length > 8 ? ` (+${cities.length - 8} autres)` : ''}
 `;
