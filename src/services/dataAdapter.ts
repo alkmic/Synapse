@@ -25,7 +25,7 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
   const specEN = specialty === 'Endocrinologue-Diabétologue' ? 'Endocrinology-Diabetology' : 'General Practice';
   const newsNote = profile.news.length > 0 ? txt('Activité académique récente.', 'Recent academic activity.') : '';
   const aiSummary = profile.metrics.isKOL
-    ? txt(`KOL reconnu en ${specialty} (exercice ${practiceTypeLabel}). Volume annuel: ${vol}K L. Fidélité ${loyalty}/10. ${newsNote}`, `Recognized KOL in ${specEN} (${practiceTypeLabel}). Annual volume: ${vol}K L. Loyalty ${loyalty}/10. ${newsNote}`)
+    ? txt(`KOL reconnu en ${specialty} (exercice ${practiceTypeLabel}). Volume annuel: ${vol}K boîtes/an. Fidélité ${loyalty}/10. ${newsNote}`, `Recognized KOL in ${specEN} (${practiceTypeLabel}). Annual volume: ${vol}K units/yr. Loyalty ${loyalty}/10. ${newsNote}`)
     : txt(`Praticien ${specialty} (${practiceTypeLabel}). Vingtile ${profile.metrics.vingtile}. Volume: ${vol}K boîtes/an. Potentiel de croissance: +${profile.metrics.potentialGrowth}%.`, `${specEN} practitioner (${practiceTypeLabel}). Vingtile ${profile.metrics.vingtile}. Volume: ${vol}K units/yr. Growth potential: +${profile.metrics.potentialGrowth}%.`);
 
   // Next best action basé sur les notes

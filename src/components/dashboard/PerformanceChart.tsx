@@ -68,7 +68,7 @@ export const PerformanceChart: React.FC = () => {
               border: 'none',
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
             }}
-            formatter={(value: number | undefined) => value ? [`${(value / 1000).toFixed(0)}K L`, ''] : ['', '']}
+            formatter={(value: number | undefined) => value ? [`${(value / 1000).toFixed(0)}K`, ''] : ['', '']}
           />
           <Area
             type="monotone"
@@ -103,7 +103,7 @@ export const PerformanceChart: React.FC = () => {
         <div className="text-center">
           <p className="text-xs text-slate-600 mb-0.5">{t('dashboard.totalVolume')}</p>
           <p className="text-base font-bold text-slate-800">
-            {(periodVolume / 1000).toFixed(0)}K L
+            {(periodVolume / 1000).toFixed(0)}K
           </p>
         </div>
         <div className="text-center">

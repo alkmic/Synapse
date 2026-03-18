@@ -271,7 +271,7 @@ Réponds UNIQUEMENT avec ce bloc JSON, sans texte avant ni après :
 
 **"Compare les KOLs aux autres praticiens en volume"** :
 - groupBy: "isKOL"
-- metrics: [{ name: "Volume Total (K L)", field: "volumeL", aggregation: "sum", format: "k" }]
+- metrics: [{ name: "Volume Total (K)", field: "volumeL", aggregation: "sum", format: "k" }]
 - chartType: "bar"
 
 **"Répartition des KOLs par spécialité"** :
@@ -1068,10 +1068,10 @@ export function interpretQuestionLocally(question: string): LocalInterpretation 
         source: 'practitioners',
         groupBy: 'isKOL',
         metrics: [
-          { name: en ? 'Total Volume (K)' : 'Volume Total (K L)', field: 'volumeL', aggregation: 'sum', format: 'k' },
+          { name: en ? 'Total Volume (K)' : 'Volume Total (K)', field: 'volumeL', aggregation: 'sum', format: 'k' },
           { name: countName, field: 'id', aggregation: 'count' }
         ],
-        sortBy: en ? 'Total Volume (K)' : 'Volume Total (K L)',
+        sortBy: en ? 'Total Volume (K)' : 'Volume Total (K)',
         sortOrder: 'desc'
       },
       formatting: {

@@ -111,11 +111,11 @@ export const NationalStats: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">{t('dashboard.totalVolumeTerritory')}</span>
-              <span className="text-xs font-bold text-al-teal">{(totalVolumeTerritory / 1000000).toFixed(1)}M L</span>
+              <span className="text-xs font-bold text-al-teal">{(totalVolumeTerritory / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">{t('dashboard.avgVolumePractitioner')}</span>
-              <span className="text-xs font-bold text-al-teal">{(avgVolumePerPractitioner / 1000).toFixed(0)}K L</span>
+              <span className="text-xs font-bold text-al-teal">{(avgVolumePerPractitioner / 1000).toFixed(0)}K</span>
             </div>
           </div>
         </div>

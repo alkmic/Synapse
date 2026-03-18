@@ -723,7 +723,7 @@ COMPLETE PRACTITIONER PROFILE
 - City: ${profile.address.city} (${profile.address.postalCode})
 
 **BUSINESS METRICS:**
-- Annual volume: ${profile.metrics.volumeL.toLocaleString()} L (${(profile.metrics.volumeL / 1000).toFixed(0)}K L)
+- Annual volume: ${profile.metrics.volumeL.toLocaleString()} (${(profile.metrics.volumeL / 1000).toFixed(0)}K)
 - Loyalty: ${profile.metrics.loyaltyScore}/10
 - Vingtile: V${profile.metrics.vingtile} ${vingtileLabel}
 - KOL: ${kolLabel}

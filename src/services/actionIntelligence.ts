@@ -564,7 +564,7 @@ export function generateIntelligentActions(
           priority,
           practitionerId: p.id,
           title: txt(`Risque de perte détecté`, `Churn risk detected`),
-          reason: txt(`Fidélité ${p.metrics.loyaltyScore}/10 - Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K L`, `Loyalty ${p.metrics.loyaltyScore}/10 - Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K L`),
+          reason: txt(`Fidélité ${p.metrics.loyaltyScore}/10 - Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K`, `Loyalty ${p.metrics.loyaltyScore}/10 - Volume ${(p.metrics.volumeL / 1000).toFixed(0)}K`),
           aiJustification: generateAIJustification(type, p, context, scores),
           scores,
           suggestedDate: generateSuggestedDate(priority, type),
