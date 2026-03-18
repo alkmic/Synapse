@@ -8,24 +8,24 @@ export function Landing() {
   const { t } = useTranslation();
 
   return (
-    <div className="h-screen bg-gradient-to-br from-airLiquide-primary via-airLiquide-darkBlue to-airLiquide-navy relative overflow-hidden flex flex-col">
-      {/* Animated background elements - subtler */}
+    <div className="h-screen bg-gradient-to-br from-al-blue-900 via-al-navy to-al-blue-800 relative overflow-hidden flex flex-col">
+      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.2, 0.15] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-20 -right-20 w-64 h-64 bg-airLiquide-teal/30 rounded-full blur-3xl"
+          className="absolute -top-20 -right-20 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl"
         />
         <motion.div
           animate={{ scale: [1.1, 1, 1.1], opacity: [0.2, 0.15, 0.2] }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-20 -left-20 w-64 h-64 bg-airLiquide-lightBlue/30 rounded-full blur-3xl"
+          className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-400/20 rounded-full blur-3xl"
         />
       </div>
 
-      {/* Main Content - Centered vertically */}
+      {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-4">
-        {/* Logo MedVantis Pharma - Compact */}
+        {/* Logo MedVantis Pharma */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -35,10 +35,10 @@ export function Landing() {
           <div className="text-white text-sm font-semibold tracking-[0.3em] uppercase">
             MedVantis Pharma
           </div>
-          <div className="h-0.5 w-full bg-gradient-to-r from-airLiquide-teal to-airLiquide-lightBlue mt-1" />
+          <div className="h-0.5 w-full bg-gradient-to-r from-violet-400 to-indigo-400 mt-1" />
         </motion.div>
 
-        {/* SYNAPSE Title - More compact */}
+        {/* SYNAPSE Title */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -48,14 +48,14 @@ export function Landing() {
           <h1 className="text-5xl sm:text-6xl font-black text-white tracking-tight">
             SYNAPSE
           </h1>
-          <div className="flex items-center justify-center gap-2 text-airLiquide-teal text-sm sm:text-base font-medium mt-1">
+          <div className="flex items-center justify-center gap-2 text-violet-300 text-sm sm:text-base font-medium mt-1">
             <Sparkles className="w-4 h-4" />
             <span>{t('welcome.landingSubtitle')}</span>
             <Sparkles className="w-4 h-4" />
           </div>
         </motion.div>
 
-        {/* Description - Shorter */}
+        {/* Description */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -65,7 +65,7 @@ export function Landing() {
           {t('welcome.landingDescription')}
         </motion.p>
 
-        {/* Features - 2 rows, more compact */}
+        {/* Features grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -73,12 +73,12 @@ export function Landing() {
           className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 mb-6 max-w-3xl"
         >
           {[
-            { icon: Brain, label: t('welcome.landingFeatures.coachIA'), color: 'text-airLiquide-teal' },
-            { icon: Zap, label: t('welcome.landingFeatures.pitchIA'), color: 'text-airLiquide-lightBlue' },
-            { icon: TrendingUp, label: t('welcome.landingFeatures.analytics'), color: 'text-airLiquide-teal' },
-            { icon: Users, label: t('welcome.landingFeatures.crmPro'), color: 'text-airLiquide-lightBlue' },
-            { icon: MapPin, label: t('welcome.landingFeatures.territory'), color: 'text-airLiquide-teal' },
-            { icon: Target, label: t('welcome.landingFeatures.objectives'), color: 'text-airLiquide-lightBlue' },
+            { icon: Brain, label: t('welcome.landingFeatures.coachIA'), color: 'text-violet-300' },
+            { icon: Zap, label: t('welcome.landingFeatures.pitchIA'), color: 'text-indigo-300' },
+            { icon: TrendingUp, label: t('welcome.landingFeatures.analytics'), color: 'text-violet-300' },
+            { icon: Users, label: t('welcome.landingFeatures.crmPro'), color: 'text-indigo-300' },
+            { icon: MapPin, label: t('welcome.landingFeatures.territory'), color: 'text-violet-300' },
+            { icon: Target, label: t('welcome.landingFeatures.objectives'), color: 'text-indigo-300' },
           ].map((feature, i) => (
             <div key={i} className="flex flex-col items-center text-center group">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
@@ -89,15 +89,15 @@ export function Landing() {
           ))}
         </motion.div>
 
-        {/* CTA Button - Smaller */}
+        {/* CTA Button */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          whileHover={{ scale: 1.03, boxShadow: "0 15px 30px rgba(0, 181, 173, 0.3)" }}
+          whileHover={{ scale: 1.03, boxShadow: "0 15px 30px rgba(99, 102, 241, 0.3)" }}
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate('/dashboard')}
-          className="group relative px-8 py-3 bg-gradient-to-r from-airLiquide-teal to-airLiquide-lightBlue text-white text-base font-semibold rounded-xl shadow-xl overflow-hidden"
+          className="group relative px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-500 text-white text-base font-semibold rounded-xl shadow-xl overflow-hidden"
         >
           <div className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
           <div className="relative flex items-center gap-2">
@@ -107,7 +107,7 @@ export function Landing() {
         </motion.button>
       </div>
 
-      {/* Footer - Version tag */}
+      {/* Footer */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
