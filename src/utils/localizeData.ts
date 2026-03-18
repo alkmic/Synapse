@@ -212,26 +212,26 @@ export function localizeNewsTitle(title: string): string {
 // ─── News Content translations ───────────────────────────────
 // Exact-match map for hardcoded new-practitioner content
 const newsContentExactMap: Record<string, string> = {
-  "Nommé chef du service de pneumologie au CHU Lyon-Sud, succédant au Pr Étienne qui part en retraite. Prend en charge un service de 45 lits avec une unité de soins intensifs respiratoires. Fort potentiel prescripteur — pas encore dans notre réseau.":
-    "Appointed head of the pulmonology department at CHU Lyon-Sud, succeeding Pr Étienne who is retiring. Takes over a 45-bed department with a respiratory intensive care unit. High prescribing potential — not yet in our network.",
-  "Co-auteur principal d'une étude randomisée sur l'impact du télésuivi SpO2 continu sur la réduction des hospitalisations chez les patients BPCO sévères. Résultats : -42% de réhospitalisations à 6 mois.":
-    "Lead co-author of a randomized study on the impact of continuous SpO2 remote monitoring on reducing hospitalizations in severe COPD patients. Results: -42% rehospitalizations at 6 months.",
-  "Installation récente dans le quartier Europole de Grenoble, spécialisée en pathologies du sommeil et ventilation non invasive. Patientèle en construction, réfère actuellement au CHU de Grenoble.":
-    "Recently established in the Europole district of Grenoble, specializing in sleep disorders and non-invasive ventilation. Building patient base, currently refers to CHU de Grenoble.",
-  "Obtention du DIU de pathologies du sommeil et ventilation, formation reconnue comme référence en France. Spécialisation en SAHOS et overlap syndrome.":
-    "Obtained the inter-university diploma in sleep disorders and ventilation, a training recognized as a reference in France. Specialization in OSAHS and overlap syndrome.",
-  "Cofondateur de la MSP des Aravis avec 4 MG, 2 IDE, 1 kiné et 1 pharmacien. Structure orientée parcours de soins chroniques avec un accent sur les pathologies respiratoires (zone de montagne).":
-    "Co-founder of the MSP des Aravis with 4 GPs, 2 nurses, 1 physiotherapist and 1 pharmacist. Structure focused on chronic care pathways with an emphasis on respiratory diseases (mountain area).",
-  "Nouvellement recrutée comme PH en pneumo-oncologie au CHU de Saint-Étienne. Arrive du CHU de Toulouse où elle était assistante. Spécialisation dans la prise en charge palliative des cancers bronchiques avec oxygénothérapie.":
-    "Newly recruited as a hospital practitioner in pulmonary oncology at CHU de Saint-Étienne. Coming from CHU de Toulouse where she was an assistant. Specialization in palliative care of bronchial cancers with oxygen therapy.",
-  "Présentation sur l'optimisation de l'oxygénothérapie palliative chez les patients atteints de cancer bronchique non à petites cellules. Focus sur la qualité de vie et le maintien à domicile.":
-    "Presentation on optimizing palliative oxygen therapy in patients with non-small cell lung cancer. Focus on quality of life and home care.",
+  "Nommé chef du service de diabétologie au CHU Lyon-Sud, succédant au Pr Étienne qui part en retraite. Prend en charge un service de 45 lits avec une unité de soins intensifs métaboliques. Fort potentiel prescripteur — pas encore dans notre réseau.":
+    "Appointed head of the diabetology department at CHU Lyon-Sud, succeeding Pr Étienne who is retiring. Takes over a 45-bed department with a metabolic intensive care unit. High prescribing potential — not yet in our network.",
+  "Co-auteur principal d'une étude randomisée sur l'impact du télésuivi HbA1c continu sur la réduction des hospitalisations chez les patients DT2 sévères. Résultats : -42% de réhospitalisations à 6 mois.":
+    "Lead co-author of a randomized study on the impact of continuous HbA1c remote monitoring on reducing hospitalizations in severe T2D patients. Results: -42% rehospitalizations at 6 months.",
+  "Installation récente dans le quartier Europole de Grenoble, spécialisée en diabétologie et maladies métaboliques. Patientèle en construction, réfère actuellement au CHU de Grenoble.":
+    "Recently established in the Europole district of Grenoble, specializing in diabetology and metabolic diseases. Building patient base, currently refers to CHU de Grenoble.",
+  "Obtention du DIU de diabétologie et maladies métaboliques, formation reconnue comme référence en France. Spécialisation en DT2 complexe et complications cardio-rénales.":
+    "Obtained the inter-university diploma in diabetology and metabolic diseases, a training recognized as a reference in France. Specialization in complex T2D and cardio-renal complications.",
+  "Cofondateur de la MSP des Aravis avec 4 MG, 2 IDE, 1 kiné et 1 pharmacien. Structure orientée parcours de soins chroniques avec un accent sur les pathologies métaboliques (zone rurale).":
+    "Co-founder of the MSP des Aravis with 4 GPs, 2 nurses, 1 physiotherapist and 1 pharmacist. Structure focused on chronic care pathways with an emphasis on metabolic diseases (rural area).",
+  "Nouvellement recrutée comme PH en endocrinologie-diabétologie au CHU de Saint-Étienne. Arrive du CHU de Toulouse où elle était assistante. Spécialisation dans la prise en charge des complications du DT2 avec insulinothérapie.":
+    "Newly recruited as a hospital practitioner in endocrinology-diabetology at CHU de Saint-Étienne. Coming from CHU de Toulouse where she was an assistant. Specialization in managing T2D complications with insulin therapy.",
+  "Présentation sur l'optimisation de l'insulinothérapie chez les patients DT2 avec complications cardio-rénales. Focus sur la qualité de vie et le maintien à domicile.":
+    "Presentation on optimizing insulin therapy in T2D patients with cardio-renal complications. Focus on quality of life and home care.",
   "Reprend le cabinet du Dr Maurin qui comptait 15 patients sous antidiabétiques suivis par GenBio. Le Dr Joubert souhaite réévaluer les contrats fournisseurs et moderniser les traitements.":
     "Takes over Dr Maurin's practice which had 15 patients on antidiabetics managed by GenBio. Dr Joubert wishes to reassess supplier contracts and modernize treatments.",
-  "Initiatrice et coordinatrice du réseau Respir'Alpes, premier réseau sentinelle de dépistage et suivi BPCO en Savoie. 12 MG et 3 pneumologues impliqués. Objectif : 500 spirométries de dépistage en 2026.":
-    "Initiator and coordinator of the Respir'Alpes network, the first COPD screening and monitoring sentinel network in Savoie. 12 GPs and 3 pulmonologists involved. Goal: 500 screening spirometries in 2026.",
-  "Publication sur le sous-diagnostic de la BPCO en zones rurales et de montagne. Données sur 800 patients en Savoie montrant un retard diagnostique moyen de 5 ans. Plaidoyer pour le dépistage systématique en médecine de ville.":
-    "Publication on the under-diagnosis of COPD in rural and mountain areas. Data on 800 patients in Savoie showing an average diagnostic delay of 5 years. Advocacy for systematic screening in primary care.",
+  "Initiatrice et coordinatrice du réseau DiabèteConnect Rhône-Alpes, premier réseau de dépistage et suivi DT2 en Savoie. 12 MG et 3 endocrinologues impliqués. Objectif : 500 dépistages glycémiques en 2026.":
+    "Initiator and coordinator of the DiabèteConnect Rhône-Alpes network, the first T2D screening and monitoring network in Savoie. 12 GPs and 3 endocrinologists involved. Goal: 500 glycemic screenings in 2026.",
+  "Publication sur le sous-diagnostic du DT2 en zones rurales et de montagne. Données sur 800 patients en Savoie montrant un retard diagnostique moyen de 5 ans. Plaidoyer pour le dépistage systématique en médecine de ville.":
+    "Publication on the under-diagnosis of T2D in rural and mountain areas. Data on 800 patients in Savoie showing an average diagnostic delay of 5 years. Advocacy for systematic screening in primary care.",
 };
 
 // Prefix-based content template translations

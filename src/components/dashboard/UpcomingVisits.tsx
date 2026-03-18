@@ -136,7 +136,7 @@ export const UpcomingVisits: React.FC = () => {
                     )}
                   </div>
                   <p className="text-xs text-slate-600 mb-1">
-                    {localizeSpecialty(practitioner.specialty)} &bull; {t('common.vingtile')} {practitioner.vingtile} &bull; {(practitioner.volumeL / 1000).toFixed(0)}K L
+                    {localizeSpecialty(practitioner.specialty)} &bull; {t('common.vingtile')} {practitioner.vingtile} &bull; {(practitioner.volumeL / 1000).toFixed(0)}K
                   </p>
                   <p className="text-xs text-danger font-medium">
                     {t('dashboard.notSeenSince', { days: daysSinceVisit })}

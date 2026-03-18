@@ -127,7 +127,7 @@ export const VingtileDistribution: React.FC = () => {
                   <div className="text-xs">
                     <p className="font-bold text-slate-800 mb-2">{t('dashboard.vingtileLabel')} {data.vingtile}</p>
                     <p className="text-slate-600">{t('dashboard.practitionersCount')} <span className="font-semibold">{data.count}</span></p>
-                    <p className="text-slate-600">{t('dashboard.totalVolumeLabel')} <span className="font-semibold">{(data.totalVolume / 1000).toFixed(0)}K L</span></p>
+                    <p className="text-slate-600">{t('dashboard.totalVolumeLabel')} <span className="font-semibold">{(data.totalVolume / 1000).toFixed(0)}K</span></p>
                     <p className="text-slate-600">{t('dashboard.avgVolumeLabel')} <span className="font-semibold">{(data.avgVolume / 1000).toFixed(0)}K L</span></p>
                   </div>
                 );

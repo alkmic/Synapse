@@ -787,7 +787,7 @@ PROFIL COMPLET DU PRATICIEN
 - Ville: ${profile.address.city} (${profile.address.postalCode})
 
 **MÉTRIQUES BUSINESS:**
-- Volume annuel: ${profile.metrics.volumeL.toLocaleString()} L (${(profile.metrics.volumeL / 1000).toFixed(0)}K L)
+- Volume annuel: ${profile.metrics.volumeL.toLocaleString()} (${(profile.metrics.volumeL / 1000).toFixed(0)}K)
 - Fidélité: ${profile.metrics.loyaltyScore}/10
 - Vingtile: V${profile.metrics.vingtile} ${vingtileLabel}
 - KOL: ${kolLabel}
