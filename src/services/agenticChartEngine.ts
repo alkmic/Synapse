@@ -112,10 +112,10 @@ Champs disponibles :
 - title: string ("Dr" | "Pr")
 - firstName: string
 - lastName: string
-- specialty: string ("Pneumologue" | "Médecin généraliste")
+- specialty: string ("Endocrinologue-Diabétologue" | "Médecin généraliste")
 - city: string (ville d'exercice)
 - postalCode: string
-- volumeL: number (volume annuel en litres O2)
+- volumeL: number (volume annuel en boîtes)
 - loyaltyScore: number (0-10, score de fidélité)
 - vingtile: number (1-20, segmentation potentiel)
 - isKOL: boolean (Key Opinion Leader)
@@ -142,7 +142,7 @@ Champs disponibles :
 - sum(publicationsCount) : total publications
 
 ### Filtres disponibles
-- specialty eq "Pneumologue"
+- specialty eq "Endocrinologue-Diabétologue"
 - isKOL eq true
 - vingtile lte 5
 - loyaltyScore gte 7
@@ -159,10 +159,10 @@ Available fields:
 - title: string ("Dr" | "Pr")
 - firstName: string
 - lastName: string
-- specialty: string ("Pneumologue" | "Médecin généraliste")
+- specialty: string ("Endocrinologue-Diabétologue" | "Médecin généraliste")
 - city: string (practice city)
 - postalCode: string
-- volumeL: number (annual volume in liters O2)
+- volumeL: number (annual volume in boxes)
 - loyaltyScore: number (0-10, loyalty score)
 - vingtile: number (1-20, potential segmentation)
 - isKOL: boolean (Key Opinion Leader)
@@ -189,7 +189,7 @@ Available fields:
 - sum(publicationsCount): total publications
 
 ### Available Filters
-- specialty eq "Pneumologue"
+- specialty eq "Endocrinologue-Diabétologue"
 - isKOL eq true
 - vingtile lte 5
 - loyaltyScore gte 7
@@ -205,7 +205,7 @@ export function getDataSchema(): string {
 export const DATA_SCHEMA = DATA_SCHEMA_FR;
 
 // Prompt système AMÉLIORÉ pour la génération de graphiques
-const CHART_GENERATION_PROMPT_FR = `Tu es un expert en visualisation de données pour un CRM pharmaceutique Air Liquide Healthcare.
+const CHART_GENERATION_PROMPT_FR = `Tu es un expert en visualisation de données pour un CRM pharmaceutique MedVantis Pharma.
 
 ${DATA_SCHEMA_FR}
 
@@ -217,7 +217,7 @@ Analyse la demande de l'utilisateur et génère une spécification JSON PRÉCISE
    - Si l'utilisateur demande "15 praticiens" → limit: 15
    - Si l'utilisateur demande "top 20" → limit: 20
    - Si l'utilisateur demande "KOLs" → filtre isKOL: true
-   - Si l'utilisateur demande "pneumologues" → filtre specialty: "Pneumologue"
+   - Si l'utilisateur demande "endocrinologues" → filtre specialty: "Endocrinologue-Diabétologue"
 
 2. **Choisis le type de graphique approprié** :
    - "bar" : pour classements, top N, comparaisons de valeurs
@@ -287,7 +287,7 @@ Réponds UNIQUEMENT avec ce bloc JSON, sans texte avant ni après :
 - chartType: "bar"
 `;
 
-const CHART_GENERATION_PROMPT_EN = `You are a data visualization expert for an Air Liquide Healthcare pharmaceutical CRM.
+const CHART_GENERATION_PROMPT_EN = `You are a data visualization expert for a MedVantis Pharma pharmaceutical CRM.
 
 ${DATA_SCHEMA_EN}
 
@@ -299,7 +299,7 @@ Analyze the user's request and generate a PRECISE JSON specification to create t
    - If the user asks for "15 practitioners" → limit: 15
    - If the user asks for "top 20" → limit: 20
    - If the user asks for "KOLs" → filter isKOL: true
-   - If the user asks for "pulmonologists" → filter specialty: "Pneumologue"
+   - If the user asks for "endocrinologists" → filter specialty: "Endocrinologue-Diabétologue"
 
 2. **Choose the appropriate chart type**:
    - "bar": for rankings, top N, value comparisons
