@@ -21,14 +21,13 @@ export default {
         'al-navy': '#1e1b4b',
         'al-teal': '#059669',        // Emerald accent
         'al-sky': '#6366f1',         // Indigo accent
-        // Aliases for backward compatibility
-        airLiquide: {
+        // Semantic aliases
+        synapse: {
           primary: '#4f46e5',
-          teal: '#059669',
-          sky: '#6366f1',
-          navy: '#1e1b4b',
-          lightBlue: '#eef2ff',
-          darkBlue: '#1e1b4b',
+          accent: '#059669',
+          secondary: '#6366f1',
+          dark: '#1e1b4b',
+          light: '#eef2ff',
         },
         // Semantic
         'success': '#059669',

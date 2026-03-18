@@ -82,8 +82,8 @@ export function localizeChannel(channel: string): string {
 const aiSummaryMap: Record<string, string> = {
   "Prescripteur régulier et fidèle. Apprécie les échanges techniques sur les innovations thérapeutiques. Montre un intérêt particulier pour les études cliniques récentes.":
     "Regular and loyal prescriber. Appreciates technical discussions on therapeutic innovations. Shows particular interest in recent clinical studies.",
-  "Médecin investi dans la prise en charge DT2. Collabore avec plusieurs endocrinologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.":
-    "Physician committed to Type 2 Diabetes management. Collaborates with several endocrinologists. Open to new solutions to improve patient comfort.",
+  "Médecin investi dans la prise en charge thérapeutique. Collabore avec plusieurs spécialistes. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.":
+    "Physician committed to therapeutic management. Collaborates with several specialists. Open to new solutions to improve patient comfort.",
   "Praticien expérimenté, très attaché aux preuves scientifiques. Participe activement aux formations continues. Excellent relais d'opinion auprès de ses confrères.":
     "Experienced practitioner, strongly attached to scientific evidence. Actively participates in continuing education. Excellent opinion relay among peers.",
   "Jeune installé dynamique, à l'écoute des innovations. Utilise beaucoup les outils digitaux. Potentiel de croissance important sur son secteur.":
@@ -113,8 +113,8 @@ const nextActionMap: Record<string, string> = {
     "Schedule an appointment to present new therapeutic options",
   "Partager l'étude clinique récente sur les antidiabétiques de nouvelle génération":
     "Share the recent clinical study on next-generation antidiabetics",
-  "Inviter à la prochaine formation sur la prise en charge DT2":
-    "Invite to the next Type 2 Diabetes management training session",
+  "Inviter à la prochaine formation sur la prise en charge thérapeutique":
+    "Invite to the next therapeutic management training session",
   "Faire le point sur les patients actuels et identifier de nouveaux besoins":
     "Review current patients and identify new needs",
   "Organiser une visite conjointe avec un confrère endocrinologue":
@@ -148,8 +148,10 @@ const conversationSummaryMap: Record<string, string> = {
     "Presentation of SUMMIT study results. Questions about prescription criteria.",
   "Point sur les nouvelles modalités de prise en charge. Intérêt pour le télésuivi.":
     "Update on new care modalities. Interest in remote monitoring.",
-  "Échange sur un cas complexe de DT2 sévère. Coordination avec l'endocrinologue référent.":
-    "Discussion on a complex severe Type 2 Diabetes case. Coordination with the referring endocrinologist.",
+  "Échange sur un cas complexe de patient polymédiqué. Coordination avec le spécialiste référent.":
+    "Discussion on a complex polymedicated patient case. Coordination with the referring specialist.",
+  "Formation sur les nouvelles solutions thérapeutiques. Démonstration appréciée.":
+    "Training on new therapeutic solutions. Demonstration appreciated.",
   "Formation sur les nouveaux glucomètres connectés. Démonstration appréciée.":
     "Training on new connected glucose meters. Demonstration appreciated.",
   "Retour d'expérience patient très positif. Demande de documentation complémentaire.":

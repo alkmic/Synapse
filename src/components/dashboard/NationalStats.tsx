@@ -69,7 +69,7 @@ export const NationalStats: React.FC = () => {
 
           <div className="mt-2 p-2 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-lg space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-600">{t('dashboard.patientsO2')}</span>
+              <span className="text-xs text-slate-600">{t('dashboard.targetMarket')}</span>
               <span className="text-xs font-bold text-indigo-600">{nationalStats.targetMarket}</span>
             </div>
             <div className="flex items-center justify-between">

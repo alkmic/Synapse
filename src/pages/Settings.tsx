@@ -787,7 +787,7 @@ export function Settings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">{t('settings.profile.email')}</label>
-              <input type="email" defaultValue="marie.dupont@airliquide.com" className="input-field" disabled />
+              <input type="email" defaultValue="marie.dupont@medvantis.com" className="input-field" disabled />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">{t('settings.profile.role')}</label>

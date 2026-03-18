@@ -66,7 +66,7 @@ export const dashboard = {
   generalPractitioners: 'General practitioners',
   pneumologists: 'Specialists',
   totalGeneral: 'Grand total',
-  patientsO2: 'Estimated target market',
+  targetMarket: 'Estimated target market',
   avgVolumePatient: 'Avg prescriptions/practitioner',
   pctKol: '% KOL',
   totalTerritory: 'Total territory',

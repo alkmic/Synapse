@@ -138,8 +138,8 @@ export default function AICoach() {
     `🎯 ${t('coach.suggestions.bestAction')}`,
     `🎯 ${t('coach.suggestions.prepareVisit')}`,
     // Connaissances métier
-    `📖 ${t('coach.suggestions.bpcoTreatment')}`,
-    `📖 ${t('coach.suggestions.airLiquideAdvantages')}`,
+    `📖 ${t('coach.suggestions.recommendedTreatments')}`,
+    `📖 ${t('coach.suggestions.medvantisAdvantages')}`,
     `📖 ${t('coach.suggestions.regulatoryNews')}`,
   ];
 

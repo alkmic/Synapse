@@ -57,7 +57,7 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
     vingtile: profile.metrics.vingtile,
     isKOL: profile.metrics.isKOL,
     lastVisitDate: profile.lastVisitDate || null,
-    avatarUrl: profile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.firstName}${profile.lastName}`,
+    avatarUrl: profile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.firstName}${profile.lastName}&backgroundColor=4338ca`,
     email: profile.contact.email,
     phone: profile.contact.phone,
     notes: profile.notes.length > 0 ? profile.notes[0].content : undefined,
@@ -66,7 +66,7 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
     address: profile.address.street,
     postalCode: profile.address.postalCode,
     department: profile.address.postalCode.substring(0, 2),
-    patientCount: Math.round(profile.metrics.volumeL / 50000), // Estimation: ~50L/patient/an
+    patientCount: Math.max(20, Math.round(profile.metrics.volumeL / 800 + profile.metrics.vingtile * 5)), // Realistic patient count
     conventionSector: profile.metrics.vingtile <= 5 ? 2 : 1, // Top praticiens en secteur 2
     activityType: profile.practiceType === 'ville' ? 'Libéral intégral' as const
       : profile.practiceType === 'mixte' ? 'Mixte' as const
@@ -79,7 +79,35 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
     riskLevel: profile.metrics.churnRisk,
     keyPoints: profile.news.slice(0, 3).map(n => n.title),
     conversations,
+    productBreakdown: generateProductBreakdownFromProfile(profile),
   };
+}
+
+// Generate a deterministic product breakdown from a database profile
+function generateProductBreakdownFromProfile(profile: PractitionerProfile): Practitioner['productBreakdown'] {
+  const PRODUCTS = [
+    { name: 'GlucoStay XR', category: 'oral' },
+    { name: 'InsuPen Flex', category: 'injectable' },
+    { name: 'CardioGlu', category: 'oral' },
+    { name: 'DiabConnect', category: 'device' },
+    { name: 'MetVantis', category: 'oral' },
+    { name: 'GLP-Vance', category: 'injectable' },
+  ];
+
+  const seed = profile.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const count = 2 + (seed % 4);
+  const selected = PRODUCTS.slice(0, count);
+  const total = profile.metrics.volumeL;
+  const weights = selected.map((_, i) => Math.max(10, 100 - i * 15 + ((seed * (i + 1)) % 20)));
+  const wSum = weights.reduce((a, b) => a + b, 0);
+
+  const trends: ('up' | 'down' | 'stable')[] = ['up', 'stable', 'down'];
+  return selected.map((p, i) => ({
+    name: p.name,
+    volume: Math.round(total * (weights[i] / wSum)),
+    trend: trends[(seed + i) % 3],
+    share: Math.round((weights[i] / wSum) * 100),
+  }));
 }
 
 export function adaptPractitionerProfiles(profiles: PractitionerProfile[]): Practitioner[] {

@@ -119,15 +119,15 @@ export function NewsTab({ practitioner }: NewsTabProps) {
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-              <span>{t('practitioners.news.guidelineAbeClassification')}</span>
+              <span>{t('practitioners.news.guidelineTreatmentAlgorithm')}</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-              <span>{t('practitioners.news.guidelineTelesuiviRecommended')}</span>
+              <span>{t('practitioners.news.guidelineRemoteMonitoring')}</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-              <span>{t('practitioners.news.guidelineOldThreshold')}</span>
+              <span>{t('practitioners.news.guidelineTargetThreshold')}</span>
             </li>
           </ul>
         </div>
@@ -138,7 +138,7 @@ export function NewsTab({ practitioner }: NewsTabProps) {
         <div className="glass-card p-4 bg-gradient-to-br from-green-50 to-emerald-50/30">
           <h4 className="font-semibold flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-green-600" />
-            {t('practitioners.news.oxygenReminders')}
+            {t('practitioners.news.practiceReminders')}
           </h4>
           <ul className="space-y-2 text-sm">
             <li className="flex items-start gap-2">
@@ -147,11 +147,11 @@ export function NewsTab({ practitioner }: NewsTabProps) {
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-              <span>{t('practitioners.news.guidelineLpprRate')}</span>
+              <span>{t('practitioners.news.guidelineReimbursement')}</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-              <span>{t('practitioners.news.guidelineTelesuiviIncluded')}</span>
+              <span>{t('practitioners.news.guidelineDigitalIncluded')}</span>
             </li>
           </ul>
         </div>

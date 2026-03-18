@@ -83,10 +83,19 @@ export const practitioners = {
   lastVisit: 'Dernière',
   never: 'Jamais',
   loyaltyScore: 'Score fidélité',
-  vsPreviousPeriod: '+12% vs période précédente',
+  vsPreviousPeriod: '{{value}} vs période précédente',
+
+  // Product breakdown
+  productBreakdown: 'Ventilation par produit',
+  productName: 'Produit',
+  productVolume: 'Volume',
+  productShare: 'Part',
+  productTrend: 'Tendance',
+  prescriptionsUnit: 'boîtes/an',
+  patientsCount: 'Patients suivis',
 
   // Key points
-  expertRecognized: '{{type}} reconnu en diabétologie DT2',
+  expertRecognized: '{{type}} reconnu dans sa spécialité',
   expert: 'Expert',
   referent: 'Référent',
   vingtileDescription: 'Vingtile {{v}} - {{desc}}',
@@ -184,7 +193,7 @@ export const practitioners = {
   battlecardSosAdv3: 'R&D interne et innovation continue',
   battlecardBastideTitle: 'vs GenBio',
   battlecardBastideAdv1: 'Expertise diabétologie pure (vs multi-activité)',
-  battlecardBastideAdv2: 'Forfaits optimisés pour le DT2',
+  battlecardBastideAdv2: 'Forfaits thérapeutiques optimisés',
   battlecardBastideAdv3: 'Support technique spécialisé 24/7',
 
   // NewsTab
@@ -194,12 +203,12 @@ export const practitioners = {
     noNews: 'Aucune actualité récente pour ce praticien',
     noNewsDescription: 'Les publications et événements seront affichés ici',
     goldGuidelines: 'Dernières recommandations ADA/EASD 2025',
-    oxygenReminders: 'Rappels pratiques prise en charge DT2',
-    guidelineAbeClassification: 'Algorithme de traitement simplifié pour le DT2',
-    guidelineTelesuiviRecommended: 'Télésuivi glycémique recommandé pour améliorer l\'observance thérapeutique',
-    guidelineOldThreshold: 'HbA1c cible < 7% pour la majorité des patients DT2',
-    guidelineInitialPrescription: 'Prescription initiale par l\'endocrinologue, renouvellement possible par le MG',
-    guidelineLpprRate: 'Remboursement antidiabétiques et insuline 100% ALD',
-    guidelineTelesuiviIncluded: 'Télésuivi MedVantis DiabConnect inclus dans le forfait, pas de surcoût',
+    practiceReminders: 'Rappels pratiques prise en charge',
+    guidelineTreatmentAlgorithm: 'Algorithme de traitement simplifié',
+    guidelineRemoteMonitoring: 'Télésuivi recommandé pour améliorer l\'observance thérapeutique',
+    guidelineTargetThreshold: 'Objectifs thérapeutiques selon les dernières recommandations',
+    guidelineInitialPrescription: 'Prescription initiale par le spécialiste, renouvellement possible par le MG',
+    guidelineReimbursement: 'Remboursement 100% ALD pour les traitements chroniques',
+    guidelineDigitalIncluded: 'Télésuivi MedVantis DiabConnect inclus dans le forfait, pas de surcoût',
   },
 };

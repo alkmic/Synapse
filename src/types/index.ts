@@ -21,8 +21,16 @@ export interface Practitioner {
   department: string;
 
   // Métriques
-  volumeL: number; // Volume annuel en boîtes
+  volumeL: number; // Volume annuel en boîtes (total toutes marques)
   patientCount: number; // Nombre de patients estimé
+
+  // Ventilation par produit
+  productBreakdown: {
+    name: string;         // Nom du médicament (GlucoStay XR, InsuPen Flex, etc.)
+    volume: number;       // Volume annuel (boîtes/stylos)
+    trend: 'up' | 'down' | 'stable';
+    share: number;        // Part en % du volume total de ce praticien
+  }[];
   conventionSector: 1 | 2;
   activityType: 'Libéral intégral' | 'Libéral temps partiel' | 'Mixte';
   preferredChannel: 'Face-to-face' | 'Email' | 'Téléphone';

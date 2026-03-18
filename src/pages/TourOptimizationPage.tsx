@@ -10,7 +10,7 @@ import {
   Clock,
   TrendingDown,
   Star,
-  Droplets,
+  FileText,
   Calendar,
   Navigation,
   Zap,
@@ -686,7 +686,7 @@ export const TourOptimizationPage: React.FC = () => {
     {
       id: 'volume' as const,
       label: t('tour.criteria.volume'),
-      icon: Droplets,
+      icon: FileText,
       description: t('tour.criteria.volumeDesc'),
       benefit: t('tour.criteria.volumeBenefit'),
       expectedSaving: t('tour.criteria.volumeSaving')
@@ -897,7 +897,7 @@ export const TourOptimizationPage: React.FC = () => {
                   {t('tour.addKols')}
                 </button>
                 <button onClick={selectTopVingtile} className="btn-secondary text-xs py-1.5 px-3">
-                  <Droplets className="w-3 h-3 mr-1" />
+                  <FileText className="w-3 h-3 mr-1" />
                   {t('tour.topVingtile')}
                 </button>
               </div>
@@ -1232,7 +1232,7 @@ export const TourOptimizationPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   {criteria === 'kol-first'
                     ? <Star className="w-6 h-6 text-amber-600" />
-                    : <Droplets className="w-6 h-6 text-amber-600" />}
+                    : <FileText className="w-6 h-6 text-amber-600" />}
                   <div>
                     <div className="font-bold text-amber-800">
                       {criteria === 'kol-first'

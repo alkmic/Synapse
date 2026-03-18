@@ -2,16 +2,16 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Phone, Mail, MapPin, TrendingUp, Sparkles, Target,
+  ArrowLeft, Phone, Mail, MapPin, TrendingUp, TrendingDown, Minus, Sparkles, Target,
   CheckCircle, Lightbulb, Swords, Calendar, Wand2, Newspaper, FileEdit,
-  MessageCircle, Mic, Building2, Home, Building, Zap, AlertTriangle, Shield
+  MessageCircle, Mic, Building2, Home, Building, Zap, AlertTriangle, Shield, Pill, Package
 } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import { useUserDataStore } from '../stores/useUserDataStore';
 import { DataService } from '../services/dataService';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { formatDate, getLocaleCode } from '../utils/helpers';
 import { useTranslation, useLanguage, getLanguage } from '../i18n';
 import { txt, localizeSpecialty, localizeAiSummary, localizeNextAction, localizeConversationSummary, localizeBattlecardText, localizeNoteContent, localizeNoteNextAction, localizeNewsTitle, localizeCompetitorName } from '../utils/localizeData';
@@ -138,10 +138,10 @@ export default function PractitionerProfile() {
         <div className="lg:col-span-1 space-y-6">
           {/* Initials & Name */}
           <div className="glass-card p-6 text-center">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4 ${
-              practitioner.isKOL ? 'bg-gradient-to-br from-amber-500 to-orange-500' :
-              practitioner.specialty === 'Endocrinologue-Diabétologue' ? 'bg-gradient-to-br from-al-blue-500 to-al-blue-600' :
-              'bg-gradient-to-br from-slate-500 to-slate-600'
+            <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-white font-semibold text-2xl mx-auto mb-4 shadow-sm ${
+              practitioner.isKOL ? 'bg-gradient-to-br from-indigo-700 to-violet-600 ring-2 ring-amber-400 ring-offset-2' :
+              practitioner.specialty === 'Endocrinologue-Diabétologue' ? 'bg-gradient-to-br from-indigo-600 to-indigo-700' :
+              'bg-gradient-to-br from-slate-600 to-slate-700'
             }`}>
               {practitioner.firstName[0]}{practitioner.lastName[0]}
             </div>
@@ -205,21 +205,23 @@ export default function PractitionerProfile() {
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <span className="text-slate-600">{t('practitioners.volumeLabel', { period: periodLabelShort })}</span>
                 <span className="font-semibold text-slate-800">
-                  {(practitioner.volumeL / 1000).toFixed(0)}K
+                  {(practitioner.volumeL / 1000).toFixed(0)}K {t('practitioners.prescriptionsUnit')}
                 </span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <span className="text-slate-600">{t('common.patients')}</span>
-                <span className="font-semibold text-slate-800">~{practitioner.patientCount}</span>
+                <span className="text-slate-600">{t('practitioners.patientsCount')}</span>
+                <span className="font-semibold text-slate-800">{practitioner.patientCount}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <span className="text-slate-600">{t('practitioners.trendLabel')}</span>
                 <span className={`font-semibold flex items-center gap-1 ${
-                  practitioner.trend === 'up' ? 'text-success' :
-                  practitioner.trend === 'down' ? 'text-danger' : 'text-slate-600'
+                  practitioner.trend === 'up' ? 'text-emerald-600' :
+                  practitioner.trend === 'down' ? 'text-red-600' : 'text-slate-600'
                 }`}>
-                  {practitioner.trend === 'up' ? '+12%' :
-                   practitioner.trend === 'down' ? '-8%' : t('common.trend.stable')}
+                  {practitioner.trend === 'up' && <TrendingUp className="w-3.5 h-3.5" />}
+                  {practitioner.trend === 'down' && <TrendingDown className="w-3.5 h-3.5" />}
+                  {practitioner.trend === 'up' ? `+${Math.round(practitioner.loyaltyScore * 1.3)}%` :
+                   practitioner.trend === 'down' ? `-${Math.round((11 - practitioner.loyaltyScore) * 1.1)}%` : t('common.trend.stable')}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -229,6 +231,29 @@ export default function PractitionerProfile() {
                 </span>
               </div>
             </div>
+
+            {/* Product Breakdown */}
+            {practitioner.productBreakdown && practitioner.productBreakdown.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('practitioners.productBreakdown')}</p>
+                <div className="space-y-2">
+                  {practitioner.productBreakdown.map((product, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Pill className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+                        <span className="text-slate-700 truncate">{product.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-slate-500">{product.share}%</span>
+                        {product.trend === 'up' && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+                        {product.trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
+                        {product.trend === 'stable' && <Minus className="w-3 h-3 text-slate-400" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -816,6 +841,18 @@ function HistoryTab({ conversations, timePeriod, periodLabel, practitionerId }: 
 function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort }: { volumeHistory: any[]; practitioner: any; periodLabel: string; periodLabelShort: string }) {
   const { t } = useTranslation();
 
+  // Compute dynamic trend value from data
+  const trendValue = practitioner.trend === 'up' ? `+${Math.round(practitioner.loyaltyScore * 1.3)}%` :
+    practitioner.trend === 'down' ? `-${Math.round((11 - practitioner.loyaltyScore) * 1.1)}%` : '0%';
+
+  // Product chart data
+  const PRODUCT_COLORS = ['#4f46e5', '#6366f1', '#818cf8', '#059669', '#0891b2', '#7c3aed'];
+  const productData = practitioner.productBreakdown?.map((p: any) => ({
+    name: p.name,
+    volume: Math.round(p.volume / 1000),
+    share: p.share,
+  })) || [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -825,33 +862,33 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
       {/* Volume Chart */}
       <div className="glass-card p-6">
         <h3 className="text-lg font-semibold mb-4">{t('practitioners.volumeEvolution', { period: periodLabel })}</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={280}>
           <LineChart data={volumeHistory}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="month" stroke="#64748b" style={{ fontSize: '12px' }} />
             <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(255,255,255,0.95)',
-                borderRadius: '12px',
-                border: 'none',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                backgroundColor: 'rgba(255,255,255,0.97)',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
               }}
             />
-            <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }} />
+            <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '16px' }} />
             <Line
               type="monotone"
               dataKey="volume"
               stroke="#4f46e5"
-              strokeWidth={3}
-              dot={{ fill: '#4f46e5', strokeWidth: 2 }}
+              strokeWidth={2.5}
+              dot={{ fill: '#4f46e5', strokeWidth: 2, r: 3 }}
               name={t('practitioners.volumesDr')}
             />
             <Line
               type="monotone"
               dataKey="vingtileAvg"
-              stroke="#059669"
-              strokeWidth={2}
+              stroke="#64748b"
+              strokeWidth={1.5}
               strokeDasharray="5 5"
               dot={false}
               name={t('practitioners.vingtileAvg')}
@@ -860,6 +897,59 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
         </ResponsiveContainer>
       </div>
 
+      {/* Product Breakdown Chart */}
+      {productData.length > 0 && (
+        <div className="glass-card p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Package className="w-5 h-5 text-indigo-500" />
+            {t('practitioners.productBreakdown')}
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={productData} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+              <XAxis type="number" stroke="#64748b" style={{ fontSize: '11px' }} tickFormatter={(v) => `${v}K`} />
+              <YAxis dataKey="name" type="category" stroke="#64748b" style={{ fontSize: '11px' }} width={100} />
+              <Tooltip
+                contentStyle={{ borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                formatter={(value) => [`${value}K ${t('practitioners.prescriptionsUnit')}`, t('practitioners.productVolume')]}
+              />
+              <Bar dataKey="volume" radius={[0, 4, 4, 0]} barSize={24}>
+                {productData.map((_: any, index: number) => (
+                  <Cell key={index} fill={PRODUCT_COLORS[index % PRODUCT_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          {/* Legend table */}
+          <div className="mt-4 border-t border-slate-100 pt-3">
+            <div className="grid grid-cols-4 gap-2 text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 px-1">
+              <span>{t('practitioners.productName')}</span>
+              <span className="text-right">{t('practitioners.productVolume')}</span>
+              <span className="text-right">{t('practitioners.productShare')}</span>
+              <span className="text-right">{t('practitioners.productTrend')}</span>
+            </div>
+            {practitioner.productBreakdown?.map((product: any, i: number) => (
+              <div key={i} className="grid grid-cols-4 gap-2 text-sm py-1.5 px-1 border-b border-slate-50 last:border-0">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }} />
+                  {product.name}
+                </span>
+                <span className="text-right text-slate-700 font-medium">{(product.volume / 1000).toFixed(1)}K</span>
+                <span className="text-right text-slate-600">{product.share}%</span>
+                <span className="text-right flex items-center justify-end gap-1">
+                  {product.trend === 'up' && <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />}
+                  {product.trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-red-500" />}
+                  {product.trend === 'stable' && <Minus className="w-3.5 h-3.5 text-slate-400" />}
+                  <span className={product.trend === 'up' ? 'text-emerald-600' : product.trend === 'down' ? 'text-red-600' : 'text-slate-500'}>
+                    {t(`common.trend.${product.trend}`)}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="glass-card p-4 text-center">
@@ -867,7 +957,9 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
           <p className="text-2xl font-bold text-slate-800">
             {(practitioner.volumeL / 1000).toFixed(0)}K
           </p>
-          <p className="text-sm text-success mt-1">{t('practitioners.vsPreviousPeriod')}</p>
+          <p className={`text-sm mt-1 ${practitioner.trend === 'up' ? 'text-emerald-600' : practitioner.trend === 'down' ? 'text-red-600' : 'text-slate-500'}`}>
+            {t('practitioners.vsPreviousPeriod', { value: trendValue })}
+          </p>
         </div>
         <div className="glass-card p-4 text-center">
           <p className="text-sm text-slate-600 mb-1">{t('practitioners.visitsCompleted')}</p>
@@ -877,7 +969,7 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
         <div className="glass-card p-4 text-center">
           <p className="text-sm text-slate-600 mb-1">{t('practitioners.loyaltyScore')}</p>
           <p className="text-2xl font-bold text-slate-800">{practitioner.loyaltyScore}/10</p>
-          <p className="text-sm text-al-blue-500 mt-1">
+          <p className="text-sm text-indigo-600 mt-1">
             {practitioner.loyaltyScore >= 8 ? t('common.loyalty.excellent') :
              practitioner.loyaltyScore >= 6 ? t('common.loyalty.good') : t('common.loyalty.toImprove')}
           </p>

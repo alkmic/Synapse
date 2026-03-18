@@ -96,7 +96,7 @@ export const manager = {
     influenceVeryHigh: 'Très élevée',
     influenceHigh: 'Élevée',
     influenceMedium: 'Moyenne',
-    topicO2Solutions: 'Nouvelles solutions antidiabétiques',
+    topicNewSolutions: 'Nouvelles solutions thérapeutiques',
     topicClinicalStudies: 'Études cliniques récentes ADA/EASD 2025',
     topicPatientFollowup: 'Programme de suivi patient personnalisé',
     topicTeamTraining: 'Formation équipe soignante',

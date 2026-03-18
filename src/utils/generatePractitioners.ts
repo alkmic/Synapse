@@ -91,7 +91,7 @@ const streets = [
 
 const aiSummaries = [
   "Prescripteur régulier et fidèle. Apprécie les échanges techniques sur les innovations thérapeutiques. Montre un intérêt particulier pour les études cliniques récentes.",
-  "Médecin investi dans la prise en charge DT2. Collabore avec plusieurs endocrinologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.",
+  "Médecin investi dans la prise en charge thérapeutique. Collabore avec plusieurs spécialistes. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.",
   "Praticien expérimenté, très attaché aux preuves scientifiques. Participe activement aux formations continues. Excellent relais d'opinion auprès de ses confrères.",
   "Jeune installé dynamique, à l'écoute des innovations. Utilise beaucoup les outils digitaux. Potentiel de croissance important sur son secteur.",
   "Médecin très organisé, préfère les rendez-vous planifiés. Apprécie les supports visuels et les données chiffrées. Prescripteur méthodique et rigoureux.",
@@ -105,7 +105,7 @@ const aiSummaries = [
 const nextActions = [
   "Proposer un rendez-vous pour présenter les nouvelles options thérapeutiques",
   "Partager l'étude clinique récente sur les antidiabétiques de nouvelle génération",
-  "Inviter à la prochaine formation sur la prise en charge DT2",
+  "Inviter à la prochaine formation sur la prise en charge thérapeutique",
   "Faire le point sur les patients actuels et identifier de nouveaux besoins",
   "Organiser une visite conjointe avec un confrère endocrinologue",
   "Présenter le nouveau dispositif de télésuivi des patients",
@@ -129,14 +129,45 @@ function randomDate(daysBack: number): string {
   return date.toISOString().split('T')[0];
 }
 
+// MedVantis product catalog — used to generate per-product breakdown
+const PRODUCT_CATALOG = [
+  { name: 'GlucoStay XR', category: 'oral' },
+  { name: 'InsuPen Flex', category: 'injectable' },
+  { name: 'CardioGlu', category: 'oral' },
+  { name: 'DiabConnect', category: 'device' },
+  { name: 'MetVantis', category: 'oral' },
+  { name: 'GLP-Vance', category: 'injectable' },
+];
+
+function generateProductBreakdown(totalVolume: number, seed: number): Practitioner['productBreakdown'] {
+  // Deterministic product selection based on seed
+  const productCount = 2 + (seed % 4); // 2-5 products
+  const selectedProducts = PRODUCT_CATALOG.slice(0, productCount);
+
+  // Distribute volume across products with deterministic weights
+  const weights = selectedProducts.map((_, i) => {
+    const base = 100 - i * 15 + ((seed * (i + 1)) % 20);
+    return Math.max(10, base);
+  });
+  const totalWeight = weights.reduce((s, w) => s + w, 0);
+
+  return selectedProducts.map((product, i) => {
+    const share = Math.round((weights[i] / totalWeight) * 100);
+    const volume = Math.round(totalVolume * (weights[i] / totalWeight));
+    const trends: ('up' | 'down' | 'stable')[] = ['up', 'stable', 'down'];
+    const trend = trends[(seed + i) % 3];
+    return { name: product.name, volume, trend, share };
+  });
+}
+
 function generateConversations(count: number): Practitioner['conversations'] {
   const conversations: Practitioner['conversations'] = [];
   const summaries = [
     "Discussion sur l'évolution de 3 patients sous antidiabétiques. Retours positifs sur l'équilibre glycémique retrouvé.",
     "Présentation des résultats de l'étude SUMMIT. Questions sur les critères de prescription.",
     "Point sur les nouvelles modalités de prise en charge. Intérêt pour le télésuivi.",
-    "Échange sur un cas complexe de DT2 sévère. Coordination avec l'endocrinologue référent.",
-    "Formation sur les nouveaux débitmètres portables. Démonstration appréciée.",
+    "Échange sur un cas complexe de patient polymédiqué. Coordination avec le spécialiste référent.",
+    "Formation sur les nouvelles solutions thérapeutiques. Démonstration appréciée.",
     "Retour d'expérience patient très positif. Demande de documentation complémentaire.",
     "Discussion sur l'observance thérapeutique. Intérêt pour les outils d'accompagnement.",
     "Questions sur les modalités de remboursement et démarches administratives.",
@@ -187,7 +218,8 @@ export function generatePractitioners(): Practitioner[] {
       city: location.city,
       department: location.department,
       volumeL,
-      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000 boîtes/an
+      patientCount: randomInt(80, 350), // Endocrinologists see many patients
+      productBreakdown: generateProductBreakdown(volumeL, id),
       conventionSector: randomItem([1, 2] as const),
       activityType: randomItem(['Libéral intégral', 'Libéral temps partiel', 'Mixte'] as const),
       preferredChannel: randomItem(['Face-to-face', 'Email', 'Téléphone'] as const),
@@ -199,7 +231,7 @@ export function generatePractitioners(): Practitioner[] {
       nextBestAction: randomItem(nextActions),
       riskLevel: !lastVisitDate || (new Date().getTime() - new Date(lastVisitDate).getTime()) / (1000 * 60 * 60 * 24) > 90 ? 'high' : randomItem(['low', 'medium'] as const),
       conversations: generateConversations(randomInt(2, 5)),
-      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${firstName}${lastName}&backgroundColor=0066B3`,
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${firstName}${lastName}&backgroundColor=4338ca`,
     });
 
     id++;
@@ -234,7 +266,8 @@ export function generatePractitioners(): Practitioner[] {
       city: location.city,
       department: location.department,
       volumeL,
-      patientCount: Math.floor(volumeL / 2000), // Estimation: 1 patient = ~2000 boîtes/an
+      patientCount: randomInt(20, 120), // GPs see fewer metabolic patients
+      productBreakdown: generateProductBreakdown(volumeL, id),
       conventionSector: randomItem([1, 2] as const),
       activityType: randomItem(['Libéral intégral', 'Libéral temps partiel', 'Mixte'] as const),
       preferredChannel: randomItem(['Face-to-face', 'Email', 'Téléphone'] as const),
@@ -246,7 +279,7 @@ export function generatePractitioners(): Practitioner[] {
       nextBestAction: randomItem(nextActions),
       riskLevel: !lastVisitDate || (new Date().getTime() - new Date(lastVisitDate).getTime()) / (1000 * 60 * 60 * 24) > 90 ? 'high' : randomItem(['low', 'medium'] as const),
       conversations: generateConversations(randomInt(0, 4)),
-      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${firstName}${lastName}&backgroundColor=00A3E0`,
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${firstName}${lastName}&backgroundColor=4338ca`,
     });
 
     id++;

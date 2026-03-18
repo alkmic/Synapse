@@ -38,7 +38,7 @@ function getMockUser(): User {
     name: 'Marie Dupont',
     role: txt('Déléguée Pharmaceutique', 'Pharmaceutical Representative'),
     territory: 'Rhône-Alpes',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=MarieDupont&backgroundColor=0066B3',
+    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=MarieDupont&backgroundColor=4338ca',
     objectives: {
       visitsMonthly: 60,
       visitsCompleted: 47,

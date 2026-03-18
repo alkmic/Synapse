@@ -113,7 +113,7 @@ export const Visits: React.FC = () => {
                 }}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   filterType === filter.key
-                    ? 'bg-gradient-to-r from-airLiquide-primary to-airLiquide-teal text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-synapse-primary to-synapse-accent text-white shadow-lg'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -144,9 +144,9 @@ export const Visits: React.FC = () => {
                 }}
                 className={`flex flex-col items-center min-w-[80px] p-3 rounded-lg transition-all ${
                   isSelected
-                    ? 'bg-gradient-to-br from-airLiquide-primary to-airLiquide-teal text-white shadow-lg scale-105'
+                    ? 'bg-gradient-to-br from-synapse-primary to-synapse-accent text-white shadow-lg scale-105'
                     : isToday
-                    ? 'bg-airLiquide-lightBlue/20 border-2 border-airLiquide-primary'
+                    ? 'bg-synapse-light/20 border-2 border-synapse-primary'
                     : 'bg-slate-50 hover:bg-slate-100'
                 }`}
               >
@@ -161,7 +161,7 @@ export const Visits: React.FC = () => {
                     className={`text-xs mt-1 px-2 py-0.5 rounded-full ${
                       isSelected
                         ? 'bg-white/20 text-white'
-                        : 'bg-airLiquide-primary/20 text-airLiquide-primary'
+                        : 'bg-synapse-primary/20 text-synapse-primary'
                     }`}
                   >
                     {dayVisits.length}
@@ -278,7 +278,7 @@ export const Visits: React.FC = () => {
                             )}
                           </div>
 
-                          <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-airLiquide-primary group-hover:translate-x-1 transition-all" />
+                          <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-synapse-primary group-hover:translate-x-1 transition-all" />
                         </div>
 
                         {visit.notes && (

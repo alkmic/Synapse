@@ -84,7 +84,7 @@ export const manager = {
     influenceVeryHigh: 'Very high',
     influenceHigh: 'High',
     influenceMedium: 'Medium',
-    topicO2Solutions: 'New antidiabetic solutions',
+    topicNewSolutions: 'New therapeutic solutions',
     topicClinicalStudies: 'Recent ADA/EASD 2025 clinical studies',
     topicPatientFollowup: 'Personalized patient follow-up program',
     topicTeamTraining: 'Healthcare team training',
