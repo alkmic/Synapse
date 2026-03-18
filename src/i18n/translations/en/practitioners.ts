@@ -159,7 +159,7 @@ export const practitioners = {
   battlecardSosAdv1: 'Nationwide coverage (vs regional)',
   battlecardSosAdv2: 'Complete antidiabetic range',
   battlecardSosAdv3: 'In-house R&D and continuous innovation',
-  battlecardBastideTitle: 'vs Bastide Medical',
+  battlecardBastideTitle: 'vs GenBio',
   battlecardBastideAdv1: 'Pure diabetology expertise (vs multi-activity)',
   battlecardBastideAdv2: 'Optimized packages for T2D',
   battlecardBastideAdv3: 'Specialized 24/7 technical support',

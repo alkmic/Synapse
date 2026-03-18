@@ -53,7 +53,7 @@ export const pitch = {
     novapharm: 'NovaPharm',
     seralis: 'Seralis',
     genbio: 'GenBio',
-    bastide: 'Bastide Médical',
+    bastide: 'Autres concurrents',
     others: 'Autres',
   },
 

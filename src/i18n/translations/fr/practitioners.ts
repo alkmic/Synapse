@@ -182,7 +182,7 @@ export const practitioners = {
   battlecardSosAdv1: 'Couverture nationale (vs régionale)',
   battlecardSosAdv2: 'Gamme antidiabétiques complète',
   battlecardSosAdv3: 'R&D interne et innovation continue',
-  battlecardBastideTitle: 'vs Bastide Médical',
+  battlecardBastideTitle: 'vs GenBio',
   battlecardBastideAdv1: 'Expertise diabétologie pure (vs multi-activité)',
   battlecardBastideAdv2: 'Forfaits optimisés pour le DT2',
   battlecardBastideAdv3: 'Support technique spécialisé 24/7',
