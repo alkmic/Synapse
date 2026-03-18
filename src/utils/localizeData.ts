@@ -20,6 +20,8 @@ export function txtLang(fr: string, en: string, lang: Language): string {
 const specialtyMap: Record<string, string> = {
   'Endocrinologue-Diabétologue': 'Endocrinologist-Diabetologist',
   'Médecin généraliste': 'General Practitioner',
+  'Néphrologue': 'Nephrologist',
+  'Cardiologue': 'Cardiologist',
 };
 
 export function localizeSpecialty(specialty: string): string {

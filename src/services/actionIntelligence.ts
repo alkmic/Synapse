@@ -16,6 +16,8 @@ const locSpec = (spec: string): string => {
   if (getLanguage() !== 'en') return spec;
   if (spec === 'Endocrinologue-Diabétologue') return 'Endocrinologist-Diabetologist';
   if (spec === 'Médecin généraliste') return 'General Practitioner';
+  if (spec === 'Néphrologue') return 'Nephrologist';
+  if (spec === 'Cardiologue') return 'Cardiologist';
   return spec;
 };
 

@@ -140,6 +140,8 @@ export default function TerritoryMap() {
   // Count by specialty
   const pneumologues = practitioners.filter(p => p.specialty === 'Endocrinologue-Diabétologue').length;
   const generalistes = practitioners.filter(p => p.specialty === 'Médecin généraliste').length;
+  const nephrologues = practitioners.filter(p => p.specialty === 'Néphrologue').length;
+  const cardiologues = practitioners.filter(p => p.specialty === 'Cardiologue').length;
   const totalVolume = mappedPractitioners.reduce((sum, p) => sum + (p?.volumeL || 0), 0);
 
   // Praticiens sélectionnés pour l'optimisation
@@ -200,6 +202,8 @@ export default function TerritoryMap() {
                 <option value="all">{t('map.allCount', { count: practitioners.length })}</option>
                 <option value="Endocrinologue-Diabétologue">{t('map.pneumoCount', { count: pneumologues })}</option>
                 <option value="Médecin généraliste">{t('map.generalistCount', { count: generalistes })}</option>
+                <option value="Néphrologue">Néphrologues ({nephrologues})</option>
+                <option value="Cardiologue">Cardiologues ({cardiologues})</option>
               </select>
             </div>
 

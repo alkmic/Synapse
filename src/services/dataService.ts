@@ -405,6 +405,8 @@ HISTORIQUE DE RELATION :
       averageLoyalty: practitioners.reduce((sum, p) => sum + p.metrics.loyaltyScore, 0) / practitioners.length,
       pneumologues: practitioners.filter(p => p.specialty === 'Endocrinologue-Diabétologue').length,
       generalistes: practitioners.filter(p => p.specialty === 'Médecin généraliste').length,
+      nephrologues: practitioners.filter(p => p.specialty === 'Néphrologue').length,
+      cardiologues: practitioners.filter(p => p.specialty === 'Cardiologue').length,
       praticienVille: practitioners.filter(p => p.practiceType === 'ville').length,
       praticienHospitalier: practitioners.filter(p => p.practiceType === 'hospitalier').length,
       praticienMixte: practitioners.filter(p => p.practiceType === 'mixte').length,

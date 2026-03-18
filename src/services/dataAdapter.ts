@@ -49,7 +49,7 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
     title: profile.title,
     firstName: profile.firstName,
     lastName: profile.lastName,
-    specialty: profile.specialty as 'Médecin généraliste' | 'Endocrinologue-Diabétologue',
+    specialty: profile.specialty as 'Médecin généraliste' | 'Endocrinologue-Diabétologue' | 'Néphrologue' | 'Cardiologue',
     practiceType: profile.practiceType,
     city: profile.address.city,
     volumeL: profile.metrics.volumeL,

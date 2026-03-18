@@ -127,7 +127,7 @@ function getRelevantRAGKnowledge(
   };
 
   // 1. Connaissances cliniques selon la spécialité
-  if (practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue' || config.tone === 'technical') {
+  if (practitioner.specialty === 'Endocrinologue-Diabétologue' || config.tone === 'technical') {
     addChunks(searchByCategory('dt2_guidelines'), 2);
     addChunks(searchByCategory('dt2_clinical'), 2);
     addChunks(searchByTag('hba1c'), 1);
@@ -135,15 +135,15 @@ function getRelevantRAGKnowledge(
     addChunks(searchByTag('sglt2'), 1);
     addChunks(searchByTag('glp1'), 1);
   } else {
-    addChunks(searchByCategory('epidemiologie'), 2);
-    addChunks(searchByTag('parcours_soins'), 1);
+    addChunks(searchByCategory('dt2_epidemiology'), 2);
+    addChunks(searchByTag('has_dt2'), 1);
     addChunks(searchByTag('ameli'), 1);
   }
 
   // 2. Connaissances produits selon la sélection
   const productKeywords = config.products.join(' ').toLowerCase();
   if (productKeywords.includes('diabconnect') || productKeywords.includes('cgm')) {
-    addChunks(searchByCategory('telesuivi'), 2);
+    addChunks(searchByCategory('cgm_telesuivi'), 2);
   }
   if (productKeywords.includes('glucostay') || productKeywords.includes('insupen') ||
       productKeywords.includes('cardioglu') || productKeywords.includes('glp-vita')) {
@@ -156,7 +156,7 @@ function getRelevantRAGKnowledge(
     addChunks(searchByTag('glp1'), 1);
   }
   if (productKeywords.includes('dispositif') || productKeywords.includes('medvantis')) {
-    addChunks(searchByTag('dispositif_medical'), 1);
+    addChunks(searchByTag('diabconnect'), 1);
   }
 
   // 3. Intelligence concurrentielle selon les concurrents sélectionnés
@@ -170,7 +170,7 @@ function getRelevantRAGKnowledge(
   // 4. Connaissances selon le focus
   const focusCategories: Record<string, KnowledgeCategory[]> = {
     service: ['medvantis_corporate'],
-    innovation: ['telesuivi', 'medvantis_products'],
+    innovation: ['cgm_telesuivi', 'medvantis_products'],
     price: ['lppr_remboursement'],
     loyalty: ['medvantis_corporate'],
     general: ['medvantis_corporate', 'medvantis_products'],
@@ -1095,7 +1095,7 @@ function getLocalPitchData(practitioner: Practitioner) {
     ? Math.floor((Date.now() - new Date(profile.lastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
     : null;
   const isKOL = profile?.metrics.isKOL || practitioner.isKOL;
-  const isPneumo = practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue';
+  const isPneumo = practitioner.specialty === 'Endocrinologue-Diabétologue';
   const churnRisk = profile?.metrics.churnRisk || 'low';
   const city = profile?.address?.city || practitioner.city;
   const titre = `${practitioner.title} ${practitioner.lastName}`;

@@ -109,8 +109,9 @@ const TERRITORY_CITIES = [
 
 // Produits MedVantis Pharma
 const PRODUCTS = [
-  'glucostab', 'insuflex', 'télésuivi', 'telesuivi', 'dt2', 'diabète',
-  'antidiabétique', 'insuline', 'metformine', 'portable', 'service 24/7', 'service'
+  'glucostay', 'insupen', 'cardioglu', 'glp-vita', 'glpvita', 'diabconnect',
+  'télésuivi', 'telesuivi', 'cgm', 'dt2', 'diabète',
+  'antidiabétique', 'insuline', 'metformine', 'sglt2', 'glp1', 'service 24/7', 'service'
 ];
 
 // Spécialités (used in analyzeQuery)

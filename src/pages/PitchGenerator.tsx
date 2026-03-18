@@ -79,13 +79,13 @@ export function PitchGenerator() {
   const PRODUCTS = PRODUCT_IDS.map(id => ({
     id,
     name: PRODUCT_NAMES[id],
-    description: t(`pitch.products.${id === 'vitalaire' ? 'vitalaire' : id === 'freestyle' ? 'freestyle' : id === 'telesuivi' ? 'telesuivi' : id === 'extracteur' ? 'station' : id === 'portable' ? 'o2liquid' : id === 'vni' ? 'dreamstation' : id === 'ppc' ? 'resmed' : id === 'service247' ? 'service247' : 'training'}`),
+    description: t(`pitch.products.${id === 'vitalaire' ? 'glucostay' : id === 'freestyle' ? 'insupen' : id === 'telesuivi' ? 'diabconnect' : id === 'extracteur' ? 'cardioGlu' : id === 'portable' ? 'glpvita' : id === 'vni' ? 'diabconnect' : id === 'ppc' ? 'glucostay' : id === 'service247' ? 'service247' : 'training'}`),
   }));
 
   // Translated competitor names
   const COMPETITORS = COMPETITOR_IDS.map(id => ({
     id,
-    name: t(`pitch.competitors.${id === 'vivisol' ? 'vivisol' : id === 'linde' ? 'linde' : id === 'sos' ? 'sos' : id === 'bastide' ? 'bastide' : 'others'}`),
+    name: t(`pitch.competitors.${id === 'novapharm' ? 'novapharm' : id === 'seralis' ? 'seralis' : id === 'genbio' || id === 'genbio2' ? 'genbio' : 'others'}`),
   }));
 
   // Translated focus options
