@@ -1,0 +1,1361 @@
+/**
+ * Service de génération de prompts enrichis pour le Pitch Generator
+ * Utilise toutes les données disponibles: profil, notes, actualités, historique de visites,
+ * ET la base de connaissances RAG (68 chunks) pour des pitchs ultra-spécifiques.
+ */
+
+import type { Practitioner } from '../types';
+import type { PitchConfig } from '../types/pitch';
+import { DataService } from './dataService';
+import { searchByCategory, searchByTag } from './ragService';
+import { getEnrichedPractitionerContext } from './practitionerDataBridge';
+import type { PractitionerProfile } from '../types/database';
+import type { KnowledgeCategory } from '../data/ragKnowledgeBase';
+import { getLanguage } from '../i18n/LanguageContext';
+
+const LENGTH_WORDS = {
+  short: 200,
+  medium: 400,
+  long: 700,
+};
+
+const TONE_DESCRIPTIONS_FR = {
+  formal: 'professionnel et institutionnel, vouvoiement strict, langage soigné',
+  conversational: 'chaleureux et naturel, tout en restant professionnel, permet de créer un lien',
+  technical: 'précis et technique, avec des données cliniques et scientifiques',
+};
+
+const TONE_DESCRIPTIONS_EN = {
+  formal: 'professional and institutional, formal register, polished language',
+  conversational: 'warm and natural while remaining professional, builds rapport',
+  technical: 'precise and technical, with clinical and scientific data',
+};
+
+const FOCUS_DESCRIPTIONS_FR = {
+  general: 'équilibre entre tous les aspects',
+  service: 'qualité du service client, disponibilité 24/7, accompagnement',
+  innovation: 'innovations technologiques, télésuivi, solutions connectées',
+  price: 'rapport qualité-prix, optimisation des coûts pour le patient',
+  loyalty: 'fidélisation, partenariat long terme, programme de suivi',
+};
+
+const FOCUS_DESCRIPTIONS_EN = {
+  general: 'balance across all aspects',
+  service: 'customer service quality, 24/7 availability, support',
+  innovation: 'technological innovations, remote monitoring, connected solutions',
+  price: 'value for money, cost optimization for the patient',
+  loyalty: 'retention, long-term partnership, follow-up program',
+};
+
+function getToneDescriptions(): Record<string, string> {
+  return getLanguage() === 'en' ? TONE_DESCRIPTIONS_EN : TONE_DESCRIPTIONS_FR;
+}
+
+function getFocusDescriptions(): Record<string, string> {
+  return getLanguage() === 'en' ? FOCUS_DESCRIPTIONS_EN : FOCUS_DESCRIPTIONS_FR;
+}
+
+/** Mapping section IDs → tag names used in generated pitch text */
+export const SECTION_ID_TO_TAG: Record<string, string> = {
+  hook: 'ACCROCHE',
+  proposition: 'PROPOSITION',
+  competition: 'CONCURRENCE',
+  cta: 'CALL_TO_ACTION',
+  objections: 'OBJECTIONS',
+  talking_points: 'TALKING_POINTS',
+  follow_up: 'FOLLOW_UP',
+};
+
+const VISIT_TYPE_FR: Record<string, string> = {
+  completed: 'Réalisée',
+  scheduled: 'Planifiée',
+  cancelled: 'Annulée',
+};
+
+const VISIT_TYPE_EN: Record<string, string> = {
+  completed: 'Completed',
+  scheduled: 'Scheduled',
+  cancelled: 'Cancelled',
+};
+
+function getVisitTypeLabels(): Record<string, string> {
+  return getLanguage() === 'en' ? VISIT_TYPE_EN : VISIT_TYPE_FR;
+}
+
+/** Shared helper: compute product frequency from visit history */
+function getProductFrequency(profile: PractitionerProfile): [string, number][] {
+  const freq: Record<string, number> = {};
+  profile.visitHistory?.forEach(visit => {
+    visit.productsDiscussed?.forEach(p => {
+      freq[p] = (freq[p] || 0) + 1;
+    });
+  });
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RAG KNOWLEDGE RETRIEVAL — Sélection intelligente par contexte
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Récupère les connaissances RAG les plus pertinentes pour le pitch
+ * basé sur la spécialité du praticien, le focus, les produits et concurrents sélectionnés
+ */
+function getRelevantRAGKnowledge(
+  practitioner: Practitioner,
+  config: PitchConfig
+): string {
+  const chunks: { title: string; content: string; source: string }[] = [];
+  const addedTitles = new Set<string>();
+  const MAX_CHUNK_CHARS = 400;
+
+  const addChunks = (items: { title: string; content: string; source: string }[], max: number) => {
+    for (const item of items) {
+      if (chunks.length >= 12) return;
+      if (addedTitles.has(item.title)) continue;
+      if (max <= 0) return;
+      chunks.push({
+        title: item.title,
+        content: item.content.length > MAX_CHUNK_CHARS
+          ? item.content.substring(0, MAX_CHUNK_CHARS) + '…'
+          : item.content,
+        source: item.source,
+      });
+      addedTitles.add(item.title);
+      max--;
+    }
+  };
+
+  // 1. Connaissances cliniques selon la spécialité
+  if (practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue' || config.tone === 'technical') {
+    addChunks(searchByCategory('dt2_guidelines'), 2);
+    addChunks(searchByCategory('dt2_clinical'), 2);
+    addChunks(searchByTag('hba1c'), 1);
+    addChunks(searchByTag('insuline'), 1);
+    addChunks(searchByTag('sglt2'), 1);
+    addChunks(searchByTag('glp1'), 1);
+  } else {
+    addChunks(searchByCategory('epidemiologie'), 2);
+    addChunks(searchByTag('parcours_soins'), 1);
+    addChunks(searchByTag('ameli'), 1);
+  }
+
+  // 2. Connaissances produits selon la sélection
+  const productKeywords = config.products.join(' ').toLowerCase();
+  if (productKeywords.includes('diabconnect') || productKeywords.includes('cgm')) {
+    addChunks(searchByCategory('telesuivi'), 2);
+  }
+  if (productKeywords.includes('glucostay') || productKeywords.includes('insupen') ||
+      productKeywords.includes('cardioglu') || productKeywords.includes('glp-vita')) {
+    addChunks(searchByCategory('oral_antidiabetics'), 2);
+    addChunks(searchByCategory('insulinotherapy'), 2);
+  }
+  if (productKeywords.includes('sglt2') || productKeywords.includes('glp1') ||
+      productKeywords.includes('glp-1')) {
+    addChunks(searchByTag('sglt2'), 1);
+    addChunks(searchByTag('glp1'), 1);
+  }
+  if (productKeywords.includes('dispositif') || productKeywords.includes('medvantis')) {
+    addChunks(searchByTag('dispositif_medical'), 1);
+  }
+
+  // 3. Intelligence concurrentielle selon les concurrents sélectionnés
+  if (config.competitors.length > 0) {
+    addChunks(searchByCategory('concurrent'), 2);
+    if (config.competitors.some(c => c.toLowerCase().includes('novapharm'))) {
+      addChunks(searchByTag('novapharm'), 1);
+    }
+  }
+
+  // 4. Connaissances selon le focus
+  const focusCategories: Record<string, KnowledgeCategory[]> = {
+    service: ['medvantis_corporate'],
+    innovation: ['telesuivi', 'medvantis_products'],
+    price: ['lppr_remboursement'],
+    loyalty: ['medvantis_corporate'],
+    general: ['medvantis_corporate', 'medvantis_products'],
+  };
+  const focusCats = focusCategories[config.focusArea] || focusCategories.general;
+  for (const cat of focusCats) {
+    addChunks(searchByCategory(cat), 1);
+  }
+
+  // 5. Réglementation/remboursement (toujours utile, dedup handled by addedTitles)
+  if (config.focusArea !== 'price') {
+    addChunks(searchByCategory('lppr_remboursement'), 1);
+  }
+
+  if (chunks.length === 0) return '';
+
+  let context = `\n═══════════════════════════════════════════════════════════════
+CONNAISSANCES MÉTIER DÉTAILLÉES (sources vérifiées : HAS DT2, ADA/EASD, MedVantis, SFD, VIDAL)
+═══════════════════════════════════════════════════════════════\n`;
+
+  for (const chunk of chunks) {
+    context += `\n### ${chunk.title}\n_Source: ${chunk.source}_\n${chunk.content}\n`;
+  }
+
+  return context;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANALYSIS HELPERS — Extraction d'insights des données praticien
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Récupère le profil complet du praticien
+ */
+function getEnrichedPractitionerData(practitionerId: string): PractitionerProfile | null {
+  return DataService.getPractitionerById(practitionerId) || null;
+}
+
+/**
+ * Analyse les patterns de visites pour identifier ce qui fonctionne
+ */
+function analyzeVisitPatterns(profile: PractitionerProfile): string {
+  const lang = getLanguage();
+
+  if (!profile.visitHistory || profile.visitHistory.length === 0) {
+    return lang === 'en'
+      ? 'First contact — no visits recorded. Discovery approach recommended.'
+      : 'Premier contact — aucune visite enregistrée. Approche de découverte recommandée.';
+  }
+
+  const visits = profile.visitHistory;
+  const topProducts = getProductFrequency(profile).slice(0, 3);
+  let completedCount = 0;
+  visits.forEach(visit => { if (visit.type === 'completed') completedCount++; });
+
+  const daysSinceLastVisit = profile.lastVisitDate
+    ? Math.floor((Date.now() - new Date(profile.lastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  let analysis = '';
+
+  if (daysSinceLastVisit !== null) {
+    if (lang === 'en') {
+      if (daysSinceLastVisit > 90) {
+        analysis += `⚠ WARNING: Last visit ${daysSinceLastVisit} days ago — "cold" contact, need to rebuild the relationship.\n`;
+      } else if (daysSinceLastVisit > 45) {
+        analysis += `Last visit ${daysSinceLastVisit} days ago — follow-up opportunity.\n`;
+      } else {
+        analysis += `Recent contact (${daysSinceLastVisit}d) — continuity and follow-up.\n`;
+      }
+    } else {
+      if (daysSinceLastVisit > 90) {
+        analysis += `⚠ ATTENTION: Dernière visite il y a ${daysSinceLastVisit} jours — contact "froid", il faut recréer le lien.\n`;
+      } else if (daysSinceLastVisit > 45) {
+        analysis += `Dernière visite il y a ${daysSinceLastVisit} jours — opportunité de relance.\n`;
+      } else {
+        analysis += `Contact récent (${daysSinceLastVisit}j) — continuité et suivi.\n`;
+      }
+    }
+  }
+
+  if (topProducts.length > 0) {
+    if (lang === 'en') {
+      analysis += `Most discussed products: ${topProducts.map(([p, n]) => `${p} (${n}×)`).join(', ')}.\n`;
+      analysis += `→ CAPITALIZE on these known products, propose upgrades or complementary solutions.\n`;
+    } else {
+      analysis += `Produits les plus discutés: ${topProducts.map(([p, n]) => `${p} (${n}×)`).join(', ')}.\n`;
+      analysis += `→ CAPITALISER sur ces produits connus, proposer montée en gamme ou complémentarité.\n`;
+    }
+  }
+
+  if (visits.length >= 3) {
+    const successRate = Math.round((completedCount / visits.length) * 100);
+    if (successRate < 50) {
+      analysis += lang === 'en'
+        ? `Completed visit rate: ${successRate}% — identify barriers.\n`
+        : `Taux de visites réalisées: ${successRate}% — identifier les freins.\n`;
+    }
+  }
+
+  return analysis;
+}
+
+/**
+ * Extrait les thèmes clés et insights des notes de visite
+ */
+function extractNoteInsights(profile: PractitionerProfile): string {
+  const lang = getLanguage();
+
+  if (!profile.notes || profile.notes.length === 0) {
+    return lang === 'en'
+      ? 'No notes available — ask open-ended questions to discover the practitioner.'
+      : 'Aucune note disponible — poser des questions ouvertes pour découvrir le praticien.';
+  }
+
+  const notes = profile.notes.slice(0, 5);
+  const themes: string[] = [];
+  const nextActions: string[] = [];
+  const allContent = notes.map(n => n.content).join(' ').toLowerCase();
+
+  const matchWord = (pattern: string) => new RegExp(`\\b${pattern}\\b`, 'i').test(allContent);
+
+  if (lang === 'en') {
+    if (matchWord('prix') || matchWord('coût') || matchWord('coûteu') || matchWord('tarif') || matchWord('cher|chère') || matchWord('économi')) {
+      themes.push('Price/cost sensitivity');
+    }
+    if (matchWord('concurrent') || matchWord('novapharm') || matchWord('servier') || matchWord('sanofi') || matchWord('généri')) {
+      themes.push('Active competitive monitoring');
+    }
+    if (matchWord('télésuivi') || matchWord('connecté') || matchWord('digital') || matchWord('appli') || matchWord('plateforme')) {
+      themes.push('Interest in digital/remote monitoring');
+    }
+    if (matchWord('observance') || matchWord('compliance') || matchWord('adhésion') || matchWord('fidél.*traitement')) {
+      themes.push('Focus on patient compliance');
+    }
+    if (matchWord('satisfait') || matchWord('très bien') || matchWord('excellent') || matchWord('ravi') || matchWord('apprécié')) {
+      themes.push('Generally satisfied with service');
+    }
+    if (matchWord('problème') || matchWord('plainte') || matchWord('retard') || matchWord('insatisf') || matchWord('déçu') || matchWord('mécontent')) {
+      themes.push('Dissatisfaction points reported');
+    }
+    if (matchWord('formation') || matchWord('éducation thérapeutique') || matchWord('dpc') || matchWord('congrès')) {
+      themes.push('Interest in training/CPD');
+    }
+  } else {
+    if (matchWord('prix') || matchWord('coût') || matchWord('coûteu') || matchWord('tarif') || matchWord('cher|chère') || matchWord('économi')) {
+      themes.push('Sensibilité prix/coûts');
+    }
+    if (matchWord('concurrent') || matchWord('novapharm') || matchWord('servier') || matchWord('sanofi') || matchWord('généri')) {
+      themes.push('Veille concurrentielle active');
+    }
+    if (matchWord('télésuivi') || matchWord('connecté') || matchWord('digital') || matchWord('appli') || matchWord('plateforme')) {
+      themes.push('Intérêt pour le digital/télésuivi');
+    }
+    if (matchWord('observance') || matchWord('compliance') || matchWord('adhésion') || matchWord('fidél.*traitement')) {
+      themes.push('Focus sur l\'observance patient');
+    }
+    if (matchWord('satisfait') || matchWord('très bien') || matchWord('excellent') || matchWord('ravi') || matchWord('apprécié')) {
+      themes.push('Globalement satisfait du service');
+    }
+    if (matchWord('problème') || matchWord('plainte') || matchWord('retard') || matchWord('insatisf') || matchWord('déçu') || matchWord('mécontent')) {
+      themes.push('Points d\'insatisfaction signalés');
+    }
+    if (matchWord('formation') || matchWord('éducation thérapeutique') || matchWord('dpc') || matchWord('congrès')) {
+      themes.push('Intérêt pour la formation/DPC');
+    }
+  }
+
+  notes.forEach(note => {
+    if (note.nextAction) nextActions.push(note.nextAction);
+  });
+
+  let insights = '';
+
+  if (lang === 'en') {
+    if (themes.length > 0) {
+      insights += `Identified themes: ${themes.join(', ')}.\n`;
+    }
+    if (nextActions.length > 0) {
+      insights += `Pending actions: ${nextActions.slice(0, 3).join(' | ')}.\n`;
+      insights += `→ MENTION these actions to demonstrate follow-through and reliability.\n`;
+    }
+    insights += `\nLatest notes (conversational context):\n`;
+    notes.slice(0, 3).forEach(note => {
+      const date = new Date(note.date).toLocaleDateString('en-US');
+      insights += `- [${date}] ${note.content.substring(0, 150)}${note.content.length > 150 ? '...' : ''}\n`;
+    });
+  } else {
+    if (themes.length > 0) {
+      insights += `Thèmes identifiés: ${themes.join(', ')}.\n`;
+    }
+    if (nextActions.length > 0) {
+      insights += `Actions en attente: ${nextActions.slice(0, 3).join(' | ')}.\n`;
+      insights += `→ MENTIONNER ces actions pour montrer le suivi et la fiabilité.\n`;
+    }
+    insights += `\nDernières notes (contexte conversationnel):\n`;
+    notes.slice(0, 3).forEach(note => {
+      const date = new Date(note.date).toLocaleDateString(getLanguage() === 'en' ? 'en-US' : 'fr-FR');
+      insights += `- [${date}] ${note.content.substring(0, 150)}${note.content.length > 150 ? '...' : ''}\n`;
+    });
+  }
+
+  return insights;
+}
+
+/**
+ * Formate les publications avec analyse thématique
+ */
+function formatPublicationsForPitch(profile: PractitionerProfile): string {
+  const lang = getLanguage();
+  const dateFmt = lang === 'en' ? 'en-US' : 'fr-FR';
+  const publications = profile.news?.filter(n => n.type === 'publication') || [];
+  const conferences = profile.news?.filter(n => n.type === 'conference') || [];
+  const awards = profile.news?.filter(n => n.type === 'award') || [];
+  const certifications = profile.news?.filter(n => n.type === 'certification') || [];
+
+  if (publications.length === 0 && conferences.length === 0 && awards.length === 0) {
+    return lang === 'en'
+      ? 'No publications/news referenced. Use specialty and location to personalize the opening.'
+      : 'Aucune publication/actualité référencée. Utiliser la spécialité et la localisation pour personnaliser l\'accroche.';
+  }
+
+  let result = '';
+
+  if (publications.length > 0) {
+    result += lang === 'en'
+      ? `PUBLICATIONS (${publications.length}) — MUST CITE IN THE OPENING:\n`
+      : `PUBLICATIONS (${publications.length}) — A CITER DANS L'ACCROCHE:\n`;
+    publications.slice(0, 3).forEach(pub => {
+      result += `- "${pub.title}" (${new Date(pub.date).toLocaleDateString(dateFmt)})\n`;
+      if (pub.content) result += lang === 'en' ? `  Summary: ${pub.content}\n` : `  Résumé: ${pub.content}\n`;
+    });
+    result += lang === 'en'
+      ? `→ MANDATORY: Mention the most recent publication in the opening to show you follow their work.\n\n`
+      : `→ OBLIGATOIRE: Mentionner la publication la plus récente dans l'accroche pour montrer que vous suivez son travail.\n\n`;
+  }
+
+  if (conferences.length > 0) {
+    result += `CONFERENCES (${conferences.length}):\n`;
+    conferences.slice(0, 2).forEach(conf => {
+      result += `- "${conf.title}" (${new Date(conf.date).toLocaleDateString(dateFmt)})\n`;
+    });
+    result += '\n';
+  }
+
+  if (awards.length > 0) {
+    result += lang === 'en' ? `AWARDS:\n` : `DISTINCTIONS:\n`;
+    awards.forEach(award => {
+      result += `- ${award.title} (${new Date(award.date).toLocaleDateString(dateFmt)})\n`;
+    });
+    result += lang === 'en' ? `→ Congratulate for this recognition.\n\n` : `→ Féliciter pour cette reconnaissance.\n\n`;
+  }
+
+  if (certifications.length > 0) {
+    result += `CERTIFICATIONS:\n`;
+    certifications.forEach(cert => {
+      result += `- ${cert.title}\n`;
+    });
+    result += '\n';
+  }
+
+  return result;
+}
+
+/**
+ * Formate l'historique complet des visites
+ */
+function formatVisitHistory(profile: PractitionerProfile): string {
+  const lang = getLanguage();
+  const dateFmt = lang === 'en' ? 'en-US' : 'fr-FR';
+
+  if (!profile.visitHistory || profile.visitHistory.length === 0) {
+    return lang === 'en'
+      ? 'No visits recorded — this is a first contact.'
+      : 'Aucune visite enregistrée — c\'est un premier contact.';
+  }
+
+  const typeLabels = getVisitTypeLabels();
+
+  return profile.visitHistory.slice(0, 5).map(visit => {
+    const date = new Date(visit.date).toLocaleDateString(dateFmt);
+    const productsLabel = lang === 'en' ? 'Products' : 'Produits';
+    const notesLabel = lang === 'en' ? 'Notes' : 'Notes';
+    const products = visit.productsDiscussed?.join(', ') || (lang === 'en' ? 'Not specified' : 'Non renseigné');
+    const typeLabel = typeLabels[visit.type] || visit.type;
+    return `- [${date}] ${typeLabel} (${visit.duration || '?'} min)\n  ${productsLabel}: ${products}${visit.notes ? `\n  ${notesLabel}: ${visit.notes}` : ''}`;
+  }).join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYSTEM PROMPT — Contexte métier + instructions de génération
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Construit le prompt système enrichi avec connaissances RAG ciblées
+ */
+export function buildEnhancedSystemPrompt(config: PitchConfig, practitioner?: Practitioner): string {
+  const lang = getLanguage();
+  const toneDesc = getToneDescriptions();
+  const focusDesc = getFocusDescriptions();
+
+  // Récupérer les connaissances RAG ciblées
+  const ragKnowledge = practitioner ? getRelevantRAGKnowledge(practitioner, config) : '';
+
+  if (lang === 'en') {
+    return `You are an expert Pharmaceutical Sales Representative for MedVantis Pharma, a leading pharmaceutical company specializing in type 2 diabetes treatments and solutions.
+
+You generate ULTRA-PERSONALIZED sales pitches. Every sentence must be specific to THIS practitioner. DO NOT generate generic phrases like "we have a comprehensive range" or "our service is excellent". Use the real data provided.
+
+═══════════════════════════════════════════════════════════════
+MEDVANTIS PHARMA PRODUCT & SERVICE RANGE (quick reference)
+═══════════════════════════════════════════════════════════════
+**Oral antidiabetics:** GlucoStay (metformin XR, improved GI tolerance) | CardioGlu (SGLT2 inhibitor, cardiovascular + renal benefits)
+**Injectables:** InsuPen (basal insulin, 36h duration, flexible dosing) | GLP-Vita (GLP-1 RA, weekly injection, -1.8% HbA1c, weight loss)
+**Connected solutions:** DiabConnect (CGM platform, real-time glucose monitoring, HbA1c trends, therapy adherence tracking) — included with eligible prescriptions
+**Services:** 24/7 medical information line | HAS-certified therapeutic education for DT2 | Practitioner portal with patient analytics | Accredited CPD
+**Reimbursement 2025:** GlucoStay 100% ALD | CardioGlu 65% SS + mutuelle | InsuPen 100% ALD | GLP-Vita 100% ALD (after metformin failure)
+**Advantages vs competitors:** Comprehensive DT2 portfolio (vs NovaPharm partial) | Native CGM integration (vs Servier without) | Cardio-renal evidence (vs generics unproven) | Dedicated diabetology MSLs (vs Sanofi broad coverage)
+${ragKnowledge}
+
+MANDATORY RULES:
+- Tone: ${toneDesc[config.tone]}
+- Target length: approximately ${LENGTH_WORDS[config.length]} words total
+- Main focus: ${focusDesc[config.focusArea]}
+- Always use formal address with the practitioner
+- USE the real data provided to personalize (publications, notes, last visit, trends)
+- NEVER invent statistics not provided
+- If the practitioner has publications: CITE the exact title of the most recent one in the opening
+- If notes mention a competitor, a problem, or a specific interest: ADDRESS that point
+- Cite clinical data if the tone is technical or if the practitioner is an endocrinologist/diabetologist
+
+MANDATORY STRUCTURE:
+
+[ACCROCHE]
+VERY personalized opening (2-3 sentences). MANDATORY: build on a concrete and recent element — a publication, conference, visit note, event. If the practitioner has publications, CITE the exact title. If they are a KOL, highlight their expertise. If never visited, mention a specific fact (their specialty in their city, a conference in their field).
+
+[PROPOSITION]
+Presentation of MedVantis Pharma's value proposition linked to needs IDENTIFIED in notes/history. If products have already been discussed, propose upgrades or complementary solutions. If the practitioner is interested in digital, push DiabConnect CGM. If price sensitive, push value for money and reimbursement. Focus: ${focusDesc[config.focusArea]}.
+
+[CONCURRENCE]
+FACTUAL differentiation from competitors. If notes mention a specific competitor, address it first. Concrete arguments without disparagement.
+
+[CALL_TO_ACTION]
+Concrete proposal based on history. If there are pending actions (identified in notes), reference them.
+${config.includeObjections ? `
+[OBJECTIONS]
+4-5 SPECIFIC objections for this practitioner (based on notes, churn risk, trend). Format: "**Objection:** ... → **Response:** ..."
+` : ''}${config.includeTalkingPoints ? `
+[TALKING_POINTS]
+6-8 key points to structure the meeting: (1) personalized opening, (2) follow-up on previous actions, (3) flagship product, (4) clinical data if relevant, (5) open-ended question, (6) concrete proposal.
+` : ''}
+[FOLLOW_UP]
+Post-visit follow-up plan in 3 steps (D+1, D+7, D+30) with personalized concrete actions.
+
+Generate the complete pitch following this exact structure. Write the entire pitch in English.`;
+  }
+
+  return `Tu es un délégué pharmaceutique MedVantis Pharma, spécialiste du diabète de type 2, expert en solutions thérapeutiques pour le DT2.
+
+Tu génères des pitchs commerciaux ULTRA-PERSONNALISÉS. Chaque phrase doit être spécifique à CE praticien. INTERDIT de générer des phrases génériques comme "nous avons une gamme complète" ou "notre service est excellent". Utilise les données réelles fournies.
+
+═══════════════════════════════════════════════════════════════
+GAMME PRODUITS & SERVICES MEDVANTIS PHARMA (référence rapide)
+═══════════════════════════════════════════════════════════════
+**Antidiabétiques oraux:** GlucoStay (metformine XR, tolérance GI améliorée) | CardioGlu (inhibiteur SGLT2, bénéfices cardiovasculaires + rénaux)
+**Injectables:** InsuPen (insuline basale, durée 36h, dosage flexible) | GLP-Vita (agoniste GLP-1, injection hebdomadaire, -1,8% HbA1c, perte de poids)
+**Solutions connectées:** DiabConnect (plateforme CGM, suivi glycémique temps réel, tendances HbA1c, observance thérapeutique) — inclus avec prescriptions éligibles
+**Services:** Ligne d'information médicale 24/7 | Éducation thérapeutique DT2 certifiée HAS | Portail praticien avec analytics patient | DPC accrédité
+**Remboursement 2025:** GlucoStay 100% ALD | CardioGlu 65% SS + mutuelle | InsuPen 100% ALD | GLP-Vita 100% ALD (après échec metformine)
+**Avantages vs concurrents:** Portfolio DT2 complet (vs NovaPharm partiel) | Intégration CGM native (vs Servier sans) | Preuves cardio-rénales (vs génériques non prouvés) | MSL dédiés diabétologie (vs Sanofi couverture large)
+${ragKnowledge}
+
+RÈGLES IMPÉRATIVES:
+- Ton: ${toneDesc[config.tone]}
+- Longueur cible: environ ${LENGTH_WORDS[config.length]} mots au total
+- Focus principal: ${focusDesc[config.focusArea]}
+- Toujours vouvoyer le praticien
+- UTILISER les données réelles fournies pour personnaliser (publications, notes, dernière visite, tendances)
+- Ne JAMAIS inventer de statistiques non fournies
+- Si le praticien a des publications : CITER le titre exact de la plus récente dans l'accroche
+- Si des notes mentionnent un concurrent, un problème ou un intérêt spécifique : ADRESSER ce point
+- Citer des données cliniques si le ton est technique ou si le praticien est endocrinologue-diabétologue
+
+STRUCTURE OBLIGATOIRE:
+
+[ACCROCHE]
+Ouverture TRÈS personnalisée (2-3 phrases). OBLIGATOIRE: s'appuyer sur un élément concret et récent — une publication, une conférence, une note de visite, un événement. Si le praticien a des publications, CITER le titre exact. Si c'est un KOL, valoriser son expertise. Si jamais visité, mentionner un fait précis (sa spécialité dans sa ville, un colloque de sa discipline).
+
+[PROPOSITION]
+Présentation de la valeur ajoutée MedVantis Pharma reliée aux besoins IDENTIFIÉS dans les notes/l'historique. Si des produits ont déjà été discutés, proposer montée en gamme ou complémentarité. Si le praticien s'intéresse au digital, pousser DiabConnect CGM. Si sensibilité prix, pousser le rapport qualité-prix et le remboursement. Focus: ${focusDesc[config.focusArea]}.
+
+[CONCURRENCE]
+Différenciation FACTUELLE par rapport aux concurrents. Si les notes mentionnent un concurrent précis, l'adresser en priorité. Arguments concrets sans dénigrement.
+
+[CALL_TO_ACTION]
+Proposition concrète basée sur l'historique. Si des actions sont en attente (identifiées dans les notes), les rappeler.
+${config.includeObjections ? `
+[OBJECTIONS]
+4-5 objections SPÉCIFIQUES à ce praticien (basées sur les notes, le churn risk, la tendance). Format: "**Objection:** ... → **Réponse:** ..."
+` : ''}${config.includeTalkingPoints ? `
+[TALKING_POINTS]
+6-8 points clés pour structurer l'entretien: (1) accroche personnalisée, (2) suivi des actions précédentes, (3) produit phare, (4) donnée clinique si pertinent, (5) question ouverte, (6) proposition concrète.
+` : ''}
+[FOLLOW_UP]
+Plan de suivi post-visite en 3 étapes (J+1, J+7, J+30) avec actions concrètes personnalisées.
+
+Génère le pitch complet en suivant cette structure exacte.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER PROMPT — Toutes les données praticien + analyses
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Construit le prompt utilisateur enrichi avec analyse des données praticien
+ */
+export function buildEnhancedUserPrompt(practitioner: Practitioner, config: PitchConfig): string {
+  const profile = getEnrichedPractitionerData(practitioner.id);
+
+  if (!profile) {
+    return buildBasicUserPrompt(practitioner, config);
+  }
+
+  // Récupérer le contexte enrichi (incluant les comptes-rendus de visite utilisateur)
+  const enrichedContext = getEnrichedPractitionerContext(practitioner.id);
+
+  const visitPatterns = analyzeVisitPatterns(profile);
+  const noteInsights = extractNoteInsights(profile);
+  const publicationsFormatted = formatPublicationsForPitch(profile);
+  const visitHistory = formatVisitHistory(profile);
+
+  // Utiliser la date de dernière visite effective (incluant les comptes-rendus)
+  const effectiveLastVisitDate = enrichedContext?.effectiveLastVisitDate || profile.lastVisitDate;
+  const daysSinceLastVisit = effectiveLastVisitDate
+    ? Math.floor((Date.now() - new Date(effectiveLastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const topProductsRaw = getProductFrequency(profile).slice(0, 3);
+  const topProducts = topProductsRaw.map(([product, count]) => `${product} (${count}x)`);
+
+  const lang = getLanguage();
+  const toneDesc = getToneDescriptions();
+  const focusDesc = getFocusDescriptions();
+  const dateFmt = lang === 'en' ? 'en-US' : 'fr-FR';
+
+  // Practice type label
+  const practiceTypeLabel = lang === 'en'
+    ? (profile.practiceType === 'ville' ? 'Private practice' : profile.practiceType === 'hospitalier' ? 'Hospital practitioner' : 'Mixed practice (private + hospital)')
+    : (profile.practiceType === 'ville' ? 'Praticien de ville (libéral)' : profile.practiceType === 'hospitalier' ? 'Praticien hospitalier' : 'Praticien mixte (ville + hôpital)');
+
+  // Vingtile label
+  const vingtileLabel = lang === 'en'
+    ? (profile.metrics.vingtile <= 5 ? '→ TOP prescriber, VIP treatment' : profile.metrics.vingtile <= 10 ? '→ Important prescriber' : '→ Standard prescriber')
+    : (profile.metrics.vingtile <= 5 ? '→ TOP prescripteur, traitement VIP' : profile.metrics.vingtile <= 10 ? '→ Prescripteur important' : '→ Prescripteur standard');
+
+  // KOL label
+  const kolLabel = lang === 'en'
+    ? (profile.metrics.isKOL ? 'YES — Influential practitioner, recognized expertise' : 'No')
+    : (profile.metrics.isKOL ? 'OUI — Praticien influent, expertise reconnue' : 'Non');
+
+  // Churn risk label
+  const churnLabel = lang === 'en'
+    ? (profile.metrics.churnRisk === 'high' ? 'HIGH — Pitch must be defensive and reassuring' : profile.metrics.churnRisk === 'medium' ? 'Medium — Vigilance required' : 'Low — Stable relationship')
+    : (profile.metrics.churnRisk === 'high' ? 'ÉLEVÉ — Pitch doit être défensif et rassurant' : profile.metrics.churnRisk === 'medium' ? 'Moyen — Vigilance requise' : 'Faible — Relation stable');
+
+  // Visit reports section
+  let visitReportsSection = '';
+  if (enrichedContext && enrichedContext.userVisitReports.length > 0) {
+    const reportsTitle = lang === 'en' ? 'RECENT VISIT REPORTS (dynamic CRM data)' : 'COMPTES-RENDUS DE VISITE RÉCENTS (données CRM dynamiques)';
+    const reportsData = enrichedContext.userVisitReports.slice(0, 3).map((report, idx) => {
+      const date = new Date(report.date).toLocaleDateString(dateFmt);
+      let text = `${idx + 1}. [${date}] ${lang === 'en' ? 'Visit' : 'Visite'} — ${lang === 'en' ? 'Sentiment' : 'Sentiment'}: ${report.extractedInfo.sentiment}`;
+      if (report.extractedInfo.keyPoints.length > 0) text += `\n   ${lang === 'en' ? 'Key points' : 'Points clés'}: ${report.extractedInfo.keyPoints.join('; ')}`;
+      if (report.extractedInfo.productsDiscussed.length > 0) text += `\n   ${lang === 'en' ? 'Products discussed' : 'Produits discutés'}: ${report.extractedInfo.productsDiscussed.join(', ')}`;
+      if (report.extractedInfo.competitorsMentioned.length > 0) text += `\n   ${lang === 'en' ? 'Competitors mentioned' : 'Concurrents mentionnés'}: ${report.extractedInfo.competitorsMentioned.join(', ')}`;
+      if (report.extractedInfo.objections.length > 0) text += `\n   ${lang === 'en' ? 'Objections' : 'Objections'}: ${report.extractedInfo.objections.join('; ')}`;
+      if (report.extractedInfo.opportunities.length > 0) text += `\n   ${lang === 'en' ? 'Opportunities' : 'Opportunités'}: ${report.extractedInfo.opportunities.join('; ')}`;
+      if (report.extractedInfo.nextActions.length > 0) text += `\n   → ${lang === 'en' ? 'Actions' : 'Actions'}: ${report.extractedInfo.nextActions.join('; ')}`;
+      return text;
+    }).join('\n');
+    const reportsInstruction = lang === 'en'
+      ? '→ USE these recent reports to personalize the pitch (mention past discussions, address objections, capitalize on opportunities)'
+      : '→ UTILISER ces comptes-rendus récents pour personnaliser le pitch (mentionner les discussions passées, adresser les objections, capitaliser sur les opportunités)';
+    visitReportsSection = `═══════════════════════════════════════════════════════════════════════════
+${reportsTitle}
+═══════════════════════════════════════════════════════════════════════════
+${reportsData}
+${reportsInstruction}
+
+`;
+  }
+
+  // Personalization directives
+  let directive1: string;
+  if (profile.news?.filter(n => n.type === 'publication').length) {
+    directive1 = lang === 'en'
+      ? `1. OPENING: Cite the publication "${profile.news.filter(n => n.type === 'publication')[0].title}" in the opening.`
+      : `1. ACCROCHE: Citer la publication "${profile.news.filter(n => n.type === 'publication')[0].title}" dans l'ouverture.`;
+  } else if (daysSinceLastVisit !== null) {
+    directive1 = lang === 'en'
+      ? `1. OPENING: Reference the last visit (${daysSinceLastVisit} days ago) and what was discussed.`
+      : `1. ACCROCHE: Référencer la dernière visite (il y a ${daysSinceLastVisit} jours) et ce qui a été discuté.`;
+  } else {
+    directive1 = lang === 'en'
+      ? `1. OPENING: Mention expertise in ${profile.specialty} in ${profile.address.city}.`
+      : `1. ACCROCHE: Mentionner l'expertise en ${profile.specialty} à ${profile.address.city}.`;
+  }
+
+  let directive2: string;
+  if (profile.metrics.churnRisk === 'high') {
+    directive2 = lang === 'en'
+      ? '2. DEFENSIVE TONE: The practitioner is at churn risk — emphasize the relationship, address frustrations, propose concrete improvements.'
+      : '2. TON DÉFENSIF: Le praticien est à risque de churn — valoriser la relation, adresser les frustrations, proposer des améliorations concrètes.';
+  } else if (profile.metrics.isKOL) {
+    directive2 = lang === 'en'
+      ? '2. KOL RECOGNITION: Explicitly acknowledge their expert status and influence in the medical community.'
+      : '2. VALORISATION KOL: Reconnaître explicitement son statut d\'expert et son influence dans la communauté médicale.';
+  } else {
+    directive2 = lang === 'en'
+      ? `2. GROWTH: Potential of +${profile.metrics.potentialGrowth}% — identify development opportunities.`
+      : `2. CROISSANCE: Potentiel de +${profile.metrics.potentialGrowth}% — identifier des opportunités de développement.`;
+  }
+
+  let directive3: string;
+  if (topProducts.length > 0) {
+    directive3 = lang === 'en'
+      ? `3. PRODUCT CONTINUITY: Capitalize on ${topProducts[0]} already discussed, propose upgrades or complementary solutions.`
+      : `3. CONTINUITÉ PRODUIT: Capitaliser sur ${topProducts[0]} déjà discuté, proposer montée en gamme ou complémentarité.`;
+  } else {
+    directive3 = lang === 'en'
+      ? '3. DISCOVERY: First product contact — broad presentation then focus based on reactions.'
+      : '3. DÉCOUVERTE: Premier contact produit — présentation large puis focus selon les réactions.';
+  }
+
+  const directive4 = lang === 'en'
+    ? '4. EVERY SECTION must contain at least one SPECIFIC element drawn from the data above.'
+    : '4. CHAQUE SECTION doit contenir au moins un élément SPÉCIFIQUE tiré des données ci-dessus.';
+
+  if (lang === 'en') {
+    return `Generate an ULTRA-PERSONALIZED pitch for this practitioner. Every section must reference SPECIFIC elements from the data below. DO NOT remain generic.
+
+═══════════════════════════════════════════════════════════════════════════
+COMPLETE PRACTITIONER PROFILE
+═══════════════════════════════════════════════════════════════════════════
+
+**IDENTITY:**
+- Name: ${profile.title} ${profile.firstName} ${profile.lastName}
+- Specialty: ${profile.specialty}${profile.subSpecialty ? ` — ${profile.subSpecialty}` : ''}
+- Practice type: ${practiceTypeLabel}
+- City: ${profile.address.city} (${profile.address.postalCode})
+
+**BUSINESS METRICS:**
+- Annual volume: ${profile.metrics.volumeL.toLocaleString()} (${(profile.metrics.volumeL / 1000).toFixed(0)}K)
+- Loyalty: ${profile.metrics.loyaltyScore}/10
+- Vingtile: V${profile.metrics.vingtile} ${vingtileLabel}
+- KOL: ${kolLabel}
+- Growth potential: +${profile.metrics.potentialGrowth}%
+- Churn risk: ${churnLabel}
+
+═══════════════════════════════════════════════════════════════════════════
+VISIT ANALYSIS (automated insights)
+═══════════════════════════════════════════════════════════════════════════
+${visitPatterns}
+
+**Historical products:** ${topProducts.length > 0 ? topProducts.join(', ') : 'No products previously discussed'}
+
+═══════════════════════════════════════════════════════════════════════════
+PRACTITIONER NEWS AND PUBLICATIONS
+═══════════════════════════════════════════════════════════════════════════
+${publicationsFormatted}
+
+═══════════════════════════════════════════════════════════════════════════
+VISIT NOTE INSIGHTS (themes, actions, context)
+═══════════════════════════════════════════════════════════════════════════
+${noteInsights}
+
+═══════════════════════════════════════════════════════════════════════════
+RECENT VISIT HISTORY
+═══════════════════════════════════════════════════════════════════════════
+${visitHistory}
+
+${visitReportsSection}═══════════════════════════════════════════════════════════════════════════
+PITCH CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════
+- Length: ${config.length} (~${LENGTH_WORDS[config.length]} words)
+- Tone: ${config.tone} (${toneDesc[config.tone]})
+- Focus: ${config.focusArea} (${focusDesc[config.focusArea]})
+- Products to highlight: ${config.products.length > 0 ? config.products.join(', ') : 'Full range'}
+- Competitors to address: ${config.competitors.length > 0 ? config.competitors.join(', ') : 'None specifically'}
+
+${config.additionalInstructions ? `**SPECIAL INSTRUCTIONS FROM THE REP:**\n${config.additionalInstructions}` : ''}
+
+═══════════════════════════════════════════════════════════════════════════
+PERSONALIZATION DIRECTIVES (MANDATORY)
+═══════════════════════════════════════════════════════════════════════════
+${directive1}
+${directive2}
+${directive3}
+${directive4}
+
+Generate the complete pitch now.`;
+  }
+
+  return `Génère un pitch ULTRA-PERSONNALISÉ pour ce praticien. Chaque section doit mentionner des éléments SPÉCIFIQUES tirés des données ci-dessous. INTERDIT de rester générique.
+
+═══════════════════════════════════════════════════════════════════════════
+PROFIL COMPLET DU PRATICIEN
+═══════════════════════════════════════════════════════════════════════════
+
+**IDENTITÉ:**
+- Nom: ${profile.title} ${profile.firstName} ${profile.lastName}
+- Spécialité: ${profile.specialty}${profile.subSpecialty ? ` — ${profile.subSpecialty}` : ''}
+- Type d'exercice: ${practiceTypeLabel}
+- Ville: ${profile.address.city} (${profile.address.postalCode})
+
+**MÉTRIQUES BUSINESS:**
+- Volume annuel: ${profile.metrics.volumeL.toLocaleString()} (${(profile.metrics.volumeL / 1000).toFixed(0)}K)
+- Fidélité: ${profile.metrics.loyaltyScore}/10
+- Vingtile: V${profile.metrics.vingtile} ${vingtileLabel}
+- KOL: ${kolLabel}
+- Potentiel de croissance: +${profile.metrics.potentialGrowth}%
+- Risque de churn: ${churnLabel}
+
+═══════════════════════════════════════════════════════════════════════════
+ANALYSE DES VISITES (insights automatiques)
+═══════════════════════════════════════════════════════════════════════════
+${visitPatterns}
+
+**Produits historiques:** ${topProducts.length > 0 ? topProducts.join(', ') : 'Aucun produit discuté précédemment'}
+
+═══════════════════════════════════════════════════════════════════════════
+ACTUALITÉS ET PUBLICATIONS DU PRATICIEN
+═══════════════════════════════════════════════════════════════════════════
+${publicationsFormatted}
+
+═══════════════════════════════════════════════════════════════════════════
+INSIGHTS DES NOTES DE VISITE (thèmes, actions, contexte)
+═══════════════════════════════════════════════════════════════════════════
+${noteInsights}
+
+═══════════════════════════════════════════════════════════════════════════
+HISTORIQUE DES VISITES RÉCENTES
+═══════════════════════════════════════════════════════════════════════════
+${visitHistory}
+
+${visitReportsSection}═══════════════════════════════════════════════════════════════════════════
+CONFIGURATION DU PITCH
+═══════════════════════════════════════════════════════════════════════════
+- Longueur: ${config.length} (~${LENGTH_WORDS[config.length]} mots)
+- Ton: ${config.tone} (${toneDesc[config.tone]})
+- Focus: ${config.focusArea} (${focusDesc[config.focusArea]})
+- Produits à mettre en avant: ${config.products.length > 0 ? config.products.join(', ') : 'Gamme complète'}
+- Concurrents à adresser: ${config.competitors.length > 0 ? config.competitors.join(', ') : 'Aucun spécifiquement'}
+
+${config.additionalInstructions ? `**INSTRUCTIONS SPÉCIALES DU COMMERCIAL:**\n${config.additionalInstructions}` : ''}
+
+═══════════════════════════════════════════════════════════════════════════
+DIRECTIVES DE PERSONNALISATION (OBLIGATOIRES)
+═══════════════════════════════════════════════════════════════════════════
+${directive1}
+${directive2}
+${directive3}
+${directive4}
+
+Génère maintenant le pitch complet.`;
+}
+
+/**
+ * Prompt de base si les données enrichies ne sont pas disponibles
+ */
+function buildBasicUserPrompt(practitioner: Practitioner, config: PitchConfig): string {
+  const lang = getLanguage();
+  const conversationHistory = practitioner.conversations?.slice(0, 2).map(c =>
+    `- ${c.date}: ${c.summary}`
+  ).join('\n') || (lang === 'en' ? 'No history available' : 'Aucun historique disponible');
+
+  if (lang === 'en') {
+    return `Generate a personalized pitch for this practitioner:
+
+PROFILE:
+- ${practitioner.title} ${practitioner.firstName} ${practitioner.lastName}
+- ${practitioner.specialty} — ${practitioner.city}
+- Volume: ${practitioner.volumeL.toLocaleString()} L | KOL: ${practitioner.isKOL ? 'Yes' : 'No'}
+- Last visit: ${practitioner.lastVisitDate || 'Never'} | Trend: ${practitioner.trend}
+- Loyalty: ${practitioner.loyaltyScore}/10
+
+HISTORY:
+${conversationHistory}
+
+AI SUMMARY:
+${practitioner.aiSummary}
+
+CONFIGURATION:
+- Length: ${config.length} (~${LENGTH_WORDS[config.length]} words) | Tone: ${config.tone}
+- Products: ${config.products.join(', ') || 'Full range'}
+- Competitors: ${config.competitors.join(', ') || 'None'}
+
+${config.additionalInstructions ? `INSTRUCTIONS: ${config.additionalInstructions}` : ''}
+
+Generate the pitch following the required structure.`;
+  }
+
+  return `Génère un pitch personnalisé pour ce praticien:
+
+PROFIL:
+- ${practitioner.title} ${practitioner.firstName} ${practitioner.lastName}
+- ${practitioner.specialty} — ${practitioner.city}
+- Volume: ${practitioner.volumeL.toLocaleString()} L | KOL: ${practitioner.isKOL ? 'Oui' : 'Non'}
+- Dernière visite: ${practitioner.lastVisitDate || 'Jamais'} | Tendance: ${practitioner.trend}
+- Fidélité: ${practitioner.loyaltyScore}/10
+
+HISTORIQUE:
+${conversationHistory}
+
+SYNTHÈSE IA:
+${practitioner.aiSummary}
+
+CONFIGURATION:
+- Longueur: ${config.length} (~${LENGTH_WORDS[config.length]} mots) | Ton: ${config.tone}
+- Produits: ${config.products.join(', ') || 'Gamme complète'}
+- Concurrents: ${config.competitors.join(', ') || 'Aucun'}
+
+${config.additionalInstructions ? `INSTRUCTIONS: ${config.additionalInstructions}` : ''}
+
+Génère le pitch en suivant la structure demandée.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION REGENERATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Prompt pour régénérer une section spécifique
+ */
+export function buildEnhancedRegenerateSectionPrompt(
+  sectionId: string,
+  currentContent: string,
+  userInstruction: string,
+  fullPitchContext: string,
+  practitioner: Practitioner
+): string {
+  const lang = getLanguage();
+
+  const sectionNamesFr: Record<string, string> = {
+    hook: "l'accroche",
+    proposition: 'la proposition de valeur',
+    competition: 'la différenciation concurrentielle',
+    cta: "l'appel à l'action",
+    objections: 'la gestion des objections',
+    talking_points: 'les points de discussion',
+    follow_up: 'le suivi proposé',
+  };
+
+  const sectionNamesEn: Record<string, string> = {
+    hook: 'the opening hook',
+    proposition: 'the value proposition',
+    competition: 'the competitive differentiation',
+    cta: 'the call to action',
+    objections: 'the objection handling',
+    talking_points: 'the talking points',
+    follow_up: 'the follow-up plan',
+  };
+
+  const sectionNames = lang === 'en' ? sectionNamesEn : sectionNamesFr;
+
+  const profile = getEnrichedPractitionerData(practitioner.id);
+  let additionalContext = '';
+
+  if (profile) {
+    const publications = profile.news?.filter(n => n.type === 'publication') || [];
+    const lastNote = profile.notes?.[0];
+    if (lang === 'en') {
+      additionalContext = `
+PRACTITIONER CONTEXT:
+- ${profile.title} ${profile.firstName} ${profile.lastName} — ${profile.specialty} in ${profile.address.city}
+- KOL: ${profile.metrics.isKOL ? 'Yes' : 'No'} | V${profile.metrics.vingtile} | Loyalty: ${profile.metrics.loyaltyScore}/10
+- Churn risk: ${profile.metrics.churnRisk} | Potential: +${profile.metrics.potentialGrowth}%
+${publications.length > 0 ? `- Latest publication: "${publications[0].title}"` : ''}
+${lastNote ? `- Latest note: "${lastNote.content.substring(0, 120)}..."` : ''}
+`;
+    } else {
+      additionalContext = `
+CONTEXTE PRATICIEN:
+- ${profile.title} ${profile.firstName} ${profile.lastName} — ${profile.specialty} à ${profile.address.city}
+- KOL: ${profile.metrics.isKOL ? 'Oui' : 'Non'} | V${profile.metrics.vingtile} | Fidélité: ${profile.metrics.loyaltyScore}/10
+- Risque churn: ${profile.metrics.churnRisk} | Potentiel: +${profile.metrics.potentialGrowth}%
+${publications.length > 0 ? `- Dernière publication: "${publications[0].title}"` : ''}
+${lastNote ? `- Dernière note: "${lastNote.content.substring(0, 120)}..."` : ''}
+`;
+    }
+  }
+
+  if (lang === 'en') {
+    return `You must rewrite only ${sectionNames[sectionId] || 'this section'} of the sales pitch.
+${additionalContext}
+FULL PITCH CONTEXT:
+${fullPitchContext}
+
+CURRENT CONTENT:
+${currentContent}
+
+INSTRUCTION:
+${userInstruction}
+
+RULES:
+- Same tone and style as the rest of the pitch
+- Same approximate length
+- Incorporate the sales rep's instruction
+- Use practitioner data to be SPECIFIC (names, dates, publications)
+- Generate ONLY the new content, without tags or titles
+
+New content:`;
+  }
+
+  return `Tu dois réécrire uniquement ${sectionNames[sectionId] || 'cette section'} du pitch commercial.
+${additionalContext}
+CONTEXTE DU PITCH COMPLET:
+${fullPitchContext}
+
+CONTENU ACTUEL:
+${currentContent}
+
+INSTRUCTION:
+${userInstruction}
+
+RÈGLES:
+- Même ton et style que le reste du pitch
+- Même longueur approximative
+- Intègre l'instruction du commercial
+- Utilise les données du praticien pour être SPÉCIFIQUE (noms, dates, publications)
+- Ne génère QUE le nouveau contenu, sans balise ni titre
+
+Nouveau contenu:`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRACTITIONER SUMMARY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Génère un résumé du praticien pour la prévisualisation
+ */
+export function generatePractitionerSummary(practitionerId: string): string {
+  const lang = getLanguage();
+  const dateFmt = lang === 'en' ? 'en-US' : 'fr-FR';
+  const profile = getEnrichedPractitionerData(practitionerId);
+
+  if (!profile) return lang === 'en' ? 'Data not available' : 'Données non disponibles';
+
+  const pubCount = profile.news?.filter(n => n.type === 'publication').length || 0;
+  const noteCount = profile.notes?.length || 0;
+  const visitCount = profile.visitHistory?.length || 0;
+
+  const daysSinceLastVisit = profile.lastVisitDate
+    ? Math.floor((Date.now() - new Date(profile.lastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  let summary = `**${profile.title} ${profile.firstName} ${profile.lastName}**\n`;
+  summary += `${profile.specialty} | ${profile.address.city}\n\n`;
+
+  summary += lang === 'en' ? `**Metrics:**\n` : `**Métriques:**\n`;
+  summary += lang === 'en'
+    ? `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K units/yr | Vingtile: V${profile.metrics.vingtile}\n`
+    : `- Volume: ${(profile.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | Vingtile: V${profile.metrics.vingtile}\n`;
+  summary += lang === 'en'
+    ? `- Loyalty: ${profile.metrics.loyaltyScore}/10 | Potential: +${profile.metrics.potentialGrowth}%\n`
+    : `- Fidélité: ${profile.metrics.loyaltyScore}/10 | Potentiel: +${profile.metrics.potentialGrowth}%\n`;
+  if (profile.metrics.isKOL) summary += `- **Key Opinion Leader**\n`;
+  if (profile.metrics.churnRisk !== 'low') {
+    summary += lang === 'en'
+      ? `- Risk: ${profile.metrics.churnRisk === 'high' ? 'HIGH' : 'Medium'}\n`
+      : `- Risque: ${profile.metrics.churnRisk === 'high' ? 'ÉLEVÉ' : 'Moyen'}\n`;
+  }
+
+  summary += lang === 'en' ? `\n**Available data:**\n` : `\n**Données disponibles:**\n`;
+  summary += `- ${pubCount} publication(s) | ${noteCount} note(s) | ${visitCount} ${lang === 'en' ? 'visit(s)' : 'visite(s)'}\n`;
+  if (daysSinceLastVisit !== null) {
+    summary += lang === 'en'
+      ? `- Last visit: ${daysSinceLastVisit} days ago\n`
+      : `- Dernière visite: il y a ${daysSinceLastVisit} jours\n`;
+  }
+
+  if (profile.news && profile.news.length > 0) {
+    const latestNews = profile.news[0];
+    summary += lang === 'en' ? `\n**Latest news:**\n` : `\n**Dernière actualité:**\n`;
+    summary += `_${latestNews.title}_ (${new Date(latestNews.date).toLocaleDateString(dateFmt)})\n`;
+  }
+
+  if (profile.notes && profile.notes.length > 0) {
+    const latestNote = profile.notes[0];
+    summary += lang === 'en' ? `\n**Latest note:**\n` : `\n**Dernière note:**\n`;
+    summary += `${latestNote.content.substring(0, 100)}...\n`;
+  }
+
+  return summary;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL PITCH GENERATION — Fallback when no LLM API key is configured
+// Uses real practitioner data + RAG knowledge to generate structured pitch
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Generates a structured pitch locally using practitioner data, without LLM.
+ * Returns text in the same [SECTION] format as the LLM would produce.
+ */
+export function generateLocalPitch(practitioner: Practitioner, config: PitchConfig): string {
+  const lang = getLanguage();
+  return lang === 'en'
+    ? generateLocalPitchEN(practitioner, config)
+    : generateLocalPitchFR(practitioner, config);
+}
+
+function getLocalPitchData(practitioner: Practitioner) {
+  const profile = getEnrichedPractitionerData(practitioner.id);
+  const publications = profile?.news?.filter(n => n.type === 'publication') || [];
+  const conferences = profile?.news?.filter(n => n.type === 'conference') || [];
+  const awards = profile?.news?.filter(n => n.type === 'award') || [];
+  const notes = profile?.notes || [];
+  const topProducts = profile ? getProductFrequency(profile).slice(0, 3) : [];
+  const daysSinceLastVisit = profile?.lastVisitDate
+    ? Math.floor((Date.now() - new Date(profile.lastVisitDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isKOL = profile?.metrics.isKOL || practitioner.isKOL;
+  const isPneumo = practitioner.specialty === 'Endocrinologue-Diabétologue' || practitioner.specialty === 'Endocrinologue';
+  const churnRisk = profile?.metrics.churnRisk || 'low';
+  const city = profile?.address?.city || practitioner.city;
+  const titre = `${practitioner.title} ${practitioner.lastName}`;
+  const pendingActions = notes.filter(n => n.nextAction).map(n => n.nextAction!);
+  return { profile, publications, conferences, awards, notes, topProducts, daysSinceLastVisit, isKOL, isPneumo, churnRisk, city, titre, pendingActions };
+}
+
+function generateLocalPitchFR(practitioner: Practitioner, config: PitchConfig): string {
+  const { publications, conferences, awards, notes, topProducts, daysSinceLastVisit, isKOL, isPneumo, churnRisk, city, titre, pendingActions } = getLocalPitchData(practitioner);
+
+  // ── ACCROCHE ──
+  let accroche = '';
+  if (publications.length > 0) {
+    const pub = publications[0];
+    const pubDate = new Date(pub.date).toLocaleDateString(getLanguage() === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' });
+    accroche = `${titre}, j'ai eu l'occasion de lire votre publication « ${pub.title} » parue en ${pubDate}. `;
+    if (isPneumo) {
+      accroche += `Votre travail sur ce sujet contribue significativement à faire avancer la prise en charge des patients diabétiques de type 2 dans la région. `;
+    } else {
+      accroche += `Ce type de travaux est essentiel pour sensibiliser les médecins généralistes à l'importance du dépistage précoce du diabète de type 2. `;
+    }
+    if (isKOL) {
+      accroche += `En tant que leader d'opinion reconnu, votre expertise est précieuse pour nos patients.`;
+    }
+  } else if (conferences.length > 0) {
+    accroche = `${titre}, j'ai noté votre participation à « ${conferences[0].title} ». Votre engagement dans la formation continue est un atout majeur pour vos patients. `;
+    accroche += `Je souhaitais justement échanger avec vous sur les dernières avancées en matière de prise en charge du diabète de type 2.`;
+  } else if (daysSinceLastVisit !== null && daysSinceLastVisit < 60) {
+    accroche = `${titre}, lors de notre dernier échange il y a ${daysSinceLastVisit} jours, nous avions abordé des sujets importants. `;
+    if (notes.length > 0) {
+      const lastNote = notes[0].content.substring(0, 80);
+      accroche += `Vous m'aviez notamment fait part de : « ${lastNote}… ». Je reviens aujourd'hui avec des éléments concrets pour avancer.`;
+    } else {
+      accroche += `Je souhaitais faire un point de suivi et vous présenter nos dernières nouveautés.`;
+    }
+  } else if (daysSinceLastVisit !== null && daysSinceLastVisit > 90) {
+    accroche = `${titre}, cela fait ${daysSinceLastVisit} jours que nous n'avons pas eu l'occasion d'échanger. `;
+    accroche += `Beaucoup de choses ont évolué chez MedVantis Pharma depuis notre dernier contact, et je tenais à vous en faire part personnellement.`;
+  } else {
+    accroche = `${titre}, en tant que ${isPneumo ? 'endocrinologue-diabétologue' : 'médecin généraliste'} à ${city}, vous êtes un partenaire clé dans la prise en charge des patients diabétiques de type 2 de votre secteur. `;
+    if (isKOL) {
+      accroche += `Votre statut de leader d'opinion et votre expertise reconnue font de vous un interlocuteur privilégié pour MedVantis Pharma.`;
+    } else {
+      accroche += `Je souhaitais vous présenter comment nous pouvons optimiser ensemble le parcours de vos patients DT2.`;
+    }
+  }
+
+  // ── PROPOSITION ──
+  let proposition = '';
+  const selectedProducts = config.products;
+
+  if (config.focusArea === 'innovation' || selectedProducts.some(p => p.toLowerCase().includes('diabconnect') || p.toLowerCase().includes('cgm'))) {
+    proposition = `**DiabConnect CGM** — Notre plateforme de suivi glycémique continu vous permet de suivre en temps réel les tendances glycémiques, l'HbA1c estimée et l'observance thérapeutique de vos patients, directement depuis votre portail praticien. `;
+    if (isPneumo) proposition += `Pour un endocrinologue-diabétologue comme vous, c'est la possibilité de détecter précocement les hypoglycémies et d'ajuster le traitement à distance. `;
+    proposition += `DiabConnect est inclus sans surcoût avec les prescriptions éligibles — aucun frais supplémentaire pour le patient ni pour vous.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('glucostay'))) {
+    proposition += `**GlucoStay** — Notre metformine XR à libération prolongée offre une tolérance gastro-intestinale améliorée, réduisant significativement les effets secondaires digestifs qui limitent l'observance chez de nombreux patients DT2.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('cardioglu'))) {
+    proposition += `**CardioGlu** — Notre inhibiteur SGLT2 avec bénéfices cardiovasculaires et rénaux prouvés, c'est la solution idéale pour vos patients DT2 à risque cardiovasculaire élevé.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('insupen'))) {
+    proposition += `**InsuPen** — Insuline basale de nouvelle génération, durée d'action de 36h avec dosage flexible, offrant un profil pharmacocinétique stable et réduisant significativement le risque d'hypoglycémies nocturnes.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('glp-vita') || p.toLowerCase().includes('glp1'))) {
+    proposition += `**GLP-Vita** — Agoniste du GLP-1 en injection hebdomadaire unique, démontrant une réduction de -1,8% de l'HbA1c avec un bénéfice additionnel sur la perte de poids. Idéal pour vos patients en surpoids ou obèses.\n\n`;
+  }
+  if (topProducts.length > 0 && proposition.length < 100) {
+    proposition += `Lors de nos échanges précédents, vous aviez montré de l'intérêt pour ${topProducts[0][0]}. Je vous propose aujourd'hui d'aller plus loin avec une offre complémentaire adaptée au profil de vos patients.\n\n`;
+  }
+  if (config.focusArea === 'service') {
+    proposition += `Notre engagement service se traduit par une **ligne d'information médicale 24h/24, 7j/7**, des MSL dédiés à la diabétologie et un accompagnement personnalisé pour chaque praticien. Votre tranquillité et celle de vos patients sont notre priorité absolue.`;
+  } else if (config.focusArea === 'price') {
+    proposition += `Côté remboursement, nos solutions sont intégralement prises en charge par l'Assurance Maladie pour les patients en ALD diabète. GlucoStay et InsuPen sont remboursés à 100%, GLP-Vita à 100% après échec de la metformine, et DiabConnect est inclus sans surcoût — un avantage significatif pour vos patients.`;
+  } else if (proposition.length < 100) {
+    proposition += `Chez MedVantis Pharma, nous mettons à votre disposition une gamme complète et intégrée pour le diabète de type 2 : des antidiabétiques oraux aux injectables innovants, en passant par le suivi glycémique connecté DiabConnect et l'éducation thérapeutique certifiée HAS. Tout est pensé pour simplifier votre quotidien et améliorer l'observance de vos patients DT2.`;
+  }
+
+  // ── CONCURRENCE ──
+  let competition = '';
+  if (config.competitors.length > 0) {
+    competition = `Face à ${config.competitors.join(' et ')}, MedVantis Pharma se distingue sur plusieurs points concrets :\n\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('novapharm'))) competition += `- **vs NovaPharm** : Notre portfolio DT2 complet couvre l'ensemble du parcours thérapeutique (metformine XR → SGLT2 → GLP-1 → insuline basale), là où NovaPharm ne propose qu'une couverture partielle. Notre plateforme DiabConnect, développée en interne, est nativement intégrée à nos solutions.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('servier'))) competition += `- **vs Servier** : Notre solution CGM DiabConnect offre un suivi glycémique connecté que Servier ne propose pas. Nos preuves cardiovasculaires et rénales avec CardioGlu sont robustes et différenciantes.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('sanofi'))) competition += `- **vs Sanofi** : Nos MSL dédiés exclusivement à la diabétologie offrent une expertise et une disponibilité que la couverture large de Sanofi ne peut égaler. InsuPen 36h offre une flexibilité de dosage supérieure.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('generiq') || c.toLowerCase().includes('généri'))) competition += `- **vs Génériques** : Nos molécules brevetées offrent des profils d'efficacité et de tolérance prouvés dans des essais cliniques de grande envergure, avec des bénéfices cardio-rénaux démontrés que les génériques ne peuvent revendiquer.\n`;
+  } else {
+    const noteContent = notes.map(n => n.content).join(' ').toLowerCase();
+    if (noteContent.includes('novapharm') || noteContent.includes('concurrent')) {
+      competition = `Nous savons que d'autres laboratoires vous sollicitent. Ce qui différencie MedVantis Pharma :\n\n`;
+      competition += `- **Portfolio DT2 complet** couvrant l'ensemble de l'escalade thérapeutique\n- **DiabConnect CGM** intégré sans surcoût pour le suivi glycémique connecté\n- **Programme d'éducation thérapeutique DT2** certifié HAS, unique dans le secteur\n- **Innovation continue** : pipeline riche en diabétologie avec études cliniques de grande envergure\n`;
+    } else {
+      competition = `Ce qui fait la force de MedVantis Pharma par rapport aux autres laboratoires :\n\n`;
+      competition += `- **Spécialiste du diabète de type 2** avec un portfolio thérapeutique complet et intégré\n- **Ligne médicale 24/7** avec MSL dédiés diabétologie\n- **DiabConnect CGM** sans surcoût : suivi glycémique en temps réel et tendances HbA1c\n- **Éducation thérapeutique DT2** certifiée HAS, dispensée par des professionnels dédiés\n`;
+    }
+  }
+
+  // ── CTA ──
+  let cta = '';
+  if (pendingActions.length > 0) { cta = `Lors de notre dernier échange, nous avions convenu de : « ${pendingActions[0]} ». Je vous propose de concrétiser cela dès maintenant.\n\n`; }
+  if (config.focusArea === 'innovation') { cta += `**Proposition concrète** : Je peux organiser une démonstration de DiabConnect directement dans votre cabinet, avec un cas patient simulé. Cela vous permettra de voir en 15 minutes comment suivre les tendances glycémiques et l'observance de vos patients DT2 en temps réel. Seriez-vous disponible la semaine prochaine ?`; }
+  else if (config.focusArea === 'service') { cta += `**Proposition concrète** : Je vous propose de planifier une rencontre avec notre MSL diabétologie régional pour vous présenter nos dernières données cliniques et répondre à toutes vos questions sur notre gamme DT2. Quel créneau vous conviendrait ?`; }
+  else if (churnRisk === 'high') { cta += `**Proposition concrète** : Votre satisfaction est notre priorité absolue. Je souhaite organiser un point complet sur votre expérience avec nos produits, identifier les axes d'amélioration et vous présenter les évolutions récentes de notre gamme DT2. Pouvons-nous nous voir cette semaine ?`; }
+  else { cta += `**Proposition concrète** : Je vous propose ${isPneumo ? 'un rendez-vous de 30 minutes pour approfondir les solutions MedVantis les plus adaptées à votre patientèle DT2' : 'une présentation ciblée de 20 minutes sur les solutions qui correspondent le mieux à vos patients diabétiques'}. Je peux m'adapter à votre agenda — quel jour vous conviendrait le mieux ?`; }
+
+  // ── OBJECTIONS ──
+  let objections = '';
+  if (config.includeObjections) {
+    objections += `**Objection : « Je prescris déjà les traitements d'un autre laboratoire et j'en suis satisfait. »**\n→ Je comprends tout à fait. Mon objectif n'est pas de tout changer, mais de vous montrer en quoi le portfolio intégré de MedVantis Pharma — avec DiabConnect CGM inclus — peut compléter votre arsenal thérapeutique et améliorer l'observance de vos patients DT2.\n\n`;
+    if (config.focusArea === 'price' || notes.some(n => n.content.toLowerCase().includes('prix'))) { objections += `**Objection : « C'est trop cher pour mes patients. »**\n→ Nos solutions sont intégralement remboursées dans le cadre de l'ALD diabète. GlucoStay et InsuPen sont à 100%, GLP-Vita à 100% après échec metformine, et DiabConnect est inclus sans aucun surcoût. Le reste à charge pour le patient en ALD est nul.\n\n`; }
+    objections += `**Objection : « Je n'ai pas le temps pour une formation. »**\n→ Notre programme est conçu pour s'intégrer à votre pratique : ${isPneumo ? 'sessions de 45 minutes en visioconférence avec nos MSL diabétologie, DPC accrédité, à votre rythme' : 'supports synthétiques de 15 minutes, directement applicables en consultation'}.\n\n`;
+    if (isPneumo) { objections += `**Objection : « Le suivi glycémique connecté, c'est encore un écran de plus à surveiller. »**\n→ DiabConnect est conçu pour être proactif : il vous alerte uniquement en cas d'anomalie (hypoglycémie, hyperglycémie prolongée, chute d'observance). Vous n'avez pas besoin de le consulter quotidiennement — il vient à vous quand c'est nécessaire.\n\n`; }
+    objections += `**Objection : « Mon patient ne saura pas utiliser un dispositif connecté. »**\n→ Nos équipes assurent la formation du patient en pharmacie ou à domicile. L'interface patient DiabConnect est volontairement simplifiée. Et notre ligne médicale 24/7 est là pour accompagner le patient en cas de difficulté.`;
+  }
+
+  // ── TALKING POINTS ──
+  let talkingPoints = '';
+  if (config.includeTalkingPoints) {
+    talkingPoints += `1. **Accroche personnalisée** : ${publications.length > 0 ? `Mentionner la publication « ${publications[0].title} »` : daysSinceLastVisit !== null ? `Rappeler le dernier échange il y a ${daysSinceLastVisit} jours` : `Valoriser son expertise en ${practitioner.specialty} à ${city}`}\n`;
+    talkingPoints += `2. **Suivi des engagements** : ${pendingActions.length > 0 ? `Faire le point sur : « ${pendingActions[0]} »` : 'Demander comment les choses ont évolué depuis le dernier contact'}\n`;
+    talkingPoints += `3. **Produit phare** : Présenter ${config.products[0] || 'GLP-Vita'} avec focus sur ${config.focusArea === 'innovation' ? 'DiabConnect CGM intégré' : config.focusArea === 'service' ? 'les MSL dédiés diabétologie' : config.focusArea === 'price' ? 'le remboursement intégral ALD' : 'les bénéfices patient'}\n`;
+    talkingPoints += `4. **Donnée clinique** : ${isPneumo ? 'Recommandations ADA/EASD 2024 — les agonistes GLP-1 réduisent de 14% les événements cardiovasculaires majeurs chez les DT2 à haut risque' : 'Le DT2 touche 4 millions de Français, dont 700 000 non diagnostiqués — rôle clé du MG dans le dépistage et l\'initiation thérapeutique'}\n`;
+    talkingPoints += `5. **Question ouverte** : « ${isPneumo ? 'Comment gérez-vous actuellement l\'escalade thérapeutique chez vos patients DT2 insuffisamment contrôlés sous bithérapie orale ?' : 'Quelle est votre approche pour les patients DT2 dont l\'HbA1c reste au-dessus de 7% malgré la metformine ?'} »\n`;
+    talkingPoints += `6. **Proposition concrète** : Fixer un prochain RDV avec action définie (démo, essai, rencontre technique)\n`;
+    if (awards.length > 0) { talkingPoints += `7. **Félicitations** : Mentionner la distinction « ${awards[0].title} »\n`; }
+    if (churnRisk === 'high') { talkingPoints += `${awards.length > 0 ? '8' : '7'}. **Rétention** : Aborder proactivement la satisfaction — « Comment évaluez-vous notre service actuel ? Y a-t-il des points à améliorer ? »\n`; }
+  }
+
+  // ── FOLLOW UP ──
+  let followUp = `**J+1 — Récapitulatif et engagement**\nEnvoyer un email de remerciement personnalisé à ${titre} récapitulant les points abordés, les produits présentés (${config.products.slice(0, 2).join(', ') || 'gamme discutée'}) et les prochaines étapes convenues.\n\n`;
+  followUp += `**J+7 — Suivi proactif**\n${pendingActions.length > 0 ? `Relance sur l'action convenue : « ${pendingActions[0]} ». ` : ''}Partager ${isPneumo ? 'un article clinique pertinent ou les dernières recommandations ADA/EASD et SFD' : 'un cas patient anonymisé illustrant les bénéfices de DiabConnect CGM'}. Proposer une date pour ${config.focusArea === 'innovation' ? 'la démonstration DiabConnect' : 'le prochain rendez-vous'}.\n\n`;
+  followUp += `**J+30 — Consolidation**\n${churnRisk === 'high' ? 'Point de satisfaction formalisé. ' : ''}Faire le bilan des actions engagées. ${isKOL ? 'Proposer une collaboration (intervention lors d\'un événement MedVantis Pharma, retour d\'expérience). ' : `Évaluer l'opportunité d'élargir l'offre (${topProducts.length > 0 ? `passage de ${topProducts[0][0]} vers une solution complémentaire` : 'nouveaux produits adaptés à sa patientèle'}).`}`;
+
+  // ── ASSEMBLE ──
+  let pitch = `[ACCROCHE]\n${accroche}\n\n[PROPOSITION]\n${proposition}\n\n[CONCURRENCE]\n${competition}\n\n[CALL_TO_ACTION]\n${cta}`;
+  if (config.includeObjections) pitch += `\n\n[OBJECTIONS]\n${objections}`;
+  if (config.includeTalkingPoints) pitch += `\n\n[TALKING_POINTS]\n${talkingPoints}`;
+  pitch += `\n\n[FOLLOW_UP]\n${followUp}`;
+  return pitch;
+}
+
+function generateLocalPitchEN(practitioner: Practitioner, config: PitchConfig): string {
+  const { publications, conferences, awards, notes, topProducts, daysSinceLastVisit, isKOL, isPneumo, churnRisk, city, titre, pendingActions } = getLocalPitchData(practitioner);
+
+  // ── HOOK ──
+  let accroche = '';
+  if (publications.length > 0) {
+    const pub = publications[0];
+    const pubDate = new Date(pub.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    accroche = `${titre}, I had the opportunity to read your publication "${pub.title}" published in ${pubDate}. `;
+    if (isPneumo) { accroche += `Your work on this topic significantly contributes to advancing the care of type 2 diabetes patients in the region. `; }
+    else { accroche += `This type of research is essential for raising awareness among general practitioners about the importance of early type 2 diabetes screening. `; }
+    if (isKOL) { accroche += `As a recognized key opinion leader, your expertise is invaluable for our patients.`; }
+  } else if (conferences.length > 0) {
+    accroche = `${titre}, I noticed your participation in "${conferences[0].title}". Your commitment to continuing education is a major asset for your patients. `;
+    accroche += `I wanted to discuss with you the latest advances in type 2 diabetes management.`;
+  } else if (daysSinceLastVisit !== null && daysSinceLastVisit < 60) {
+    accroche = `${titre}, during our last conversation ${daysSinceLastVisit} days ago, we discussed some important topics. `;
+    if (notes.length > 0) { accroche += `You specifically mentioned: "${notes[0].content.substring(0, 80)}...". I'm back today with concrete elements to move forward.`; }
+    else { accroche += `I wanted to follow up and present our latest innovations.`; }
+  } else if (daysSinceLastVisit !== null && daysSinceLastVisit > 90) {
+    accroche = `${titre}, it has been ${daysSinceLastVisit} days since we last had the opportunity to talk. `;
+    accroche += `A lot has evolved at MedVantis Pharma since our last contact, and I wanted to share it with you personally.`;
+  } else {
+    accroche = `${titre}, as a ${isPneumo ? 'endocrinologist-diabetologist' : 'general practitioner'} in ${city}, you are a key partner in the care of type 2 diabetes patients in your area. `;
+    if (isKOL) { accroche += `Your status as a key opinion leader and your recognized expertise make you a privileged contact for MedVantis Pharma.`; }
+    else { accroche += `I wanted to present how we can optimize together the care pathway for your T2D patients.`; }
+  }
+
+  // ── PROPOSITION ──
+  let proposition = '';
+  const selectedProducts = config.products;
+  if (config.focusArea === 'innovation' || selectedProducts.some(p => p.toLowerCase().includes('diabconnect') || p.toLowerCase().includes('cgm'))) {
+    proposition = `**DiabConnect CGM** — Our continuous glucose monitoring platform lets you track glycemic trends, estimated HbA1c, and therapy adherence of your patients in real time, directly from your practitioner portal. `;
+    if (isPneumo) proposition += `For an endocrinologist-diabetologist like you, this means the ability to detect hypoglycemia early and adjust treatment remotely. `;
+    proposition += `DiabConnect is included at no extra cost with eligible prescriptions — no additional fees for the patient or for you.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('glucostay'))) {
+    proposition += `**GlucoStay** — Our extended-release metformin offers improved gastrointestinal tolerance, significantly reducing the digestive side effects that limit adherence in many T2D patients.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('cardioglu'))) {
+    proposition += `**CardioGlu** — Our SGLT2 inhibitor with proven cardiovascular and renal benefits, the ideal solution for your T2D patients with high cardiovascular risk.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('insupen'))) {
+    proposition += `**InsuPen** — Next-generation basal insulin with 36h duration of action and flexible dosing, providing a stable pharmacokinetic profile and significantly reducing the risk of nocturnal hypoglycemia.\n\n`;
+  }
+  if (selectedProducts.some(p => p.toLowerCase().includes('glp-vita') || p.toLowerCase().includes('glp1'))) {
+    proposition += `**GLP-Vita** — Weekly GLP-1 receptor agonist injection, demonstrating a -1.8% HbA1c reduction with additional weight loss benefit. Ideal for your overweight or obese patients.\n\n`;
+  }
+  if (topProducts.length > 0 && proposition.length < 100) {
+    proposition += `During our previous discussions, you showed interest in ${topProducts[0][0]}. I'd like to propose going further with a complementary offer tailored to your patients' profile.\n\n`;
+  }
+  if (config.focusArea === 'service') {
+    proposition += `Our service commitment means a **24/7 medical information line**, dedicated diabetology MSLs, and personalized support for each practitioner. Your peace of mind and that of your patients is our absolute priority.`;
+  } else if (config.focusArea === 'price') {
+    proposition += `On the reimbursement side, our solutions are fully covered by national health insurance for ALD diabetes patients. GlucoStay and InsuPen are 100% covered, GLP-Vita is 100% covered after metformin failure, and DiabConnect is included at no extra cost — a significant advantage for your patients.`;
+  } else if (proposition.length < 100) {
+    proposition += `At MedVantis Pharma, we provide you with a complete, integrated T2D range: from oral antidiabetics to innovative injectables, through connected glucose monitoring with DiabConnect and HAS-certified therapeutic education. Everything is designed to simplify your daily practice and improve your T2D patients' compliance.`;
+  }
+
+  // ── COMPETITION ──
+  let competition = '';
+  if (config.competitors.length > 0) {
+    competition = `Compared to ${config.competitors.join(' and ')}, MedVantis Pharma stands out on several concrete points:\n\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('novapharm'))) competition += `- **vs NovaPharm**: Our comprehensive T2D portfolio covers the entire therapeutic pathway (metformin XR → SGLT2 → GLP-1 → basal insulin), where NovaPharm offers only partial coverage. Our DiabConnect platform, developed in-house, is natively integrated with our solutions.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('servier'))) competition += `- **vs Servier**: Our DiabConnect CGM solution offers connected glucose monitoring that Servier does not provide. Our cardiovascular and renal evidence with CardioGlu is robust and differentiating.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('sanofi'))) competition += `- **vs Sanofi**: Our MSLs dedicated exclusively to diabetology offer expertise and availability that Sanofi's broad coverage cannot match. InsuPen 36h offers superior dosing flexibility.\n`;
+    if (config.competitors.some(c => c.toLowerCase().includes('generic'))) competition += `- **vs Generics**: Our patented molecules offer proven efficacy and tolerance profiles from large-scale clinical trials, with demonstrated cardio-renal benefits that generics cannot claim.\n`;
+  } else {
+    const noteContent = notes.map(n => n.content).join(' ').toLowerCase();
+    if (noteContent.includes('novapharm') || noteContent.includes('concurrent')) {
+      competition = `We know that other pharmaceutical companies are reaching out to you. What differentiates MedVantis Pharma:\n\n`;
+      competition += `- **Comprehensive T2D portfolio** covering the entire therapeutic escalation pathway\n- **DiabConnect CGM** integrated at no extra cost for connected glucose monitoring\n- **HAS-certified T2D therapeutic education program**, unique in the sector\n- **Continuous innovation**: rich diabetology pipeline with large-scale clinical studies\n`;
+    } else {
+      competition = `What makes MedVantis Pharma stand out from other pharmaceutical companies:\n\n`;
+      competition += `- **T2D specialist** with a complete and integrated therapeutic portfolio\n- **24/7 medical line** with dedicated diabetology MSLs\n- **DiabConnect CGM** at no extra cost: real-time glucose monitoring and HbA1c trends\n- **T2D therapeutic education** HAS-certified, delivered by dedicated professionals\n`;
+    }
+  }
+
+  // ── CTA ──
+  let cta = '';
+  if (pendingActions.length > 0) { cta = `During our last conversation, we agreed on: "${pendingActions[0]}". I propose we make this happen now.\n\n`; }
+  if (config.focusArea === 'innovation') { cta += `**Concrete proposal**: I can arrange a demonstration of DiabConnect right in your office, with a simulated patient case. This will let you see in 15 minutes how to track glycemic trends and your T2D patients' adherence in real time. Would you be available next week?`; }
+  else if (config.focusArea === 'service') { cta += `**Concrete proposal**: I suggest we schedule a meeting with our regional diabetology MSL to present our latest clinical data and answer all your questions about our T2D range. What time slot would work for you?`; }
+  else if (churnRisk === 'high') { cta += `**Concrete proposal**: Your satisfaction is our absolute priority. I want to organize a comprehensive review of your experience with our products, identify areas for improvement, and present the recent updates to our T2D range. Can we meet this week?`; }
+  else { cta += `**Concrete proposal**: I suggest ${isPneumo ? 'a 30-minute meeting to explore the MedVantis solutions best suited to your T2D patient base' : 'a focused 20-minute presentation on the solutions that best match your diabetic patients\' needs'}. I can adapt to your schedule — which day would work best for you?`; }
+
+  // ── OBJECTIONS ──
+  let objections = '';
+  if (config.includeObjections) {
+    objections += `**Objection: "I already prescribe another lab's treatments and I'm satisfied."**\n→ I completely understand. My goal isn't to change everything, but to show you how MedVantis Pharma's integrated portfolio — with DiabConnect CGM included — can complement your current therapeutic arsenal and improve your T2D patients' compliance.\n\n`;
+    if (config.focusArea === 'price' || notes.some(n => n.content.toLowerCase().includes('prix'))) { objections += `**Objection: "It's too expensive for my patients."**\n→ Our solutions are fully reimbursed under ALD diabetes. GlucoStay and InsuPen are 100% covered, GLP-Vita is 100% after metformin failure, and DiabConnect is included at no additional cost. The out-of-pocket cost for ALD patients is zero.\n\n`; }
+    objections += `**Objection: "I don't have time for training."**\n→ Our program is designed to fit into your practice: ${isPneumo ? '45-minute video conference sessions with our diabetology MSLs, accredited CPD, at your own pace' : 'concise 15-minute materials, directly applicable in consultation'}.\n\n`;
+    if (isPneumo) { objections += `**Objection: "Connected glucose monitoring means yet another screen to watch."**\n→ DiabConnect is designed to be proactive: it alerts you only when there's an anomaly (hypoglycemia, prolonged hyperglycemia, compliance drop). You don't need to check it daily — it comes to you when needed.\n\n`; }
+    objections += `**Objection: "My patient won't know how to use a connected device."**\n→ Our teams handle patient training at the pharmacy or at home. The DiabConnect patient interface is intentionally simplified. And our 24/7 medical line is there to assist the patient with any difficulties.`;
+  }
+
+  // ── TALKING POINTS ──
+  let talkingPoints = '';
+  if (config.includeTalkingPoints) {
+    talkingPoints += `1. **Personalized opening**: ${publications.length > 0 ? `Mention the publication "${publications[0].title}"` : daysSinceLastVisit !== null ? `Reference the last meeting ${daysSinceLastVisit} days ago` : `Highlight expertise in ${practitioner.specialty} in ${city}`}\n`;
+    talkingPoints += `2. **Follow up on commitments**: ${pendingActions.length > 0 ? `Review status of: "${pendingActions[0]}"` : 'Ask how things have evolved since the last contact'}\n`;
+    talkingPoints += `3. **Flagship product**: Present ${config.products[0] || 'GLP-Vita'} with focus on ${config.focusArea === 'innovation' ? 'DiabConnect CGM integration' : config.focusArea === 'service' ? 'dedicated diabetology MSLs' : config.focusArea === 'price' ? 'full ALD reimbursement' : 'patient benefits'}\n`;
+    talkingPoints += `4. **Clinical data**: ${isPneumo ? 'ADA/EASD 2024 recommendations — GLP-1 agonists reduce major cardiovascular events by 14% in high-risk T2D patients' : 'T2D affects 4 million people in France, 700,000 undiagnosed — key role of GPs in screening and therapy initiation'}\n`;
+    talkingPoints += `5. **Open-ended question**: "${isPneumo ? 'How do you currently manage therapeutic escalation in your T2D patients insufficiently controlled on oral bitherapy?' : 'What is your approach for T2D patients whose HbA1c remains above 7% despite metformin?'}"\n`;
+    talkingPoints += `6. **Concrete proposal**: Schedule next meeting with a defined action (demo, trial, technical meeting)\n`;
+    if (awards.length > 0) { talkingPoints += `7. **Congratulations**: Mention the award "${awards[0].title}"\n`; }
+    if (churnRisk === 'high') { talkingPoints += `${awards.length > 0 ? '8' : '7'}. **Retention**: Proactively address satisfaction — "How would you rate our current service? Are there areas for improvement?"\n`; }
+  }
+
+  // ── FOLLOW UP ──
+  let followUp = `**D+1 — Summary and commitment**\nSend a personalized thank-you email to ${titre} summarizing the topics discussed, products presented (${config.products.slice(0, 2).join(', ') || 'range discussed'}) and the agreed next steps.\n\n`;
+  followUp += `**D+7 — Proactive follow-up**\n${pendingActions.length > 0 ? `Follow up on the agreed action: "${pendingActions[0]}". ` : ''}Share ${isPneumo ? 'a relevant clinical article or the latest ADA/EASD and SFD recommendations' : 'an anonymized patient case illustrating the benefits of DiabConnect CGM'}. Propose a date for ${config.focusArea === 'innovation' ? 'the DiabConnect demonstration' : 'the next meeting'}.\n\n`;
+  followUp += `**D+30 — Consolidation**\n${churnRisk === 'high' ? 'Formal satisfaction review. ' : ''}Review the actions taken. ${isKOL ? 'Propose a collaboration (speaking at a MedVantis Pharma event, experience feedback). ' : `Evaluate the opportunity to expand the offering (${topProducts.length > 0 ? `transitioning from ${topProducts[0][0]} to a complementary solution` : 'new products tailored to their patient base'}).`}`;
+
+  // ── ASSEMBLE ──
+  let pitch = `[ACCROCHE]\n${accroche}\n\n[PROPOSITION]\n${proposition}\n\n[CONCURRENCE]\n${competition}\n\n[CALL_TO_ACTION]\n${cta}`;
+  if (config.includeObjections) pitch += `\n\n[OBJECTIONS]\n${objections}`;
+  if (config.includeTalkingPoints) pitch += `\n\n[TALKING_POINTS]\n${talkingPoints}`;
+  pitch += `\n\n[FOLLOW_UP]\n${followUp}`;
+  return pitch;
+}

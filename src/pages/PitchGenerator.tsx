@@ -1,0 +1,1302 @@
+import { useState, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Pause,
+  Copy,
+  Check,
+  RefreshCw,
+  ArrowLeft,
+  Settings,
+  Loader2,
+  Search,
+  Star,
+  MapPin,
+  FileText,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  ChevronRight,
+  Clock,
+  Target,
+  Shield,
+  Zap,
+  Award,
+  BookOpen
+} from 'lucide-react';
+import { useAppStore } from '../stores/useAppStore';
+import { useTranslation } from '../i18n';
+import { localizeSpecialty, txt } from '../utils/localizeData';
+import { getLocaleCode } from '../utils/helpers';
+import { useGroq } from '../hooks/useGroq';
+import { useSpeech } from '../hooks/useSpeech';
+import { buildEnhancedSystemPrompt, buildEnhancedUserPrompt, buildEnhancedRegenerateSectionPrompt, generatePractitionerSummary, SECTION_ID_TO_TAG, generateLocalPitch } from '../services/pitchPromptsEnhanced';
+import { DataService } from '../services/dataService';
+import { quickSearch } from '../services/universalSearch';
+import { SkeletonPitchSection } from '../components/ui/Skeleton';
+import { MarkdownText } from '../components/ui/MarkdownText';
+import type { PitchConfig, PitchSection } from '../types/pitch';
+import type { Practitioner } from '../types';
+
+// Couleurs et icones par section
+const SECTION_STYLES: Record<string, { gradient: string; bg: string; icon: string; borderColor: string }> = {
+  hook: { gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', icon: '1', borderColor: 'border-amber-200' },
+  proposition: { gradient: 'from-blue-500 to-cyan-500', bg: 'bg-blue-50', icon: '2', borderColor: 'border-blue-200' },
+  competition: { gradient: 'from-purple-500 to-pink-500', bg: 'bg-purple-50', icon: '3', borderColor: 'border-purple-200' },
+  cta: { gradient: 'from-green-500 to-emerald-500', bg: 'bg-green-50', icon: '4', borderColor: 'border-green-200' },
+  objections: { gradient: 'from-red-500 to-rose-500', bg: 'bg-red-50', icon: '5', borderColor: 'border-red-200' },
+  talking_points: { gradient: 'from-indigo-500 to-violet-500', bg: 'bg-indigo-50', icon: '6', borderColor: 'border-indigo-200' },
+  follow_up: { gradient: 'from-teal-500 to-cyan-500', bg: 'bg-teal-50', icon: '7', borderColor: 'border-teal-200' },
+};
+
+// Produits MedVantis Pharma disponibles (descriptions are translated inside the component)
+const PRODUCT_IDS = ['vitalaire', 'freestyle', 'telesuivi', 'extracteur', 'portable', 'vni', 'ppc', 'service247', 'formation'] as const;
+const PRODUCT_NAMES: Record<string, string> = {
+  vitalaire: 'GlucoStay XR',
+  freestyle: 'InsuPen Flex',
+  telesuivi: 'DiabConnect CGM',
+  extracteur: 'CardioGlu',
+  portable: 'GLP-Vita',
+  vni: 'DiabConnect App Pro',
+  ppc: 'GlucoStay XR 750mg',
+  service247: 'Service 24/7',
+  formation: 'Formation patients',
+};
+
+// Concurrents identifiés (names stay as-is)
+const COMPETITOR_IDS = ['novapharm', 'seralis', 'genbio', 'genbio2', 'other'] as const;
+
+export function PitchGenerator() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const practitioners = useAppStore((state) => state.practitioners);
+  const { t, language } = useTranslation();
+
+  // Translated product descriptions
+  const PRODUCTS = PRODUCT_IDS.map(id => ({
+    id,
+    name: PRODUCT_NAMES[id],
+    description: t(`pitch.products.${id === 'vitalaire' ? 'vitalaire' : id === 'freestyle' ? 'freestyle' : id === 'telesuivi' ? 'telesuivi' : id === 'extracteur' ? 'station' : id === 'portable' ? 'o2liquid' : id === 'vni' ? 'dreamstation' : id === 'ppc' ? 'resmed' : id === 'service247' ? 'service247' : 'training'}`),
+  }));
+
+  // Translated competitor names
+  const COMPETITORS = COMPETITOR_IDS.map(id => ({
+    id,
+    name: t(`pitch.competitors.${id === 'vivisol' ? 'vivisol' : id === 'linde' ? 'linde' : id === 'sos' ? 'sos' : id === 'bastide' ? 'bastide' : 'others'}`),
+  }));
+
+  // Translated focus options
+  const FOCUS_OPTIONS = [
+    { id: 'general', label: t('pitch.focus.general'), icon: Target, description: t('pitch.focus.generalDesc') },
+    { id: 'service', label: t('pitch.focus.service'), icon: Shield, description: t('pitch.focus.serviceDesc') },
+    { id: 'innovation', label: t('pitch.focus.innovation'), icon: Zap, description: t('pitch.focus.innovationDesc') },
+    { id: 'price', label: t('pitch.focus.price'), icon: TrendingDown, description: t('pitch.focus.priceDesc') },
+    { id: 'loyalty', label: t('pitch.focus.loyalty'), icon: Award, description: t('pitch.focus.loyaltyDesc') },
+  ];
+
+  const practitionerId = searchParams.get('practitionerId');
+  const practitioner = practitioners.find((p) => p.id === practitionerId);
+
+  // Etape du wizard
+  const [step, setStep] = useState<'select' | 'preview' | 'configure' | 'generate'>(!practitioner ? 'select' : 'preview');
+
+  // Recherche de praticien
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSpecialty, setFilterSpecialty] = useState<string>('all');
+  const [filterKOL, setFilterKOL] = useState<boolean | null>(null);
+  const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(practitioner || null);
+
+  // Configuration du pitch
+  const [config, setConfig] = useState<PitchConfig>({
+    length: 'medium',
+    tone: 'conversational',
+    products: ['GlucoStab Pro', 'Telesuivi DT2'],
+    competitors: [],
+    additionalInstructions: '',
+    includeObjections: true,
+    includeTalkingPoints: true,
+    focusArea: 'general',
+  });
+
+  // Etats de generation
+  const [sections, setSections] = useState<PitchSection[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [streamedText, setStreamedText] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editInstruction, setEditInstruction] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  // Previsualisation praticien (kept for future use)
+  const [, setPractitionerSummary] = useState<string>('');
+
+  // Hooks IA et Speech
+  const { streamCompletion, complete, isLoading: groqLoading, error: _llmError } = useGroq({
+    temperature: 0.8,
+    maxTokens: 4096,
+  });
+
+  // LLM est toujours disponible (API externe ou WebLLM navigateur)
+  const hasValidApiKey = true; // useGroq gère le fallback WebLLM automatiquement
+  const { speak, pause, resume, stop, isSpeaking, isPaused, isSupported: speechSupported } = useSpeech();
+
+  // Filtrage des praticiens
+  const filteredPractitioners = useMemo(() => {
+    // Si recherche active, utiliser quickSearch
+    if (searchQuery.length >= 2) {
+      const searchResults = quickSearch(searchQuery, 20);
+      return searchResults.map(p => ({
+        ...practitioners.find(pr => pr.id === p.id)!
+      })).filter(Boolean);
+    }
+
+    let filtered = [...practitioners];
+
+    if (filterSpecialty !== 'all') {
+      filtered = filtered.filter(p => p.specialty === filterSpecialty);
+    }
+
+    if (filterKOL !== null) {
+      filtered = filtered.filter(p => p.isKOL === filterKOL);
+    }
+
+    // Trier par volume par defaut
+    return filtered.sort((a, b) => b.volumeL - a.volumeL).slice(0, 30);
+  }, [practitioners, searchQuery, filterSpecialty, filterKOL]);
+
+  // Selectionner un praticien
+  const handleSelectPractitioner = (p: Practitioner) => {
+    setSelectedPractitioner(p);
+    navigate(`/pitch?practitionerId=${p.id}`, { replace: true });
+
+    // Auto-selectionner les produits deja discutes avec ce praticien
+    const profile = DataService.getPractitionerById(p.id);
+    if (profile?.visitHistory) {
+      const discussed = new Set<string>();
+      profile.visitHistory.forEach(v => v.productsDiscussed?.forEach(prod => discussed.add(prod)));
+      if (discussed.size > 0) {
+        const matchedProducts = PRODUCTS
+          .filter(prod => discussed.has(prod.name) || [...discussed].some(d => prod.name.toLowerCase().includes(d.toLowerCase().split(' ')[0])))
+          .map(prod => prod.name);
+        if (matchedProducts.length > 0) {
+          setConfig(prev => ({ ...prev, products: matchedProducts }));
+        }
+      }
+    }
+
+    // Generer le resume
+    const summary = generatePractitionerSummary(p.id);
+    setPractitionerSummary(summary);
+    setStep('preview');
+  };
+
+  // Parser le texte streame en sections
+  const parsePitchSections = (text: string): PitchSection[] => {
+    const sectionRegex = /\[([A-Z_]+)\]\s*\n([\s\S]*?)(?=\n\[|$)/g;
+    const parsed: PitchSection[] = [];
+    let match;
+
+    const sectionMap: Record<string, { id: PitchSection['id']; title: string; icon: string }> = {
+      ACCROCHE: { id: 'hook', title: t('pitch.sections.hook'), icon: '1' },
+      PROPOSITION: { id: 'proposition', title: t('pitch.sections.valueProposition'), icon: '2' },
+      CONCURRENCE: { id: 'competition', title: t('pitch.sections.differentiation'), icon: '3' },
+      CALL_TO_ACTION: { id: 'cta', title: t('pitch.sections.callToAction'), icon: '4' },
+      OBJECTIONS: { id: 'objections', title: t('pitch.sections.objectionHandling'), icon: '5' },
+      TALKING_POINTS: { id: 'talking_points', title: t('pitch.sections.discussionPoints'), icon: '6' },
+      FOLLOW_UP: { id: 'follow_up', title: t('pitch.sections.followUpPlan'), icon: '7' },
+    };
+
+    while ((match = sectionRegex.exec(text)) !== null) {
+      const [, key, content] = match;
+      const section = sectionMap[key];
+      if (section) {
+        parsed.push({
+          ...section,
+          content: content.trim(),
+        });
+      }
+    }
+
+    return parsed;
+  };
+
+  // Simulate streaming for local pitch (word-by-word reveal)
+  const simulateLocalStream = async (text: string) => {
+    const words = text.split(' ');
+    let accumulated = '';
+    for (let i = 0; i < words.length; i++) {
+      accumulated += (i > 0 ? ' ' : '') + words[i];
+      const parsed = parsePitchSections(accumulated);
+      if (parsed.length > 0) {
+        setSections(parsed);
+      }
+      setStreamedText(accumulated);
+      // Stream faster: batch 3 words at a time with small delay
+      if (i % 3 === 0) await new Promise(r => setTimeout(r, 8));
+    }
+  };
+
+  // Generer le pitch complet
+  const generatePitch = async () => {
+    if (!selectedPractitioner) return;
+
+    setIsGenerating(true);
+    setStreamedText('');
+    setSections([]);
+    setGenerateError(null);
+    setStep('generate');
+
+    try {
+      if (hasValidApiKey) {
+        // LLM mode
+        setIsDemo(false);
+        const systemPrompt = buildEnhancedSystemPrompt(config, selectedPractitioner);
+        const userPrompt = buildEnhancedUserPrompt(selectedPractitioner, config);
+        let receivedChunks = false;
+
+        await streamCompletion(
+          [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          (chunk) => {
+            receivedChunks = true;
+            setStreamedText((prev) => {
+              const newText = prev + chunk;
+              const parsed = parsePitchSections(newText);
+              if (parsed.length > 0) {
+                setSections(parsed);
+              }
+              return newText;
+            });
+          },
+          () => {
+            // Success callback — streaming complete
+          }
+        );
+
+        // If LLM returned an error or produced no output, fallback to local
+        if (!receivedChunks) {
+          setIsDemo(true);
+          const localPitch = generateLocalPitch(selectedPractitioner, config);
+          await simulateLocalStream(localPitch);
+        }
+      } else {
+        // No API key — generate locally from real data
+        setIsDemo(true);
+        const localPitch = generateLocalPitch(selectedPractitioner, config);
+        await simulateLocalStream(localPitch);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t('pitch.generateError');
+      setGenerateError(msg);
+      // Fallback to local on any error
+      try {
+        setIsDemo(true);
+        const localPitch = generateLocalPitch(selectedPractitioner, config);
+        await simulateLocalStream(localPitch);
+      } catch {
+        setGenerateError(t('pitch.generateError'));
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Regenerer une section specifique
+  const regenerateSection = async (sectionId: string) => {
+    if (!selectedPractitioner) return;
+
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section || !editInstruction.trim()) return;
+
+    setEditingSection(sectionId);
+
+    const systemPrompt = buildEnhancedSystemPrompt(config, selectedPractitioner);
+    const regeneratePrompt = buildEnhancedRegenerateSectionPrompt(
+      sectionId,
+      section.content,
+      editInstruction,
+      streamedText,
+      selectedPractitioner
+    );
+
+    const newContent = await complete([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: regeneratePrompt },
+    ]);
+
+    if (newContent) {
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === sectionId ? { ...s, content: newContent.trim() } : s
+        )
+      );
+
+      const tag = SECTION_ID_TO_TAG[section.id] || section.id.toUpperCase();
+      const updatedText = streamedText.replace(
+        new RegExp(`\\[${tag}\\][\\s\\S]*?(?=\\n\\[|$)`),
+        `[${tag}]\n${newContent.trim()}`
+      );
+      setStreamedText(updatedText);
+    }
+
+    setEditingSection(null);
+    setEditInstruction('');
+  };
+
+  // Copier le pitch complet
+  const copyToClipboard = () => {
+    const fullText = sections.map((s) => `${s.title.toUpperCase()}\n\n${s.content}`).join('\n\n---\n\n');
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Lire le pitch a voix haute
+  const handleSpeak = () => {
+    if (isSpeaking) {
+      if (isPaused) {
+        resume();
+      } else {
+        pause();
+      }
+    } else {
+      const fullText = sections.map((s) => s.content).join('. ');
+      speak(fullText, { rate: 0.95 });
+    }
+  };
+
+  // Step progress indicator
+  const STEPS = [
+    { key: 'select', label: t('pitch.steps.practitioner'), num: 1 },
+    { key: 'preview', label: t('pitch.steps.preview'), num: 2 },
+    { key: 'configure', label: t('pitch.steps.config'), num: 3 },
+    { key: 'generate', label: t('pitch.steps.pitch'), num: 4 },
+  ] as const;
+
+  const currentStepIndex = STEPS.findIndex(s => s.key === step);
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center gap-1 sm:gap-2 mb-6">
+      {STEPS.map((s, i) => (
+        <div key={s.key} className="flex items-center">
+          <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+            i === currentStepIndex
+              ? 'bg-purple-100 text-purple-700 ring-2 ring-purple-300'
+              : i < currentStepIndex
+                ? 'bg-green-100 text-green-700'
+                : 'bg-slate-100 text-slate-400'
+          }`}>
+            {i < currentStepIndex ? (
+              <Check className="w-3.5 h-3.5" />
+            ) : (
+              <span className="w-4 h-4 rounded-full bg-current/10 flex items-center justify-center text-[10px] font-bold">{s.num}</span>
+            )}
+            <span className="hidden sm:inline">{s.label}</span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className={`w-4 sm:w-8 h-0.5 mx-0.5 ${i < currentStepIndex ? 'bg-green-300' : 'bg-slate-200'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  // Etape 1: Selection du praticien
+  if (step === 'select') {
+    return (
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <StepIndicator />
+          {/* Header */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  {t('pitch.title')}
+                </span>
+              </h1>
+              <p className="text-slate-600 mt-1">{t('pitch.subtitle')}</p>
+            </div>
+          </div>
+
+          {/* Filtres et recherche */}
+          <div className="glass-card p-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[250px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder={t('pitch.searchPlaceholder')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              </div>
+
+              <select
+                value={filterSpecialty}
+                onChange={(e) => setFilterSpecialty(e.target.value)}
+                className="px-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">{t('pitch.allSpecialties')}</option>
+                <option value="Endocrinologue-Diabétologue">{t('pitch.pneumologists')}</option>
+                <option value="Medecin generaliste">{t('pitch.generalists')}</option>
+              </select>
+
+              <select
+                value={filterKOL === null ? 'all' : filterKOL ? 'kol' : 'non-kol'}
+                onChange={(e) => setFilterKOL(e.target.value === 'all' ? null : e.target.value === 'kol')}
+                className="px-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">{t('pitch.allTypes')}</option>
+                <option value="kol">{t('pitch.kolsOnly')}</option>
+                <option value="non-kol">{t('pitch.nonKols')}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Liste des praticiens */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPractitioners.map((p) => {
+              const profile = DataService.getPractitionerById(p.id);
+              const pubCount = profile?.news?.filter(n => n.type === 'publication').length || 0;
+              const noteCount = profile?.notes?.length || 0;
+
+              return (
+                <motion.div
+                  key={p.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleSelectPractitioner(p)}
+                  className="glass-card p-4 cursor-pointer hover:shadow-xl transition-all border-2 border-transparent hover:border-purple-300"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                      p.isKOL ? 'bg-gradient-to-br from-amber-500 to-orange-500' :
+                      p.specialty === 'Endocrinologue-Diabétologue' ? 'bg-gradient-to-br from-al-blue-500 to-al-blue-600' :
+                      'bg-gradient-to-br from-slate-500 to-slate-600'
+                    }`}>
+                      {p.firstName[0]}{p.lastName[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-slate-800 truncate">
+                          {p.title} {p.lastName}
+                        </h3>
+                        {p.isKOL && <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />}
+                      </div>
+                      <p className="text-sm text-slate-600">{localizeSpecialty(p.specialty)}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                        <MapPin className="w-3 h-3" />
+                        <span>{p.city}</span>
+                        <span className="text-slate-300">|</span>
+                        <span>{(p.volumeL / 1000).toFixed(0)}K {txt('boîtes/an', 'units/yr')}</span>
+                      </div>
+                      {(pubCount > 0 || noteCount > 0) && (
+                        <div className="flex items-center gap-2 mt-2">
+                          {pubCount > 0 && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <BookOpen className="w-3 h-3" />
+                              {pubCount} pub
+                            </span>
+                          )}
+                          {noteCount > 0 && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {noteCount} notes
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-400" />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Etape 2: Previsualisation du praticien
+  if (step === 'preview' && selectedPractitioner) {
+    const profile = DataService.getPractitionerById(selectedPractitioner.id);
+    const pubCount = profile?.news?.filter(n => n.type === 'publication').length || 0;
+    const noteCount = profile?.notes?.length || 0;
+    const visitCount = profile?.visitHistory?.length || 0;
+
+    return (
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <StepIndicator />
+          {/* Header */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                setStep('select');
+                setSelectedPractitioner(null);
+              }}
+              className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-slate-800">
+                {t('pitch.pitchFor', { name: `${selectedPractitioner.title} ${selectedPractitioner.lastName}` })}
+              </h1>
+              <p className="text-slate-600">{t('pitch.checkData')}</p>
+            </div>
+          </div>
+
+          {/* Profil du praticien */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Infos principales */}
+            <div className="glass-card p-6">
+              <div className="flex items-start gap-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                  selectedPractitioner.isKOL ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-gradient-to-br from-al-blue-500 to-al-blue-600'
+                }`}>
+                  {selectedPractitioner.firstName[0]}{selectedPractitioner.lastName[0]}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">
+                    {selectedPractitioner.title} {selectedPractitioner.firstName} {selectedPractitioner.lastName}
+                  </h2>
+                  <p className="text-slate-600">{localizeSpecialty(selectedPractitioner.specialty)}</p>
+                  <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
+                    <MapPin className="w-4 h-4" />
+                    {selectedPractitioner.city}
+                  </div>
+                  {selectedPractitioner.isKOL && (
+                    <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+                      <Star className="w-3 h-3 fill-amber-500" />
+                      Key Opinion Leader
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500">{t('pitch.annualVolume')}</div>
+                  <div className="text-lg font-bold text-slate-800">{(selectedPractitioner.volumeL / 1000).toFixed(0)}K</div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500">{t('pitch.loyalty')}</div>
+                  <div className="text-lg font-bold text-slate-800">{selectedPractitioner.loyaltyScore}/10</div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500">{t('pitch.vingtile')}</div>
+                  <div className="text-lg font-bold text-slate-800">V{selectedPractitioner.vingtile}</div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="text-xs text-slate-500">{t('pitch.trend')}</div>
+                  <div className="flex items-center gap-1">
+                    {selectedPractitioner.trend === 'up' ? (
+                      <TrendingUp className="w-5 h-5 text-green-500" />
+                    ) : selectedPractitioner.trend === 'down' ? (
+                      <TrendingDown className="w-5 h-5 text-red-500" />
+                    ) : (
+                      <div className="w-5 h-5 bg-slate-400 rounded-full" />
+                    )}
+                    <span className="font-bold capitalize">{selectedPractitioner.trend}</span>
+                  </div>
+                </div>
+              </div>
+
+              {profile?.metrics.churnRisk !== 'low' && (
+                <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${
+                  profile?.metrics.churnRisk === 'high' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                }`}>
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {t('pitch.churnRisk', { level: profile?.metrics.churnRisk === 'high' ? t('pitch.churnHigh') : t('pitch.churnMedium') })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Donnees enrichies */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Publications */}
+              <div className="glass-card p-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                  <BookOpen className="w-5 h-5 text-purple-500" />
+                  {t('pitch.publications', { count: String(pubCount) })}
+                </h3>
+                {pubCount > 0 ? (
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {profile?.news?.filter(n => n.type === 'publication').slice(0, 3).map((pub, idx) => (
+                      <div key={idx} className="bg-purple-50 rounded-lg p-3">
+                        <div className="font-medium text-sm text-purple-900">{pub.title}</div>
+                        <div className="text-xs text-purple-600 mt-1">{new Date(pub.date).toLocaleDateString(getLocaleCode(language))}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">{t('pitch.noPublications')}</p>
+                )}
+              </div>
+
+              {/* Notes recentes */}
+              <div className="glass-card p-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                  {t('pitch.recentNotes', { count: String(noteCount) })}
+                </h3>
+                {noteCount > 0 ? (
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {profile?.notes?.slice(0, 3).map((note, idx) => (
+                      <div key={idx} className="bg-blue-50 rounded-lg p-3">
+                        <div className="text-sm text-blue-900">{note.content.substring(0, 100)}...</div>
+                        <div className="text-xs text-blue-600 mt-1">{new Date(note.date).toLocaleDateString(getLocaleCode(language))}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">{t('pitch.noNotes')}</p>
+                )}
+              </div>
+
+              {/* Historique visites */}
+              <div className="glass-card p-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-3">
+                  <Clock className="w-5 h-5 text-green-500" />
+                  {t('pitch.visitHistory', { count: String(visitCount) })}
+                </h3>
+                {visitCount > 0 ? (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {profile?.visitHistory?.slice(0, 3).map((visit, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-green-50 rounded-lg p-3">
+                        <div>
+                          <div className="text-sm font-medium text-green-900">{new Date(visit.date).toLocaleDateString(getLocaleCode(language))}</div>
+                          {visit.productsDiscussed && visit.productsDiscussed.length > 0 && (
+                            <div className="text-xs text-green-600">{t('pitch.productsLabel')}: {visit.productsDiscussed.join(', ')}</div>
+                          )}
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          visit.type === 'completed' ? 'bg-green-200 text-green-800' : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {visit.type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">{t('pitch.noVisits')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => {
+                setStep('select');
+                setSelectedPractitioner(null);
+              }}
+              className="btn-secondary"
+            >
+              {t('pitch.chooseAnother')}
+            </button>
+            <button
+              onClick={() => setStep('configure')}
+              className="btn-primary flex items-center gap-2"
+            >
+              {t('pitch.configurePitch')}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Etape 3: Configuration du pitch
+  if (step === 'configure' && selectedPractitioner) {
+    return (
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <StepIndicator />
+          {/* Header */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setStep('preview')}
+              className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">
+                {t('pitch.config.title')}
+              </h1>
+              <p className="text-slate-600">{t('pitch.config.forPractitioner', { name: `${selectedPractitioner.title} ${selectedPractitioner.lastName}` })}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Colonne gauche */}
+            <div className="space-y-6">
+              {/* Focus du pitch */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-purple-500" />
+                  {t('pitch.config.pitchFocus')}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {FOCUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setConfig({ ...config, focusArea: opt.id as any })}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        config.focusArea === opt.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <opt.icon className={`w-5 h-5 mb-1 ${config.focusArea === opt.id ? 'text-purple-600' : 'text-slate-500'}`} />
+                      <div className="font-medium text-sm">{opt.label}</div>
+                      <div className="text-xs text-slate-500">{opt.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Longueur et ton */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-blue-500" />
+                  {t('pitch.config.format')}
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('pitch.config.length')}</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['short', 'medium', 'long'] as const).map((len) => (
+                        <button
+                          key={len}
+                          onClick={() => setConfig({ ...config, length: len })}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            config.length === len
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {len === 'short' ? t('pitch.config.short') : len === 'medium' ? t('pitch.config.medium') : t('pitch.config.long')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('pitch.config.tone')}</label>
+                    <div className="space-y-2">
+                      {(['formal', 'conversational', 'technical'] as const).map((tone) => (
+                        <button
+                          key={tone}
+                          onClick={() => setConfig({ ...config, tone })}
+                          className={`w-full px-4 py-2 rounded-lg text-sm font-medium text-left transition-all ${
+                            config.tone === tone
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          {tone === 'formal' ? t('pitch.config.formal') : tone === 'conversational' ? t('pitch.config.conversational') : t('pitch.config.technical')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Options supplementaires */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4">{t('pitch.config.additionalSections')}</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={config.includeObjections}
+                      onChange={(e) => setConfig({ ...config, includeObjections: e.target.checked })}
+                      className="w-5 h-5 text-purple-500 rounded"
+                    />
+                    <div>
+                      <div className="font-medium">{t('pitch.config.objectionHandling')}</div>
+                      <div className="text-xs text-slate-500">{t('pitch.config.objectionDesc')}</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={config.includeTalkingPoints}
+                      onChange={(e) => setConfig({ ...config, includeTalkingPoints: e.target.checked })}
+                      className="w-5 h-5 text-purple-500 rounded"
+                    />
+                    <div>
+                      <div className="font-medium">{t('pitch.config.discussionPoints')}</div>
+                      <div className="text-xs text-slate-500">{t('pitch.config.discussionDesc')}</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Colonne droite */}
+            <div className="space-y-6">
+              {/* Produits */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4">{t('pitch.config.productsToHighlight')}</h3>
+                <div className="space-y-2">
+                  {PRODUCTS.map((product) => (
+                    <label key={product.id} className="flex items-start gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
+                      <input
+                        type="checkbox"
+                        checked={config.products.includes(product.name)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setConfig({ ...config, products: [...config.products, product.name] });
+                          } else {
+                            setConfig({ ...config, products: config.products.filter((p) => p !== product.name) });
+                          }
+                        }}
+                        className="w-4 h-4 mt-1 text-purple-500 rounded"
+                      />
+                      <div>
+                        <div className="font-medium text-sm">{product.name}</div>
+                        <div className="text-xs text-slate-500">{product.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Concurrents */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4">{t('pitch.config.competitorsToAddress')}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {COMPETITORS.map((competitor) => (
+                    <label key={competitor.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
+                      <input
+                        type="checkbox"
+                        checked={config.competitors.includes(competitor.name)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setConfig({ ...config, competitors: [...config.competitors, competitor.name] });
+                          } else {
+                            setConfig({ ...config, competitors: config.competitors.filter((c) => c !== competitor.name) });
+                          }
+                        }}
+                        className="w-4 h-4 text-purple-500 rounded"
+                      />
+                      <span className="text-sm">{competitor.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instructions additionnelles */}
+              <div className="glass-card p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4">{t('pitch.config.specialInstructions')}</h3>
+                <textarea
+                  value={config.additionalInstructions}
+                  onChange={(e) => setConfig({ ...config, additionalInstructions: e.target.value })}
+                  placeholder={t('pitch.config.specialInstructionsPlaceholder')}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={4}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* API status info */}
+          {!hasValidApiKey && (
+            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-blue-800">{t('pitch.offlineMode')}</p>
+                <p className="text-sm text-blue-600">{t('pitch.offlineModeDesc')}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-between">
+            <button
+              onClick={() => setStep('preview')}
+              className="btn-secondary"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t('common.back')}
+            </button>
+            <button
+              onClick={generatePitch}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Sparkles className="w-5 h-5" />
+              {hasValidApiKey ? t('pitch.generateIA') : t('pitch.generate')}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Etape 4: Generation et affichage du pitch
+  return (
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <StepIndicator />
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setStep('configure')}
+              className="p-2 rounded-lg hover:bg-white/50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                {t('pitch.pitchGenerated')}
+              </h1>
+              <p className="text-slate-600">
+                Pour {selectedPractitioner?.title} {selectedPractitioner?.firstName} {selectedPractitioner?.lastName}
+              </p>
+            </div>
+          </div>
+
+          {sections.length > 0 && !isGenerating && (
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {speechSupported && (
+                <>
+                  <button
+                    onClick={handleSpeak}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    {isSpeaking && !isPaused ? (
+                      <>
+                        <Pause className="w-4 h-4" />
+                        {t('pitch.pause')}
+                      </>
+                    ) : isSpeaking && isPaused ? (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        {t('pitch.resume')}
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        {t('pitch.listen')}
+                      </>
+                    )}
+                  </button>
+                  {isSpeaking && (
+                    <button
+                      onClick={stop}
+                      className="btn-secondary text-red-500 border-red-300"
+                    >
+                      <VolumeX className="w-4 h-4" />
+                    </button>
+                  )}
+                </>
+              )}
+              <button
+                onClick={copyToClipboard}
+                className="btn-secondary flex items-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {t('common.copied')}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    {t('common.copy')}
+                  </>
+                )}
+              </button>
+              <button
+                onClick={generatePitch}
+                className="btn-primary flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('pitch.regenerate')}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Demo mode banner */}
+        {isDemo && !isGenerating && sections.length > 0 && (
+          <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <Sparkles className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-800">{t('pitch.demoModeTitle')}</p>
+              <p className="text-sm text-amber-600">{t('pitch.demoModeDesc')}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error display */}
+        {generateError && !isGenerating && sections.length === 0 && (
+          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-200">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-red-800">{t('pitch.generationErrorTitle')}</p>
+              <p className="text-sm text-red-600">{generateError}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Contenu du pitch */}
+        <AnimatePresence mode="wait">
+          {isGenerating && sections.length === 0 ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-3 mb-6 p-4 bg-purple-50 rounded-xl border border-purple-200">
+                <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+                <div>
+                  <p className="font-medium text-purple-800">{t('pitch.generating')}</p>
+                  <p className="text-sm text-purple-600">{hasValidApiKey ? t('pitch.loadingAI') : t('pitch.loadingLocal')}</p>
+                </div>
+              </div>
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonPitchSection key={i} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-5"
+            >
+              {sections.map((section, index) => {
+                const style = SECTION_STYLES[section.id] || SECTION_STYLES.hook;
+
+                return (
+                  <motion.div
+                    key={section.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`glass-card p-6 group relative border-l-4 ${style.borderColor} hover:shadow-lg transition-shadow`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.gradient} text-white flex items-center justify-center font-bold text-sm shadow-md`}>
+                          {style.icon}
+                        </span>
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-800">{section.title}</h3>
+                          <p className="text-xs text-slate-500">Section {index + 1} / {sections.length}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(section.content);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-slate-100"
+                          title={t('pitch.copySectionTooltip')}
+                        >
+                          <Copy className="w-4 h-4 text-slate-500" />
+                        </button>
+                        {!isDemo && (
+                          <button
+                            onClick={() => {
+                              setEditingSection(section.id);
+                              setEditInstruction('');
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-purple-50"
+                            title={t('pitch.editSectionTooltip')}
+                          >
+                            <RefreshCw className="w-4 h-4 text-purple-500" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {editingSection === section.id ? (
+                      <div className="space-y-3 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-xl border-t border-slate-200">
+                        <label className="block text-sm font-medium text-slate-700">
+                          {t('pitch.howToModify')}
+                        </label>
+                        <textarea
+                          value={editInstruction}
+                          onChange={(e) => setEditInstruction(e.target.value)}
+                          placeholder={t('pitch.modifyPlaceholder')}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          rows={3}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => regenerateSection(section.id)}
+                            disabled={groqLoading || !editInstruction.trim()}
+                            className="btn-primary text-sm"
+                          >
+                            {groqLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {t('pitch.regenerating')}
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4" />
+                                {t('pitch.applyChanges')}
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingSection(null);
+                              setEditInstruction('');
+                            }}
+                            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50"
+                          >
+                            {t('common.cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`${style.bg} -mx-6 -mb-6 p-6 rounded-b-xl`}>
+                        <MarkdownText className="text-slate-700 leading-relaxed">
+                          {section.content}
+                        </MarkdownText>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+
+              {isGenerating && sections.length > 0 && (
+                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-xl border border-purple-200">
+                  <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
+                  <span className="text-sm text-purple-700 font-medium">{t('pitch.generatingNextSections')}</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Actions finales */}
+        {sections.length > 0 && !isGenerating && (
+          <div className="space-y-4">
+            <div className="glass-card p-6 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                    <Check className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-green-800">{t('pitch.pitchReady')}</h3>
+                    <p className="text-sm text-green-700">
+                      {t('pitch.sectionsGenerated', { count: String(sections.length), name: `${selectedPractitioner?.title} ${selectedPractitioner?.lastName}` })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      stop();
+                      setStep('select');
+                      setSelectedPractitioner(null);
+                      setSections([]);
+                      setStreamedText('');
+                      setIsDemo(false);
+                      setGenerateError(null);
+                    }}
+                    className="btn-secondary flex-1 sm:flex-none"
+                  >
+                    {t('pitch.newPitch')}
+                  </button>
+                  <button
+                    onClick={copyToClipboard}
+                    className="btn-primary flex items-center justify-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? t('common.copied') : t('pitch.copyAll')}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps CTA */}
+            <div className="glass-card p-4 bg-gradient-to-r from-al-blue-50 to-sky-50 border border-al-blue-200">
+              <p className="text-sm font-semibold text-al-navy mb-3">{t('pitch.nextSteps')}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate(`/visit-report?practitionerId=${selectedPractitioner?.id}`)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 transition-all"
+                >
+                  <Clock className="w-4 h-4" />
+                  {t('pitch.makeReport')}
+                </button>
+                <button
+                  onClick={() => navigate(`/practitioner/${selectedPractitioner?.id}`)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-al-blue-50 hover:border-al-blue-200 hover:text-al-blue-700 transition-all"
+                >
+                  <FileText className="w-4 h-4" />
+                  {t('pitch.seeFullProfile')}
+                </button>
+                <button
+                  onClick={() => navigate('/next-actions')}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700 transition-all"
+                >
+                  <Zap className="w-4 h-4" />
+                  {t('pitch.seeOtherActions')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
