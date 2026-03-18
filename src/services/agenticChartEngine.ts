@@ -445,8 +445,8 @@ export function extractQueryParameters(question: string): {
   }
 
   // Détecter la spécialité
-  if (/pneumo/i.test(q)) {
-    params.wantsSpecialty = 'Pneumologue';
+  if (/endocrino|diabéto|diabeto/i.test(q)) {
+    params.wantsSpecialty = 'Endocrinologue-Diabétologue';
   } else if (/generaliste|mg\b/i.test(q)) {
     params.wantsSpecialty = 'Médecin généraliste';
   }
@@ -962,12 +962,12 @@ export function getDataContextForLLM(): string {
     return `
 CURRENT DATA CONTEXT:
 - ${stats.totalPractitioners} total practitioners
-  - ${stats.pneumologues} Pulmonologists
+  - ${stats.pneumologues} Endocrinologists
   - ${stats.generalistes} General Practitioners
 - ${stats.totalKOLs} identified KOLs
-  - Pulmonologists: ${kolsBySpecialty['Pneumologue'] || 0} KOLs
+  - Endocrinologists: ${kolsBySpecialty['Endocrinologue-Diabétologue'] || 0} KOLs
   - GPs: ${kolsBySpecialty['Médecin généraliste'] || 0} KOLs
-- Total volume: ${Math.round(stats.totalVolume / 1000)}K L/yr
+- Total volume: ${Math.round(stats.totalVolume / 1000)}K boxes/yr
 - Average loyalty: ${stats.averageLoyalty.toFixed(1)}/10
 - Cities present: ${cities.slice(0, 8).join(', ')}${cities.length > 8 ? ` (+${cities.length - 8} others)` : ''}
 `;
