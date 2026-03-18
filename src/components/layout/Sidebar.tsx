@@ -67,14 +67,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         {item.badge && (
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-semibold ${
             isActive
-              ? 'bg-al-teal/20 text-al-teal'
-              : 'bg-al-teal/30 text-al-teal'
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-emerald-500/30 text-emerald-300'
           }`}>
             {item.badge}
           </span>
         )}
         {isActive && !item.badge && (
-          <div className="ml-auto w-2 h-2 bg-al-teal rounded-full" />
+          <div className="ml-auto w-2 h-2 bg-emerald-400 rounded-full" />
         )}
       </Link>
     );

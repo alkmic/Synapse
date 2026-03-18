@@ -842,15 +842,15 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
             <Line
               type="monotone"
               dataKey="volume"
-              stroke="#0066B3"
+              stroke="#4f46e5"
               strokeWidth={3}
-              dot={{ fill: '#0066B3', strokeWidth: 2 }}
+              dot={{ fill: '#4f46e5', strokeWidth: 2 }}
               name={t('practitioners.volumesDr')}
             />
             <Line
               type="monotone"
               dataKey="vingtileAvg"
-              stroke="#00B5AD"
+              stroke="#059669"
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}

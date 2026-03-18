@@ -29,7 +29,7 @@ export function DayTimeline({ visits }: { visits: Visit[] }) {
   };
 
   const getColorFromString = (str: string) => {
-    const colors = ['#0066B3', '#00B5AD', '#F59E0B', '#10B981', '#6366F1', '#EC4899'];
+    const colors = ['#4f46e5', '#059669', '#F59E0B', '#10B981', '#6366F1', '#EC4899'];
     const index = str.charCodeAt(0) % colors.length;
     return colors[index];
   };

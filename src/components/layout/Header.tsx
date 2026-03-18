@@ -30,9 +30,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </button>
 
           {/* SYNAPSE Badge (visible on larger screens) */}
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 bg-gradient-to-r from-purple-50 to-blue-50 px-3 py-1.5 rounded-full border border-purple-100">
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-            <span className="font-medium text-purple-700">SYNAPSE</span>
+          <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 bg-gradient-to-r from-indigo-50 to-violet-50 px-3 py-1.5 rounded-full border border-indigo-100">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="font-medium text-indigo-700">SYNAPSE</span>
             <span className="text-slate-400">|</span>
             <span>{t('nav.speakOrType')}</span>
           </div>

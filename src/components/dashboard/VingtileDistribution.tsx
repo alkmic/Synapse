@@ -38,9 +38,9 @@ export const VingtileDistribution: React.FC = () => {
 
   // Get color based on vingtile (gradient from high to low performance)
   const getBarColor = (vingtile: number) => {
-    if (vingtile <= 3) return '#0066B3'; // al-blue
-    if (vingtile <= 7) return '#00A3E0'; // al-sky
-    if (vingtile <= 12) return '#00B5AD'; // al-teal
+    if (vingtile <= 3) return '#4f46e5'; // indigo-600
+    if (vingtile <= 7) return '#818cf8'; // indigo-400
+    if (vingtile <= 12) return '#059669'; // emerald-600
     if (vingtile <= 17) return '#94a3b8'; // slate-400
     return '#cbd5e1'; // slate-300
   };

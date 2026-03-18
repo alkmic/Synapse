@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Users, Target, Award, ArrowUpRight,
-  Droplets, Star, AlertTriangle, TrendingUp, MapPin, Clock,
+  FileText, Star, AlertTriangle, TrendingUp, MapPin, Clock,
   AlertCircle, CheckCircle2, Trophy, Zap, BarChart2
 } from 'lucide-react';
 import {
@@ -170,7 +170,7 @@ export default function ManagerDashboard() {
       name,
       value: count,
       percentage: ((count / metrics.totalPractitioners) * 100).toFixed(1),
-      color: index === 0 ? '#0066B3' : index === 1 ? '#00B5AD' : '#94A3B8',
+      color: index === 0 ? '#4f46e5' : index === 1 ? '#059669' : '#94A3B8',
     }));
   }, [metrics]);
 
@@ -321,7 +321,7 @@ export default function ManagerDashboard() {
           className="glass-card p-4 sm:p-6"
         >
           <div className="flex items-center justify-between mb-2">
-            <Droplets className="w-6 h-6 sm:w-8 sm:h-8 text-cyan-500" />
+            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
             <span className="flex items-center text-green-500 text-xs sm:text-sm font-medium">
               <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
               +18%
@@ -411,8 +411,8 @@ export default function ManagerDashboard() {
             <AreaChart data={[...getMonthlyPerformance(), ...getProjectionData()]}>
               <defs>
                 <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0066B3" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#0066B3" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
@@ -427,7 +427,7 @@ export default function ManagerDashboard() {
               <Area
                 type="monotone"
                 dataKey="actual"
-                stroke="#0066B3"
+                stroke="#4f46e5"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorActual)"
@@ -515,8 +515,8 @@ export default function ManagerDashboard() {
             <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="volume" fill="#0066B3" name="Volume (M)" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="practitioners" fill="#00B5AD" name={getLanguage() === 'en' ? 'Practitioners' : 'Praticiens'} radius={[8, 8, 0, 0]} />
+            <Bar dataKey="volume" fill="#4f46e5" name="Volume (M)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="practitioners" fill="#059669" name={getLanguage() === 'en' ? 'Practitioners' : 'Praticiens'} radius={[8, 8, 0, 0]} />
             <Bar dataKey="kols" fill="#F59E0B" name="KOLs" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -660,7 +660,7 @@ export default function ManagerDashboard() {
 
           <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
             <div className="flex items-start gap-3">
-              <Droplets className="w-5 h-5 text-cyan-600 mt-0.5" />
+              <FileText className="w-5 h-5 text-violet-600 mt-0.5" />
               <div>
                 <p className="font-semibold text-slate-800 text-sm">{t('manager.insightVolume')}</p>
                 <p className="text-xs text-slate-600 mt-1">

@@ -18,7 +18,7 @@ export const manager = {
 
   // KPIs
   totalVisits: 'Visites totales',
-  totalVolume: 'Volume total (Boîtes)',
+  totalVolume: 'Prescriptions totales',
   onTrack: 'On track',
   toFollow: 'À suivre',
   achievementRate: "Taux d'atteinte",

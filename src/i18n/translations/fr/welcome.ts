@@ -2,7 +2,7 @@ export const welcome = {
   // Welcome page
   mainTitle: 'SYNAPSE',
   mainSubtitle: 'L\'IA qui connecte vos équipes terrain à l\'excellence thérapeutique',
-  description: 'Votre assistant intelligent pour optimiser vos relations avec les praticiens et maximiser l\'impact de vos délégués pharmaceutiques sur le marché du Diabète de Type 2.',
+  description: 'Votre assistant intelligent pour optimiser vos relations avec les praticiens et maximiser l\'impact de vos délégués pharmaceutiques.',
   launchExperience: 'Lancer l\'expérience',
   features: {
     generativeAI: 'IA Générative',
@@ -15,7 +15,7 @@ export const welcome = {
 
   // Landing page
   landingSubtitle: 'Sales & Network AI for Pharma Strategy Excellence',
-  landingDescription: 'Optimisez vos visites terrain, générez des pitchs personnalisés et maximisez l\'impact de vos délégués pharmaceutiques sur le marché DT2.',
+  landingDescription: 'Optimisez vos visites terrain, générez des pitchs personnalisés et maximisez l\'impact de vos délégués pharmaceutiques.',
   landingFeatures: {
     coachIA: 'Coach IA',
     pitchIA: 'Pitch IA',

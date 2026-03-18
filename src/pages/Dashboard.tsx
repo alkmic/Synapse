@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, UserPlus, Droplets, Star, AlertTriangle, Clock, Zap, ChevronRight, Mic } from 'lucide-react';
+import { Calendar, UserPlus, FileText, Star, AlertTriangle, Clock, Zap, ChevronRight, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/useAppStore';
 import { useTimePeriod } from '../contexts/TimePeriodContext';
@@ -201,8 +201,8 @@ export const Dashboard: React.FC = () => {
           linkTo="/practitioners"
         />
         <AnimatedStatCard
-          icon={Droplets}
-          iconBgColor="bg-cyan-500"
+          icon={FileText}
+          iconBgColor="bg-violet-500"
           label={t('dashboard.prescribedVolume')}
           value={periodMetrics.totalVolume / 1000}
           suffix="K"

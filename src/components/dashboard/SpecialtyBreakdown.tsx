@@ -26,14 +26,14 @@ export const SpecialtyBreakdown: React.FC = () => {
 
   // Data for pie chart (by count)
   const countData = [
-    { name: t('dashboard.pneumologists'), value: pneumologues.length, color: '#0066B3' },
-    { name: t('common.specialty.generalistes'), value: generalistes.length, color: '#00B5AD' }
+    { name: t('dashboard.pneumologists'), value: pneumologues.length, color: '#4f46e5' },
+    { name: t('common.specialty.generalistes'), value: generalistes.length, color: '#059669' }
   ];
 
   // Data for volume pie chart
   const volumeData = [
-    { name: t('dashboard.pneumologists'), value: pneumoVolume, color: '#0066B3' },
-    { name: t('common.specialty.generalistes'), value: genVolume, color: '#00B5AD' }
+    { name: t('dashboard.pneumologists'), value: pneumoVolume, color: '#4f46e5' },
+    { name: t('common.specialty.generalistes'), value: genVolume, color: '#059669' }
   ];
 
   // Custom label renderer for pie charts

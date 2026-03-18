@@ -7,33 +7,33 @@ export default {
       colors: {
         // SYNAPSE — MedVantis Pharma
         'al-blue': {
-          50: '#E8EDF5',
-          100: '#D1DBEB',
-          200: '#A3B7D7',
-          300: '#7593C3',
-          400: '#476FAF',
-          500: '#1B2A4A', // Primary — Bleu nuit
-          600: '#162240',
-          700: '#111A30',
-          800: '#0C1220',
-          900: '#070A10',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#4f46e5', // Primary — Indigo
+          600: '#4338ca',
+          700: '#3730a3',
+          800: '#312e81',
+          900: '#1e1b4b',
         },
-        'al-navy': '#1B2A4A',
-        'al-teal': '#2D6A4F',       // Vert médical
-        'al-sky': '#40916C',         // Vert clair / accent
+        'al-navy': '#1e1b4b',
+        'al-teal': '#059669',        // Emerald accent
+        'al-sky': '#6366f1',         // Indigo accent
         // Aliases for backward compatibility
         airLiquide: {
-          primary: '#1B2A4A',
-          teal: '#2D6A4F',
-          sky: '#40916C',
-          navy: '#1B2A4A',
-          lightBlue: '#E8EDF5',
-          darkBlue: '#111A30',
+          primary: '#4f46e5',
+          teal: '#059669',
+          sky: '#6366f1',
+          navy: '#1e1b4b',
+          lightBlue: '#eef2ff',
+          darkBlue: '#1e1b4b',
         },
         // Semantic
-        'success': '#2D6A4F',
-        'warning': '#D4A843',
-        'danger': '#C1553B',
+        'success': '#059669',
+        'warning': '#d97706',
+        'danger': '#dc2626',
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],

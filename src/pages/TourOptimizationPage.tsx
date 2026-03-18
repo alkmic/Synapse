@@ -583,7 +583,7 @@ export const TourOptimizationPage: React.FC = () => {
 
   // Créer les icônes de carte
   const createNumberIcon = (number: number, isKOL: boolean) => {
-    const color = isKOL ? '#F59E0B' : '#0066B3';
+    const color = isKOL ? '#F59E0B' : '#4f46e5';
     return L.divIcon({
       html: `
         <div style="
@@ -1352,7 +1352,7 @@ export const TourOptimizationPage: React.FC = () => {
                     {/* Route */}
                     <Polyline
                       positions={mapRoute}
-                      color="#0066B3"
+                      color="#4f46e5"
                       weight={3}
                       opacity={0.8}
                       dashArray="10, 5"

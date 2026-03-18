@@ -14,7 +14,7 @@ export const manager = {
     seeDetails: 'See details',
   },
   totalVisits: 'Total visits',
-  totalVolume: 'Total volume (Units)',
+  totalVolume: 'Total prescriptions',
   onTrack: 'On track',
   toFollow: 'To follow',
   achievementRate: 'Achievement rate',

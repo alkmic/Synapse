@@ -1,7 +1,7 @@
 export const welcome = {
   mainTitle: 'SYNAPSE',
   mainSubtitle: 'The AI connecting your field teams to therapeutic excellence',
-  description: 'Your intelligent assistant to optimize your relationships with practitioners and maximize the impact of your pharma delegates on the Type 2 Diabetes market.',
+  description: 'Your intelligent assistant to optimize your relationships with practitioners and maximize the impact of your pharma delegates.',
   launchExperience: 'Launch experience',
   features: {
     generativeAI: 'Generative AI',
@@ -12,7 +12,7 @@ export const welcome = {
     virtualCoachDesc: 'Strategic recommendations in real time',
   },
   landingSubtitle: 'Sales & Network AI for Pharma Strategy Excellence',
-  landingDescription: 'Optimize your field visits, generate personalized pitches and maximize the impact of your pharma delegates on the T2D market.',
+  landingDescription: 'Optimize your field visits, generate personalized pitches and maximize the impact of your pharma delegates.',
   landingFeatures: {
     coachIA: 'AI Coach',
     pitchIA: 'AI Pitch',

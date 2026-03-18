@@ -50,8 +50,8 @@ export const PerformanceChart: React.FC = () => {
         <AreaChart data={performanceData}>
           <defs>
             <linearGradient id="colorVolumes" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#0066B3" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#0066B3" stopOpacity={0} />
+              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -73,7 +73,7 @@ export const PerformanceChart: React.FC = () => {
           <Area
             type="monotone"
             dataKey="yourVolume"
-            stroke="#0066B3"
+            stroke="#4f46e5"
             strokeWidth={3}
             fill="url(#colorVolumes)"
             name={t('dashboard.yourVolumes')}

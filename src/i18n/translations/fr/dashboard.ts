@@ -8,7 +8,7 @@ export const dashboard = {
   // KPI labels
   visitsLabel: 'Visites {{period}}',
   newPrescribers: 'Nouveaux prescripteurs',
-  prescribedVolume: 'Volume prescrit',
+  prescribedVolume: 'Prescriptions',
   avgLoyalty: 'Fidélité moyenne',
   urgentKols: 'KOLs à voir urgent',
   notSeenDays: 'Non vus >{{days}}j',
@@ -77,31 +77,31 @@ export const dashboard = {
   nationalStats: 'Statistiques Nationales et Territoire',
   nationalFrance: 'France Entière',
   yourTerritory: 'Votre Territoire',
-  ratioSpecialties: 'Ratio Endocrinologues/Généralistes',
+  ratioSpecialties: 'Ratio Spécialistes/Généralistes',
   national: 'National',
   territoryLabel: 'Territoire',
   generalPractitioners: 'Médecins généralistes',
-  pneumologists: 'Endocrinologues',
+  pneumologists: 'Spécialistes',
   totalGeneral: 'Total général',
-  patientsO2: 'Patients DT2',
-  avgVolumePatient: 'Volume moy./patient/an',
+  patientsO2: 'Marché cible estimé',
+  avgVolumePatient: 'Prescriptions moy./praticien',
   pctKol: '% KOL',
   totalTerritory: 'Total territoire',
   kolIdentified: 'KOL identifiés',
-  totalVolumeTerritory: 'Volume total territoire',
-  avgVolumePractitioner: 'Volume moy./praticien',
+  totalVolumeTerritory: 'Prescriptions totales territoire',
+  avgVolumePractitioner: 'Prescriptions moy./praticien',
 
   // Specialty breakdown
   specialtyBreakdown: 'Répartition par Spécialité',
   practitionerCount: 'Nombre de Praticiens',
-  totalVolumeLiters: 'Volume Total (Boîtes)',
+  totalVolumeLiters: 'Prescriptions Totales',
   specialtyCol: 'Spécialité',
   practCol: 'Prat.',
   kolCol: 'KOL',
   totalVolumeCol: 'Volume Total',
   avgCol: 'Moy.',
   keyInsight: 'Insight clé',
-  pneumoShort: 'Endocrino',
+  pneumoShort: 'Spéc.',
 
   // Performance chart
   performanceTitle: 'Performance {{period}}',
@@ -181,7 +181,7 @@ export const dashboard = {
 
   // Specialty breakdown extra
   totalRow: 'Total',
-  specialtyInsightText: 'Les endocrinologues représentent {{practPercent}}% des praticiens mais génèrent {{volumePercent}}% du volume total - un ratio de {{ratio}}x supérieur aux généralistes.',
+  specialtyInsightText: 'Les spécialistes représentent {{practPercent}}% des praticiens mais génèrent {{volumePercent}}% des prescriptions totales - un ratio de {{ratio}}x supérieur aux généralistes.',
 
   // Vingtile distribution extra
   allFilter: 'Tous',
