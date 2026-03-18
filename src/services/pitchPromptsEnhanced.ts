@@ -135,15 +135,15 @@ function getRelevantRAGKnowledge(
     addChunks(searchByTag('sglt2'), 1);
     addChunks(searchByTag('glp1'), 1);
   } else {
-    addChunks(searchByCategory('epidemiologie'), 2);
-    addChunks(searchByTag('parcours_soins'), 1);
+    addChunks(searchByCategory('dt2_epidemiology'), 2);
+    addChunks(searchByTag('has_dt2'), 1);
     addChunks(searchByTag('ameli'), 1);
   }
 
   // 2. Connaissances produits selon la sélection
   const productKeywords = config.products.join(' ').toLowerCase();
   if (productKeywords.includes('diabconnect') || productKeywords.includes('cgm')) {
-    addChunks(searchByCategory('telesuivi'), 2);
+    addChunks(searchByCategory('cgm_telesuivi'), 2);
   }
   if (productKeywords.includes('glucostay') || productKeywords.includes('insupen') ||
       productKeywords.includes('cardioglu') || productKeywords.includes('glp-vita')) {
@@ -156,7 +156,7 @@ function getRelevantRAGKnowledge(
     addChunks(searchByTag('glp1'), 1);
   }
   if (productKeywords.includes('dispositif') || productKeywords.includes('medvantis')) {
-    addChunks(searchByTag('dispositif_medical'), 1);
+    addChunks(searchByTag('diabconnect'), 1);
   }
 
   // 3. Intelligence concurrentielle selon les concurrents sélectionnés
@@ -170,7 +170,7 @@ function getRelevantRAGKnowledge(
   // 4. Connaissances selon le focus
   const focusCategories: Record<string, KnowledgeCategory[]> = {
     service: ['medvantis_corporate'],
-    innovation: ['telesuivi', 'medvantis_products'],
+    innovation: ['cgm_telesuivi', 'medvantis_products'],
     price: ['lppr_remboursement'],
     loyalty: ['medvantis_corporate'],
     general: ['medvantis_corporate', 'medvantis_products'],

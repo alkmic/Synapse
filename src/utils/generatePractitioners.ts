@@ -165,7 +165,7 @@ export function generatePractitioners(): Practitioner[] {
     const location = randomItem(allCities);
     const vingtile = randomInt(1, 5);
     const volumeL = randomInt(200000, 500000);
-    const isKOL = Math.random() < 0.15; // 15% KOL parmi les pneumologues
+    const isKOL = Math.random() < 0.15; // 15% KOL parmi les endocrinologues
     const hasRecentVisit = Math.random() < 0.6;
     const lastVisitDate = hasRecentVisit ? randomDate(180) : null;
     const visitCount = randomInt(3, 25);
