@@ -18,7 +18,7 @@ export function txtLang(fr: string, en: string, lang: Language): string {
 
 // ─── Specialty names ───────────────────────────────────────────
 const specialtyMap: Record<string, string> = {
-  'Pneumologue': 'Pulmonologist',
+  'Endocrinologue-Diabétologue': 'Endocrinologist-Diabetologist',
   'Médecin généraliste': 'General Practitioner',
 };
 
@@ -80,8 +80,8 @@ export function localizeChannel(channel: string): string {
 const aiSummaryMap: Record<string, string> = {
   "Prescripteur régulier et fidèle. Apprécie les échanges techniques sur les innovations thérapeutiques. Montre un intérêt particulier pour les études cliniques récentes.":
     "Regular and loyal prescriber. Appreciates technical discussions on therapeutic innovations. Shows particular interest in recent clinical studies.",
-  "Médecin investi dans la prise en charge BPCO. Collabore avec plusieurs pneumologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.":
-    "Physician committed to COPD management. Collaborates with several pulmonologists. Open to new solutions to improve patient comfort.",
+  "Médecin investi dans la prise en charge DT2. Collabore avec plusieurs endocrinologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.":
+    "Physician committed to Type 2 Diabetes management. Collaborates with several endocrinologists. Open to new solutions to improve patient comfort.",
   "Praticien expérimenté, très attaché aux preuves scientifiques. Participe activement aux formations continues. Excellent relais d'opinion auprès de ses confrères.":
     "Experienced practitioner, strongly attached to scientific evidence. Actively participates in continuing education. Excellent opinion relay among peers.",
   "Jeune installé dynamique, à l'écoute des innovations. Utilise beaucoup les outils digitaux. Potentiel de croissance important sur son secteur.":
@@ -109,14 +109,14 @@ export function localizeAiSummary(summary: string): string {
 const nextActionMap: Record<string, string> = {
   "Proposer un rendez-vous pour présenter les nouvelles options thérapeutiques":
     "Schedule an appointment to present new therapeutic options",
-  "Partager l'étude clinique récente sur l'oxygénothérapie portable":
-    "Share the recent clinical study on portable oxygen therapy",
-  "Inviter à la prochaine formation sur la prise en charge BPCO":
-    "Invite to the next COPD management training session",
+  "Partager l'étude clinique récente sur les antidiabétiques de nouvelle génération":
+    "Share the recent clinical study on next-generation antidiabetics",
+  "Inviter à la prochaine formation sur la prise en charge DT2":
+    "Invite to the next Type 2 Diabetes management training session",
   "Faire le point sur les patients actuels et identifier de nouveaux besoins":
     "Review current patients and identify new needs",
-  "Organiser une visite conjointe avec un confrère pneumologue":
-    "Organize a joint visit with a pulmonologist colleague",
+  "Organiser une visite conjointe avec un confrère endocrinologue":
+    "Organize a joint visit with an endocrinologist colleague",
   "Présenter le nouveau dispositif de télésuivi des patients":
     "Present the new remote patient monitoring device",
   "Proposer un support patient pour l'éducation thérapeutique":
@@ -140,14 +140,14 @@ export function localizeNextAction(action: string): string {
 
 // ─── Conversation summary translations ────────────────────────
 const conversationSummaryMap: Record<string, string> = {
-  "Discussion sur l'évolution de 3 patients sous O2. Retours positifs sur l'autonomie retrouvée.":
-    "Discussion on the progress of 3 patients on O2. Positive feedback on regained autonomy.",
+  "Discussion sur l'évolution de 3 patients sous antidiabétiques. Retours positifs sur l'équilibre glycémique retrouvé.":
+    "Discussion on the progress of 3 patients on antidiabetics. Positive feedback on regained glycemic balance.",
   "Présentation des résultats de l'étude SUMMIT. Questions sur les critères de prescription.":
     "Presentation of SUMMIT study results. Questions about prescription criteria.",
   "Point sur les nouvelles modalités de prise en charge. Intérêt pour le télésuivi.":
     "Update on new care modalities. Interest in remote monitoring.",
-  "Échange sur un cas complexe de BPCO sévère. Coordination avec le pneumologue référent.":
-    "Discussion on a complex severe COPD case. Coordination with the referring pulmonologist.",
+  "Échange sur un cas complexe de DT2 sévère. Coordination avec l'endocrinologue référent.":
+    "Discussion on a complex severe Type 2 Diabetes case. Coordination with the referring endocrinologist.",
   "Formation sur les nouveaux débitmètres portables. Démonstration appréciée.":
     "Training on new portable flow meters. Demonstration appreciated.",
   "Retour d'expérience patient très positif. Demande de documentation complémentaire.":
@@ -226,8 +226,8 @@ const newsContentExactMap: Record<string, string> = {
     "Newly recruited as a hospital practitioner in pulmonary oncology at CHU de Saint-Étienne. Coming from CHU de Toulouse where she was an assistant. Specialization in palliative care of bronchial cancers with oxygen therapy.",
   "Présentation sur l'optimisation de l'oxygénothérapie palliative chez les patients atteints de cancer bronchique non à petites cellules. Focus sur la qualité de vie et le maintien à domicile.":
     "Presentation on optimizing palliative oxygen therapy in patients with non-small cell lung cancer. Focus on quality of life and home care.",
-  "Reprend le cabinet du Dr Maurin qui comptait 15 patients sous oxygénothérapie suivis par Bastide Médical. Le Dr Joubert souhaite réévaluer les contrats fournisseurs et moderniser les équipements.":
-    "Takes over Dr Maurin's practice which had 15 patients on oxygen therapy managed by Bastide Médical. Dr Joubert wishes to reassess supplier contracts and modernize equipment.",
+  "Reprend le cabinet du Dr Maurin qui comptait 15 patients sous antidiabétiques suivis par GenBio. Le Dr Joubert souhaite réévaluer les contrats fournisseurs et moderniser les traitements.":
+    "Takes over Dr Maurin's practice which had 15 patients on antidiabetics managed by GenBio. Dr Joubert wishes to reassess supplier contracts and modernize treatments.",
   "Initiatrice et coordinatrice du réseau Respir'Alpes, premier réseau sentinelle de dépistage et suivi BPCO en Savoie. 12 MG et 3 pneumologues impliqués. Objectif : 500 spirométries de dépistage en 2026.":
     "Initiator and coordinator of the Respir'Alpes network, the first COPD screening and monitoring sentinel network in Savoie. 12 GPs and 3 pulmonologists involved. Goal: 500 screening spirometries in 2026.",
   "Publication sur le sous-diagnostic de la BPCO en zones rurales et de montagne. Données sur 800 patients en Savoie montrant un retard diagnostique moyen de 5 ans. Plaidoyer pour le dépistage systématique en médecine de ville.":
@@ -535,8 +535,8 @@ const newsRelevanceExactMap: Record<string, string> = {
     "Topic directly related to our home care solutions. Perfect talking point for a first visit.",
   "15 patients sous O2 à récupérer ! Le Dr Joubert est ouvert au changement de prestataire. Visite de captation prioritaire.":
     "15 patients on O2 to win back! Dr Joubert is open to changing providers. Priority acquisition visit.",
-  "Réseau de 12 MG + 3 pneumo = multiplicateur d'impact. Si Air Liquide devient partenaire du réseau, accès à tous les prescripteurs impliqués.":
-    "Network of 12 GPs + 3 pulmonologists = impact multiplier. If Air Liquide becomes a network partner, access to all involved prescribers.",
+  "Réseau de 12 MG + 3 pneumo = multiplicateur d'impact. Si MedVantis Pharma devient partenaire du réseau, accès à tous les prescripteurs impliqués.":
+    "Network of 12 GPs + 3 pulmonologists = impact multiplier. If MedVantis Pharma becomes a network partner, access to all involved prescribers.",
   "Publication très alignée avec notre mission de dépistage. Proposer un partenariat de dépistage spirométrique avec notre matériel.":
     "Publication very aligned with our screening mission. Propose a spirometric screening partnership with our equipment.",
 };
@@ -566,10 +566,9 @@ export function localizeNewsRelevance(relevance: string): string {
 
 // ─── Competitor Name translations ────────────────────────────
 const competitorNameMap: Record<string, string> = {
-  'Bastide Médical': 'Bastide Medical',
-  'SOS Oxygène': 'SOS Oxygen',
-  'Linde Healthcare': 'Linde Healthcare',
-  'Vivisol': 'Vivisol',
+  'GenBio': 'GenBio',
+  'NovaPharm': 'NovaPharm',
+  'Seralis': 'Seralis',
 };
 
 export function localizeCompetitorName(name: string): string {
@@ -579,109 +578,83 @@ export function localizeCompetitorName(name: string): string {
 
 // ─── Battlecard translations ─────────────────────────────────
 const battlecardTextMap: Record<string, string> = {
-  // ── Vivisol ourAdvantages ──
-  "Réactivité SAV +30% (astreinte 24/7 vs H+8 chez Vivisol)":
-    "After-sales responsiveness +30% (24/7 on-call vs H+8 at Vivisol)",
-  "Télésuivi O₂ Connect inclus gratuitement (supplément payant chez Vivisol)":
-    "O₂ Connect remote monitoring included free (paid add-on at Vivisol)",
+  // ── NovaPharm ourAdvantages ──
+  "Réactivité SAV +30% (astreinte 24/7 vs H+8 chez NovaPharm)":
+    "After-sales responsiveness +30% (24/7 on-call vs H+8 at NovaPharm)",
+  "Télésuivi DT2 Connect inclus gratuitement (supplément payant chez NovaPharm)":
+    "DT2 Connect remote monitoring included free (paid add-on at NovaPharm)",
   "Formation patient à domicile par IDE dédiée":
     "Home patient training by dedicated nurse",
-  "Gamme complète O2 + VNI + PPC (Vivisol limité en VNI)":
-    "Full O2 + NIV + CPAP range (Vivisol limited in NIV)",
-  "Plateforme Orkyn' patient avec appli mobile":
-    "Orkyn' patient platform with mobile app",
-  // ── Vivisol theirStrengths ──
-  "Tarifs agressifs sur les concentrateurs fixes (-10 à -15%)":
-    "Aggressive pricing on stationary concentrators (-10 to -15%)",
-  "Implantation forte en Italie du Nord (patients frontaliers)":
-    "Strong presence in Northern Italy (cross-border patients)",
+  "Gamme complète antidiabétiques + insuline (NovaPharm limité en insuline)":
+    "Full antidiabetics + insulin range (NovaPharm limited in insulin)",
+  "Plateforme MedVantis patient avec appli mobile":
+    "MedVantis patient platform with mobile app",
+  // ── NovaPharm theirStrengths ──
+  "Tarifs agressifs sur les antidiabétiques oraux (-10 à -15%)":
+    "Aggressive pricing on oral antidiabetics (-10 to -15%)",
+  "Implantation forte en Europe du Sud (patients frontaliers)":
+    "Strong presence in Southern Europe (cross-border patients)",
   "Bonne relation historique avec certains CHU":
     "Good historical relationship with certain university hospitals",
-  // ── Vivisol counterArguments ──
-  "Le coût total de prise en charge (incluant réhospitalisations évitées par le télésuivi) est inférieur chez Air Liquide":
-    "The total cost of care (including rehospitalizations prevented by remote monitoring) is lower at Air Liquide",
-  "Notre astreinte 24/7 réduit les passages aux urgences — argument décisif pour les pneumologues hospitaliers":
-    "Our 24/7 on-call service reduces ER visits — a decisive argument for hospital pulmonologists",
+  // ── NovaPharm counterArguments ──
+  "Le coût total de prise en charge (incluant réhospitalisations évitées par le télésuivi) est inférieur chez MedVantis Pharma":
+    "The total cost of care (including rehospitalizations prevented by remote monitoring) is lower at MedVantis Pharma",
+  "Notre astreinte 24/7 réduit les passages aux urgences — argument décisif pour les endocrinologues hospitaliers":
+    "Our 24/7 on-call service reduces ER visits — a decisive argument for hospital endocrinologists",
   "Nos données de télésuivi sont intégrables dans les DPI hospitaliers (interopérabilité HL7/FHIR)":
     "Our remote monitoring data can be integrated into hospital EHR systems (HL7/FHIR interoperability)",
 
-  // ── Linde Healthcare ourAdvantages ──
+  // ── Seralis ourAdvantages ──
   "Connectivité IoT native sur tous les dispositifs médicaux":
     "Native IoT connectivity on all medical devices",
   "Chronic Care Connect — suivi digital patient complet":
     "Chronic Care Connect — complete digital patient monitoring",
-  "Plateforme Orkyn' dédiée avec éducation thérapeutique intégrée":
-    "Dedicated Orkyn' platform with integrated therapeutic education",
+  "Plateforme MedVantis dédiée avec éducation thérapeutique intégrée":
+    "Dedicated MedVantis platform with integrated therapeutic education",
   "Réseau technicien 2x plus dense en Rhône-Alpes":
     "Technician network 2x denser in Rhône-Alpes",
-  "R&D interne avec brevets sur l'oxygénothérapie intelligente":
-    "In-house R&D with patents on smart oxygen therapy",
-  // ── Linde Healthcare theirStrengths ──
-  "Adossé au groupe Linde (solidité financière)":
-    "Backed by the Linde group (financial strength)",
-  "Bonne gamme de gaz médicaux hospitaliers":
-    "Good range of hospital medical gases",
+  "R&D interne avec brevets sur le diabète connecté":
+    "In-house R&D with patents on connected diabetes care",
+  // ── Seralis theirStrengths ──
+  "Adossé au groupe Seralis (solidité financière)":
+    "Backed by the Seralis group (financial strength)",
+  "Bonne gamme de produits diabétologiques hospitaliers":
+    "Good range of hospital diabetology products",
   "Prix compétitifs sur les gros volumes hospitaliers":
     "Competitive pricing on large hospital volumes",
-  // ── Linde Healthcare counterArguments ──
-  "Linde est un industriel gazier — Air Liquide Santé est un spécialiste du parcours patient à domicile":
-    "Linde is an industrial gas company — Air Liquide Healthcare is a home patient care specialist",
+  // ── Seralis counterArguments ──
+  "Seralis est un généraliste — MedVantis Pharma est un spécialiste du parcours patient diabétique":
+    "Seralis is a generalist — MedVantis Pharma is a diabetic patient care pathway specialist",
   "Notre plateforme de télésuivi est propriétaire et évolutive, pas un simple rebranding":
     "Our remote monitoring platform is proprietary and scalable, not a simple rebrand",
-  "Nos IDE formateurs sont salariés (vs sous-traitance chez Linde) — continuité de la relation patient":
-    "Our training nurses are employees (vs outsourced at Linde) — continuity of the patient relationship",
+  "Nos IDE formateurs sont salariés (vs sous-traitance chez Seralis) — continuité de la relation patient":
+    "Our training nurses are employees (vs outsourced at Seralis) — continuity of the patient relationship",
 
-  // ── SOS Oxygène ourAdvantages ──
+  // ── GenBio ourAdvantages ──
   "Couverture nationale complète (vs implantation régionale Sud)":
     "Full national coverage (vs regional presence in the South)",
-  "Gamme VNI/PPC complète ALMS (SOS limité en ventilation)":
-    "Full ALMS NIV/CPAP range (SOS limited in ventilation)",
+  "Gamme diabétologique complète (GenBio limité en insulinothérapie)":
+    "Full diabetology range (GenBio limited in insulin therapy)",
   "R&D et innovation continue (télésuivi, IoT, IA)":
     "Continuous R&D and innovation (remote monitoring, IoT, AI)",
-  "Capacité de prise en charge multi-pathologies (BPCO + SAS + IRC)":
-    "Multi-pathology care capability (COPD + SAS + CRF)",
-  "Interlocuteur unique pour l'ensemble du parcours respiratoire":
-    "Single point of contact for the entire respiratory care pathway",
-  // ── SOS Oxygène theirStrengths ──
+  "Capacité de prise en charge multi-pathologies (DT2 + complications + comorbidités)":
+    "Multi-pathology care capability (T2D + complications + comorbidities)",
+  "Interlocuteur unique pour l'ensemble du parcours diabétique":
+    "Single point of contact for the entire diabetes care pathway",
+  // ── GenBio theirStrengths ──
   "Forte proximité locale dans le Sud-Est":
     "Strong local proximity in the Southeast",
   "Image de PME réactive et à taille humaine":
     "Image of a responsive, human-scale SME",
   "Bonne notoriété chez les MG de ville dans leur zone":
     "Good reputation among community GPs in their area",
-  // ── SOS Oxygène counterArguments ──
+  // ── GenBio counterArguments ──
   "Notre maillage territorial en Rhône-Alpes est équivalent avec en plus la couverture nationale pour les patients voyageurs":
     "Our territorial coverage in Rhône-Alpes is equivalent, with added national coverage for traveling patients",
-  "Notre programme patient Orkyn' offre un suivi plus complet que la simple livraison":
-    "Our Orkyn' patient program offers more comprehensive monitoring than simple delivery",
-  "Pour les cas complexes (VNI + O2), un seul prestataire simplifie le parcours vs 2 intervenants":
-    "For complex cases (NIV + O2), a single provider simplifies the pathway vs 2 providers",
-
-  // ── Bastide Médical ourAdvantages ──
-  "Expertise respiratoire pure (vs Bastide multi-activité : nutrition, perf, stomie...)":
-    "Pure respiratory expertise (vs Bastide multi-activity: nutrition, infusion, ostomy...)",
-  "Forfaits LPPR optimisés pour la pneumologie":
-    "LPPR packages optimized for pulmonology",
-  "Support technique respiratoire spécialisé 24/7":
-    "Specialized respiratory technical support 24/7",
-  "Équipes terrain 100% dédiées au respiratoire":
-    "Field teams 100% dedicated to respiratory care",
-  "Télésuivi O₂ avec algorithmes prédictifs d'exacerbation":
-    "O₂ remote monitoring with predictive exacerbation algorithms",
-  // ── Bastide Médical theirStrengths ──
-  "Offre globale MAD (oxygène + nutrition + perfusion)":
-    "Global home care offer (oxygen + nutrition + infusion)",
-  "Réseau de pharmacies affiliées pour la capillarité":
-    "Network of affiliated pharmacies for capillarity",
-  "Communication active auprès des MG de ville":
-    "Active communication with community GPs",
-  // ── Bastide Médical counterArguments ──
-  "Un généraliste du MAD ne peut pas égaler un spécialiste du respiratoire — nos techniciens sont formés exclusivement à la pneumologie":
-    "A home care generalist cannot match a respiratory specialist — our technicians are trained exclusively in pulmonology",
-  "La dispersion multi-activité de Bastide impacte les délais d'intervention respiratoire urgente":
-    "Bastide's multi-activity dispersion impacts emergency respiratory intervention times",
-  "Nos concentrateurs et VNI sont de dernière génération — Bastide revend souvent du matériel reconditionné":
-    "Our concentrators and NIV devices are latest generation — Bastide often resells refurbished equipment",
+  "Notre programme patient MedVantis offre un suivi plus complet que la simple livraison":
+    "Our MedVantis patient program offers more comprehensive monitoring than simple delivery",
+  "Pour les cas complexes (insuline + antidiabétiques), un seul prestataire simplifie le parcours vs 2 intervenants":
+    "For complex cases (insulin + antidiabetics), a single provider simplifies the pathway vs 2 providers",
 };
 
 export function localizeBattlecardText(text: string): string {
@@ -701,7 +674,7 @@ const pneumoNotePatterns: NotePattern[] = [
   ],
   [
     /^Échange téléphonique productif avec (.+?) (.+?)\. Souhaite mettre en place le télésuivi O2 Connect pour ses (\d+) patients/,
-    (m) => `Productive phone call with ${m[1]} ${m[2]}. Wants to set up O2 Connect remote monitoring for their ${m[3]} most unstable patients. Questions about integration with their medical software. Mentioned receiving a proposal from Vivisol recently.`,
+    (m) => `Productive phone call with ${m[1]} ${m[2]}. Wants to set up O2 Connect remote monitoring for their ${m[3]} most unstable patients. Questions about integration with their medical software. Mentioned receiving a proposal from NovaPharm recently.`,
   ],
   [
     /^Rendez-vous avec (.+?) (.+?) au CHU\. Présentation des données cliniques/,
@@ -709,11 +682,11 @@ const pneumoNotePatterns: NotePattern[] = [
   ],
   [
     /^Visite de routine\. (.+?) (.+?) satisfait/,
-    (m) => `Routine visit. ${m[1]} ${m[2]} satisfied with Air Liquide service quality. No technical incidents reported on the monitored patients. Discussion on GOLD 2025 guidelines and their impact on oxygen therapy prescriptions.`,
+    (m) => `Routine visit. ${m[1]} ${m[2]} satisfied with MedVantis Pharma service quality. No technical incidents reported on the monitored patients. Discussion on GOLD 2025 guidelines and their impact on oxygen therapy prescriptions.`,
   ],
   [
     /^(.+?) (.+?) m'a contacté\(e\) pour un problème d'approvisionnement en oxygène liquide/,
-    (m) => `${m[1]} ${m[2]} contacted me about a liquid oxygen supply issue for a home patient. Incident resolved in under 4 hours thanks to the on-call service. The practitioner appreciated the responsiveness and compares favorably to their past experience with SOS Oxygène.`,
+    (m) => `${m[1]} ${m[2]} contacted me about a liquid oxygen supply issue for a home patient. Incident resolved in under 4 hours thanks to the on-call service. The practitioner appreciated the responsiveness and compares favorably to their past experience with GenBio.`,
   ],
   [
     /^Participation à la réunion pluridisciplinaire du service de pneumologie\. (.+?) (.+?) a présenté/,
@@ -788,11 +761,11 @@ const generalisteNotePatterns: NotePattern[] = [
   ],
   [
     /^Contact téléphonique de (.+?) (.+?) : question sur la conduite à tenir/,
-    (m) => `Phone contact from ${m[1]} ${m[2]}: question about what to do when a patient on O2 travels abroad. Information on the Air Liquide international assistance service provided.`,
+    (m) => `Phone contact from ${m[1]} ${m[2]}: question about what to do when a patient on O2 travels abroad. Information on the MedVantis Pharma international assistance service provided.`,
   ],
   [
-    /^(.+?) (.+?) mentionne avoir été démarché\(e\) par Bastide Médical/,
-    (m) => `${m[1]} ${m[2]} mentions being approached by Bastide Médical. Lower price announced but limited service. I presented our added value: remote monitoring, 24/7 on-call, patient training. The physician remains loyal.`,
+    /^(.+?) (.+?) mentionne avoir été démarché\(e\) par GenBio/,
+    (m) => `${m[1]} ${m[2]} mentions being approached by GenBio. Lower price announced but limited service. I presented our added value: remote monitoring, 24/7 on-call, patient training. The physician remains loyal.`,
   ],
   [
     /^Visite chez (.+?) (.+?) avec présentation du nouveau kit éducation.*?(\d+) patients sous O2/,
@@ -840,8 +813,8 @@ const noteNextActionMap: Record<string, string> = {
     "Organize BiLevel vs Philips comparative trial",
   "Répondre avec brochure programme réhabilitation":
     "Reply with rehabilitation program brochure",
-  "Inviter au prochain symposium Air Liquide":
-    "Invite to the next Air Liquide symposium",
+  "Inviter au prochain symposium MedVantis Pharma":
+    "Invite to the next MedVantis Pharma symposium",
   "Contacter le pneumologue successeur pour présentation":
     "Contact the successor pulmonologist for an introduction",
   "Proposer date pour webinaire conjoint":
@@ -859,8 +832,8 @@ const noteNextActionMap: Record<string, string> = {
     "Call back for patient evaluation regarding deterioration",
   "Fournir documentation programme sevrage tabagique":
     "Provide smoking cessation program documentation",
-  "Surveillance concurrentielle Bastide sur ce secteur":
-    "Competitive monitoring of Bastide in this area",
+  "Surveillance concurrentielle GenBio sur ce secteur":
+    "Competitive monitoring of GenBio in this area",
   "Organiser changement d'équipement chez patient isolé":
     "Organize equipment change for isolated patient",
   "Envoyer offre simplifiée prescripteurs occasionnels":

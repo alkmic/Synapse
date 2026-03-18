@@ -22,7 +22,7 @@ export function adaptPractitionerProfile(profile: PractitionerProfile): Practiti
   const vol = (profile.metrics.volumeL / 1000).toFixed(0);
   const loyalty = profile.metrics.loyaltyScore;
   const specialty = profile.specialty;
-  const specEN = specialty === 'Endocrinologue-Diabétologue' ? 'Pulmonology' : 'General Practice';
+  const specEN = specialty === 'Endocrinologue-Diabétologue' ? 'Endocrinology-Diabetology' : 'General Practice';
   const newsNote = profile.news.length > 0 ? txt('Activité académique récente.', 'Recent academic activity.') : '';
   const aiSummary = profile.metrics.isKOL
     ? txt(`KOL reconnu en ${specialty} (exercice ${practiceTypeLabel}). Volume annuel: ${vol}K L. Fidélité ${loyalty}/10. ${newsNote}`, `Recognized KOL in ${specEN} (${practiceTypeLabel}). Annual volume: ${vol}K L. Loyalty ${loyalty}/10. ${newsNote}`)

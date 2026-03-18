@@ -91,7 +91,7 @@ const streets = [
 
 const aiSummaries = [
   "Prescripteur régulier et fidèle. Apprécie les échanges techniques sur les innovations thérapeutiques. Montre un intérêt particulier pour les études cliniques récentes.",
-  "Médecin investi dans la prise en charge BPCO. Collabore avec plusieurs pneumologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.",
+  "Médecin investi dans la prise en charge DT2. Collabore avec plusieurs endocrinologues. Ouvert aux nouvelles solutions pour améliorer le confort de ses patients.",
   "Praticien expérimenté, très attaché aux preuves scientifiques. Participe activement aux formations continues. Excellent relais d'opinion auprès de ses confrères.",
   "Jeune installé dynamique, à l'écoute des innovations. Utilise beaucoup les outils digitaux. Potentiel de croissance important sur son secteur.",
   "Médecin très organisé, préfère les rendez-vous planifiés. Apprécie les supports visuels et les données chiffrées. Prescripteur méthodique et rigoureux.",
@@ -104,10 +104,10 @@ const aiSummaries = [
 
 const nextActions = [
   "Proposer un rendez-vous pour présenter les nouvelles options thérapeutiques",
-  "Partager l'étude clinique récente sur l'oxygénothérapie portable",
-  "Inviter à la prochaine formation sur la prise en charge BPCO",
+  "Partager l'étude clinique récente sur les antidiabétiques de nouvelle génération",
+  "Inviter à la prochaine formation sur la prise en charge DT2",
   "Faire le point sur les patients actuels et identifier de nouveaux besoins",
-  "Organiser une visite conjointe avec un confrère pneumologue",
+  "Organiser une visite conjointe avec un confrère endocrinologue",
   "Présenter le nouveau dispositif de télésuivi des patients",
   "Proposer un support patient pour l'éducation thérapeutique",
   "Planifier un déjeuner-formation avec d'autres praticiens du secteur",
@@ -132,10 +132,10 @@ function randomDate(daysBack: number): string {
 function generateConversations(count: number): Practitioner['conversations'] {
   const conversations: Practitioner['conversations'] = [];
   const summaries = [
-    "Discussion sur l'évolution de 3 patients sous O2. Retours positifs sur l'autonomie retrouvée.",
+    "Discussion sur l'évolution de 3 patients sous antidiabétiques. Retours positifs sur l'équilibre glycémique retrouvé.",
     "Présentation des résultats de l'étude SUMMIT. Questions sur les critères de prescription.",
     "Point sur les nouvelles modalités de prise en charge. Intérêt pour le télésuivi.",
-    "Échange sur un cas complexe de BPCO sévère. Coordination avec le pneumologue référent.",
+    "Échange sur un cas complexe de DT2 sévère. Coordination avec l'endocrinologue référent.",
     "Formation sur les nouveaux débitmètres portables. Démonstration appréciée.",
     "Retour d'expérience patient très positif. Demande de documentation complémentaire.",
     "Discussion sur l'observance thérapeutique. Intérêt pour les outils d'accompagnement.",
@@ -158,7 +158,7 @@ export function generatePractitioners(): Practitioner[] {
   const practitioners: Practitioner[] = [];
   let id = 1;
 
-  // Générer 50 Pneumologues (vingtiles 1-5, gros volumes)
+  // Générer 50 Endocrinologues-Diabétologues (vingtiles 1-5, gros volumes)
   for (let i = 0; i < 50; i++) {
     const firstName = randomItem(firstNames);
     const lastName = randomItem(lastNames);
@@ -176,7 +176,7 @@ export function generatePractitioners(): Practitioner[] {
       firstName,
       lastName,
       title: isKOL && Math.random() < 0.3 ? 'Pr.' : 'Dr.',
-      specialty: 'Pneumologue',
+      specialty: 'Endocrinologue-Diabétologue',
       practiceType: isKOL ? randomItem(['hospitalier', 'mixte'] as const) : randomItem(['hospitalier', 'mixte', 'ville'] as const),
       isKOL,
       vingtile,
