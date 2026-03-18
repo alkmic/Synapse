@@ -148,8 +148,8 @@ const conversationSummaryMap: Record<string, string> = {
     "Update on new care modalities. Interest in remote monitoring.",
   "Échange sur un cas complexe de DT2 sévère. Coordination avec l'endocrinologue référent.":
     "Discussion on a complex severe Type 2 Diabetes case. Coordination with the referring endocrinologist.",
-  "Formation sur les nouveaux débitmètres portables. Démonstration appréciée.":
-    "Training on new portable flow meters. Demonstration appreciated.",
+  "Formation sur les nouveaux glucomètres connectés. Démonstration appréciée.":
+    "Training on new connected glucose meters. Demonstration appreciated.",
   "Retour d'expérience patient très positif. Demande de documentation complémentaire.":
     "Very positive patient feedback. Request for additional documentation.",
   "Discussion sur l'observance thérapeutique. Intérêt pour les outils d'accompagnement.":
@@ -253,7 +253,7 @@ const newsContentPrefixMap: Array<[string, string]> = [
   ["Intervention sur ", "Presentation on "],
 ];
 
-// Topic translations (all topics from pneumo and generaliste templates)
+// Topic translations (all topics from diabeto and generaliste templates)
 const topicMap: Record<string, string> = {
   // ── Diabeto publication topics (Diabetes Care) ──
   "l'éducation thérapeutique chez le patient DT2 sous antidiabétiques": "therapeutic education in T2D patients on antidiabetics",
@@ -312,47 +312,47 @@ const topicMap: Record<string, string> = {
   "les innovations en insulinothérapie à domicile": "innovations in home insulin therapy",
   "l'utilisation des données connectées en diabétologie": "the use of connected data in diabetology",
   // ── Generaliste publication topics (Revue du Praticien) ──
-  "le dépistage de la BPCO en soins primaires": "COPD screening in primary care",
-  "la coordination ville-hôpital pour les patients sous O2": "community-hospital coordination for patients on O2",
-  "les red flags en consultation pour orientation pneumologique": "red flags in consultation for pulmonology referral",
-  "l'accompagnement du patient BPCO en médecine générale": "supporting the COPD patient in general practice",
-  "le rôle du médecin traitant dans le renouvellement de l'OLD": "the role of the attending physician in LTOT renewal",
-  "la gestion du sevrage tabagique en cabinet de ville": "managing smoking cessation in community practice",
-  "les critères d'adressage au pneumologue pour bilan respiratoire": "referral criteria to a pulmonologist for respiratory assessment",
+  "le dépistage du DT2 en soins primaires": "T2D screening in primary care",
+  "la coordination ville-hôpital pour les patients sous insuline": "community-hospital coordination for patients on insulin",
+  "les red flags en consultation pour orientation en diabétologie": "red flags in consultation for diabetology referral",
+  "l'accompagnement du patient DT2 en médecine générale": "supporting the T2D patient in general practice",
+  "le rôle du médecin traitant dans le renouvellement des antidiabétiques": "the role of the attending physician in antidiabetic renewal",
+  "la gestion de l'éducation thérapeutique du DT2 en cabinet de ville": "managing T2D therapeutic education in community practice",
+  "les critères d'adressage à l'endocrinologue pour bilan métabolique": "referral criteria to an endocrinologist for metabolic assessment",
   // ── Generaliste publication topics (Exercer) ──
-  "l'organisation de la consultation BPCO en cabinet libéral": "organizing COPD consultations in private practice",
-  "la place de la spirométrie au cabinet du généraliste": "the role of spirometry in the GP's office",
-  "l'éducation thérapeutique du patient insuffisant respiratoire": "therapeutic education for respiratory failure patients",
-  "le suivi à domicile des patients sous assistance respiratoire": "home monitoring of patients on respiratory support",
+  "l'organisation de la consultation DT2 en cabinet libéral": "organizing T2D consultations in private practice",
+  "la place de la glycémie continue au cabinet du généraliste": "the role of continuous glucose monitoring in the GP's office",
+  "l'éducation thérapeutique du patient DT2 avec complications": "therapeutic education for T2D patients with complications",
+  "le suivi à domicile des patients sous insulinothérapie": "home monitoring of patients on insulin therapy",
   "l'intégration du télésuivi dans la pratique de médecine générale": "integrating remote monitoring into general practice",
-  "le parcours patient BPCO vu depuis les soins primaires": "the COPD patient pathway from a primary care perspective",
+  "le parcours patient DT2 vu depuis les soins primaires": "the T2D patient pathway from a primary care perspective",
   // ── Generaliste publication topics (Quotidien du Médecin) ──
-  "l'enjeu du dépistage précoce de la BPCO en France": "the challenge of early COPD screening in France",
-  "la prise en charge ambulatoire de l'insuffisance respiratoire chronique": "outpatient management of chronic respiratory failure",
+  "l'enjeu du dépistage précoce du DT2 en France": "the challenge of early T2D screening in France",
+  "la prise en charge ambulatoire des complications métaboliques chroniques": "outpatient management of chronic metabolic complications",
   "l'apport du numérique dans le suivi des maladies chroniques": "the contribution of digital tools in chronic disease monitoring",
-  "le rôle du généraliste dans la prévention de l'aggravation BPCO": "the role of the GP in preventing COPD worsening",
+  "le rôle du généraliste dans la prévention de l'aggravation du DT2": "the role of the GP in preventing T2D worsening",
   // ── Generaliste publication topics (UNAFORMEC) ──
-  "la prescription d'oxygénothérapie de longue durée en ville": "prescribing long-term oxygen therapy in community practice",
-  "les outils d'évaluation de la dyspnée utilisables en consultation": "dyspnea assessment tools usable in consultation",
-  "le suivi post-hospitalisation du patient BPCO exacerbé": "post-hospitalization follow-up of exacerbated COPD patients",
-  "l'accompagnement du patient insuffisant respiratoire chronique et de son aidant": "supporting the chronic respiratory failure patient and their caregiver",
+  "la prescription d'antidiabétiques au long cours en ville": "prescribing long-term antidiabetics in community practice",
+  "les outils d'évaluation de l'HbA1c utilisables en consultation": "HbA1c assessment tools usable in consultation",
+  "le suivi post-hospitalisation du patient DT2 décompensé": "post-hospitalization follow-up of decompensated T2D patients",
+  "l'accompagnement du patient DT2 chronique et de son aidant": "supporting the chronic T2D patient and their caregiver",
   // ── Generaliste conference topics ──
-  "le repérage des maladies respiratoires en soins primaires": "identifying respiratory diseases in primary care",
+  "le repérage du DT2 en soins primaires": "identifying T2D in primary care",
   "les outils numériques pour le médecin traitant": "digital tools for the attending physician",
   "la coordination des acteurs du domicile (HAD, PSAD, IDE)": "coordinating home care actors (HAH, HSSP, nurses)",
   "l'optimisation du suivi des patients chroniques": "optimizing chronic patient follow-up",
-  "les parcours de soins des patients insuffisants respiratoires": "care pathways for respiratory failure patients",
+  "les parcours de soins des patients DT2 avec complications": "care pathways for T2D patients with complications",
   "la téléconsultation et le télésuivi en médecine générale": "teleconsultation and remote monitoring in general practice",
-  "l'impact de la pollution atmosphérique sur les pathologies respiratoires": "the impact of air pollution on respiratory diseases",
+  "l'impact de l'alimentation ultra-transformée sur le DT2": "the impact of ultra-processed food on T2D",
   // ── Generaliste event topics ──
-  "le bon usage des dispositifs médicaux respiratoires": "the proper use of respiratory medical devices",
-  "la prise en charge du patient BPCO en médecine de ville": "managing the COPD patient in community practice",
-  "les innovations du PSAD et télésuivi": "innovations in HSSP and remote monitoring",
-  "la prévention et le sevrage tabagique": "prevention and smoking cessation",
+  "le bon usage des dispositifs de glycémie continue": "the proper use of continuous glucose monitoring devices",
+  "la prise en charge du patient DT2 en médecine de ville": "managing the T2D patient in community practice",
+  "les innovations en télésuivi glycémique": "innovations in glycemic remote monitoring",
+  "la prévention et l'éducation nutritionnelle": "prevention and nutritional education",
   "la gestion des poly-pathologies chez le sujet âgé": "managing multi-morbidity in the elderly",
   "l'organisation du maintien à domicile des patients chroniques": "organizing home care for chronic patients",
-  "l'utilisation de la spirométrie en cabinet de ville": "using spirometry in community practice",
-  "la coordination IDE-MG pour le suivi des patients sous O2": "nurse-GP coordination for monitoring patients on O2",
+  "l'utilisation de la glycémie capillaire en cabinet de ville": "using capillary blood glucose monitoring in community practice",
+  "la coordination IDE-MG pour le suivi des patients sous insuline": "nurse-GP coordination for monitoring patients on insulin",
 };
 
 // Certification/domain translations (for "Obtention d'un {cert} en {domain}")
@@ -366,27 +366,27 @@ const certMap: Record<string, string> = {
 };
 
 const domainMap: Record<string, string> = {
-  // Pneumo domains
-  "réhabilitation respiratoire": "pulmonary rehabilitation",
-  "pneumologie interventionnelle": "interventional pulmonology",
-  "allergologie respiratoire": "respiratory allergology",
-  "oncologie thoracique": "thoracic oncology",
-  "soins palliatifs respiratoires": "respiratory palliative care",
-  "sommeil et ventilation": "sleep and ventilation",
+  // Diabeto domains
+  "diabétologie avancée": "advanced diabetology",
+  "endocrinologie interventionnelle": "interventional endocrinology",
+  "nutrition et maladies métaboliques": "nutrition and metabolic diseases",
+  "complications cardiovasculaires du diabète": "cardiovascular complications of diabetes",
+  "éducation thérapeutique en diabétologie": "therapeutic education in diabetology",
+  "diabète et obésité": "diabetes and obesity",
   // Generaliste domains
   "éducation thérapeutique du patient": "therapeutic patient education",
   "tabacologie": "tobacco addiction medicine",
   "médecine du sommeil": "sleep medicine",
   "gérontologie et polypathologies": "gerontology and multi-morbidity",
   "coordination des soins à domicile": "home care coordination",
-  "maladies respiratoires chroniques": "chronic respiratory diseases",
+  "maladies métaboliques chroniques": "chronic metabolic diseases",
   "soins palliatifs et accompagnement": "palliative care and support",
   "médecine d'urgence ambulatoire": "ambulatory emergency medicine",
 };
 
 // Event name translations (for "{event} sur {topic}")
 const eventNameMap: Record<string, string> = {
-  // Pneumo events
+  // Diabeto events
   "Formation continue": "Continuing education",
   "Atelier pratique": "Practical workshop",
   "Table ronde": "Round table",
@@ -404,14 +404,14 @@ const eventNameMap: Record<string, string> = {
 
 // Conference event translations (for "Présentation sur {topic} au {event}")
 const conferenceEventMap: Record<string, string> = {
-  // Pneumo conference events
-  "Congrès de la SPLF": "SPLF Congress",
-  "Congrès ERS (European Respiratory Society)": "ERS Congress (European Respiratory Society)",
-  "Journées de Pneumologie Rhône-Alpes": "Rhône-Alpes Pulmonology Days",
-  "Congrès CPLF": "CPLF Congress",
-  "Journées Francophones d'Allergologie": "French-Speaking Allergology Days",
-  "Assises Nationales de la BPCO": "National COPD Conference",
-  "Congrès CHEST (American College of Chest Physicians)": "CHEST Congress (American College of Chest Physicians)",
+  // Diabeto conference events
+  "Congrès de la SFD": "SFD Congress (Francophone Diabetes Society)",
+  "Congrès EASD (European Association for the Study of Diabetes)": "EASD Congress (European Association for the Study of Diabetes)",
+  "Journées de Diabétologie Rhône-Alpes": "Rhône-Alpes Diabetology Days",
+  "Congrès SFE (Société Française d'Endocrinologie)": "SFE Congress (French Endocrinology Society)",
+  "Journées Francophones de Nutrition": "French-Speaking Nutrition Days",
+  "Assises Nationales du Diabète": "National Diabetes Conference",
+  "Congrès ADA (American Diabetes Association)": "ADA Congress (American Diabetes Association)",
   // Generaliste conference events
   "Congrès de la Médecine Générale France": "General Medicine Congress France",
   "Journées Nationales de Médecine Générale (JNMG)": "National General Medicine Days (JNMG)",
@@ -424,20 +424,20 @@ const conferenceEventMap: Record<string, string> = {
 
 // Achievement translations (for "Reconnaissance pour {achievement}")
 const achievementMap: Record<string, string> = {
-  // Pneumo achievements
-  "son excellence dans la prise en charge des patients sous oxygénothérapie": "excellence in managing patients on oxygen therapy",
-  "sa contribution à la recherche en pneumologie": "contributions to pulmonology research",
+  // Diabeto achievements
+  "son excellence dans la prise en charge des patients DT2 sous insulinothérapie": "excellence in managing T2D patients on insulin therapy",
+  "sa contribution à la recherche en diabétologie": "contributions to diabetology research",
   "son engagement dans l'éducation thérapeutique": "commitment to therapeutic education",
-  "son rôle dans l'amélioration du parcours de soins BPCO dans la région": "role in improving the COPD care pathway in the region",
-  "sa participation au réseau sentinelle de surveillance BPCO": "participation in the COPD surveillance sentinel network",
-  "son implication dans le programme de dépistage BPCO en médecine de ville": "involvement in the COPD screening program in community practice",
+  "son rôle dans l'amélioration du parcours de soins DT2 dans la région": "role in improving the T2D care pathway in the region",
+  "sa participation au réseau de dépistage et suivi DT2": "participation in the T2D screening and monitoring network",
+  "son implication dans le programme de dépistage DT2 en médecine de ville": "involvement in the T2D screening program in community practice",
   // Generaliste achievements
-  "son engagement dans le dépistage des maladies respiratoires": "commitment to respiratory disease screening",
+  "son engagement dans le dépistage du DT2": "commitment to T2D screening",
   "sa qualité de coordination avec les prestataires de santé à domicile": "quality of coordination with home health providers",
   "son rôle de maître de stage universitaire": "role as a university training supervisor",
   "son implication dans la maison de santé pluriprofessionnelle": "involvement in the multi-professional health center",
-  "sa participation active au réseau de soins respiratoire régional": "active participation in the regional respiratory care network",
-  "son travail sur l'amélioration du parcours BPCO en soins primaires": "work on improving the COPD pathway in primary care",
+  "sa participation active au réseau de soins métaboliques régional": "active participation in the regional metabolic care network",
+  "son travail sur l'amélioration du parcours DT2 en soins primaires": "work on improving the T2D pathway in primary care",
   "sa contribution à la formation des internes en médecine générale": "contribution to training medical residents in general practice",
 };
 
@@ -490,7 +490,7 @@ export function localizeNewsContent(content: string): string {
   }
 
   // 3) Handle "{event} sur {topic}" pattern (event type news)
-  //    e.g. "Formation continue sur la gestion de l'oxygénothérapie en ville"
+  //    e.g. "Formation continue sur la gestion des antidiabétiques en ville"
   for (const [frEvent, enEvent] of Object.entries(eventNameMap)) {
     const eventPrefix = `${frEvent} sur `;
     if (content.startsWith(eventPrefix)) {
@@ -521,24 +521,24 @@ const newsRelevancePrefixMap: Array<[string, string]> = [
 const newsRelevanceExactMap: Record<string, string> = {
   "Opportunité majeure : nouveau chef de service = nouvelles décisions d'approvisionnement. Profil haut potentiel KOL à conquérir.":
     "Major opportunity: new department head = new supply decisions. High-potential KOL profile to win over.",
-  "Sa publication porte EXACTEMENT sur le télésuivi O2 — notre produit phare. Levier de discussion idéal pour un premier contact.":
-    "Their publication is EXACTLY about O2 remote monitoring — our flagship product. Ideal discussion lever for a first contact.",
+  "Sa publication porte EXACTEMENT sur le télésuivi glycémique — notre produit phare. Levier de discussion idéal pour un premier contact.":
+    "Their publication is EXACTLY about glycemic remote monitoring — our flagship product. Ideal discussion lever for a first contact.",
   "Nouvelle installation = recherche active de prestataire. Fenêtre de captation très courte avant que la concurrence ne s'installe.":
     "New practice = actively seeking a provider. Very short window to capture before competitors move in.",
-  "Certification récente = praticienne à jour, réceptive aux innovations. Proposer notre gamme PPC/VNI complète.":
-    "Recent certification = up-to-date practitioner, receptive to innovations. Propose our full CPAP/NIV range.",
+  "Certification récente = praticienne à jour, réceptive aux innovations. Proposer notre gamme complète antidiabétiques/insulinothérapie.":
+    "Recent certification = up-to-date practitioner, receptive to innovations. Propose our full antidiabetics/insulin therapy range.",
   "MSP = fort volume potentiel (4 MG prescripteurs). Si on capte la MSP, on capte tous les médecins. Priorité absolue.":
     "Health center = high potential volume (4 GP prescribers). If we capture the health center, we capture all the doctors. Absolute priority.",
   "Venue d'un autre CHU = pas de prestataire local attitré. Fenêtre de premier contact cruciale cette semaine.":
     "Coming from another university hospital = no established local provider. Crucial first-contact window this week.",
   "Sujet directement lié à nos solutions de maintien à domicile. Point d'accroche parfait pour une première visite.":
     "Topic directly related to our home care solutions. Perfect talking point for a first visit.",
-  "15 patients sous O2 à récupérer ! Le Dr Joubert est ouvert au changement de prestataire. Visite de captation prioritaire.":
-    "15 patients on O2 to win back! Dr Joubert is open to changing providers. Priority acquisition visit.",
-  "Réseau de 12 MG + 3 pneumo = multiplicateur d'impact. Si MedVantis Pharma devient partenaire du réseau, accès à tous les prescripteurs impliqués.":
-    "Network of 12 GPs + 3 pulmonologists = impact multiplier. If MedVantis Pharma becomes a network partner, access to all involved prescribers.",
-  "Publication très alignée avec notre mission de dépistage. Proposer un partenariat de dépistage spirométrique avec notre matériel.":
-    "Publication very aligned with our screening mission. Propose a spirometric screening partnership with our equipment.",
+  "15 patients sous antidiabétiques à récupérer ! Le Dr Joubert est ouvert au changement de prestataire. Visite de captation prioritaire.":
+    "15 patients on antidiabetics to win back! Dr Joubert is open to changing providers. Priority acquisition visit.",
+  "Réseau de 12 MG + 3 endocrinologues = multiplicateur d'impact. Si MedVantis Pharma devient partenaire du réseau, accès à tous les prescripteurs impliqués.":
+    "Network of 12 GPs + 3 endocrinologists = impact multiplier. If MedVantis Pharma becomes a network partner, access to all involved prescribers.",
+  "Publication très alignée avec notre mission de dépistage. Proposer un partenariat de dépistage glycémique avec notre matériel.":
+    "Publication very aligned with our screening mission. Propose a glycemic screening partnership with our equipment.",
 };
 
 export function localizeNewsRelevance(relevance: string): string {
@@ -667,125 +667,125 @@ export function localizeBattlecardText(text: string): string {
 // Each entry: [regex, replacement function or template string]
 type NotePattern = [RegExp, (m: RegExpMatchArray) => string];
 
-const pneumoNotePatterns: NotePattern[] = [
+const diabetoNotePatterns: NotePattern[] = [
   [
-    /^Visite approfondie avec (.+?) (.+?)\. Discussion sur (\d+) patients BPCO/,
-    (m) => `In-depth visit with ${m[1]} ${m[2]}. Discussion on ${m[3]} COPD stage III-IV patients currently on LTOT. Very interested in the new FreeStyle portable concentrator to improve mobility for the most active patients. Requests an in-office demonstration.`,
+    /^Visite approfondie avec (.+?) (.+?)\. Discussion sur (\d+) patients DT2/,
+    (m) => `In-depth visit with ${m[1]} ${m[2]}. Discussion on ${m[3]} severe T2D patients currently on insulin therapy. Very interested in the new connected glucose monitoring device to improve glycemic control for the most complex patients. Requests an in-office demonstration.`,
   ],
   [
-    /^Échange téléphonique productif avec (.+?) (.+?)\. Souhaite mettre en place le télésuivi O2 Connect pour ses (\d+) patients/,
-    (m) => `Productive phone call with ${m[1]} ${m[2]}. Wants to set up O2 Connect remote monitoring for their ${m[3]} most unstable patients. Questions about integration with their medical software. Mentioned receiving a proposal from NovaPharm recently.`,
+    /^Échange téléphonique productif avec (.+?) (.+?)\. Souhaite mettre en place le télésuivi DT2 Connect pour ses (\d+) patients/,
+    (m) => `Productive phone call with ${m[1]} ${m[2]}. Wants to set up DT2 Connect remote monitoring for their ${m[3]} most unstable patients. Questions about integration with their medical software. Mentioned receiving a proposal from NovaPharm recently.`,
   ],
   [
     /^Rendez-vous avec (.+?) (.+?) au CHU\. Présentation des données cliniques/,
-    (m) => `Meeting with ${m[1]} ${m[2]} at the university hospital. Presentation of clinical data on adherence with remote monitoring. Convinced by the results of the multicenter study. Wants to gradually equip all LTOT patients.`,
+    (m) => `Meeting with ${m[1]} ${m[2]} at the university hospital. Presentation of clinical data on adherence with remote monitoring. Convinced by the results of the multicenter study. Wants to gradually equip all insulin-treated T2D patients.`,
   ],
   [
     /^Visite de routine\. (.+?) (.+?) satisfait/,
-    (m) => `Routine visit. ${m[1]} ${m[2]} satisfied with MedVantis Pharma service quality. No technical incidents reported on the monitored patients. Discussion on GOLD 2025 guidelines and their impact on oxygen therapy prescriptions.`,
+    (m) => `Routine visit. ${m[1]} ${m[2]} satisfied with MedVantis Pharma service quality. No technical incidents reported on the monitored patients. Discussion on ADA/EASD 2025 guidelines and their impact on antidiabetic prescriptions.`,
   ],
   [
-    /^(.+?) (.+?) m'a contacté\(e\) pour un problème d'approvisionnement en oxygène liquide/,
-    (m) => `${m[1]} ${m[2]} contacted me about a liquid oxygen supply issue for a home patient. Incident resolved in under 4 hours thanks to the on-call service. The practitioner appreciated the responsiveness and compares favorably to their past experience with GenBio.`,
+    /^(.+?) (.+?) m'a contacté\(e\) pour un problème d'approvisionnement en insuline/,
+    (m) => `${m[1]} ${m[2]} contacted me about an insulin supply issue for a home patient. Incident resolved in under 4 hours thanks to the on-call service. The practitioner appreciated the responsiveness and compares favorably to their past experience with GenBio.`,
   ],
   [
-    /^Participation à la réunion pluridisciplinaire du service de pneumologie\. (.+?) (.+?) a présenté/,
-    (m) => `Participated in the multidisciplinary meeting of the pulmonology department. ${m[1]} ${m[2]} presented a complex case of a COPD patient with cardiac comorbidities. Our remote monitoring solutions were cited as a reference. Excellent for our image.`,
+    /^Participation à la réunion pluridisciplinaire du service de diabétologie\. (.+?) (.+?) a présenté/,
+    (m) => `Participated in the multidisciplinary meeting of the diabetology department. ${m[1]} ${m[2]} presented a complex case of a T2D patient with cardio-renal comorbidities. Our remote monitoring solutions were cited as a reference. Excellent for our image.`,
   ],
   [
-    /^Entretien avec (.+?) (.+?) sur la VNI.*?(\d+) patients candidats/,
-    (m) => `Discussion with ${m[1]} ${m[2]} on NIV (Non-Invasive Ventilation). ${m[3]} candidate patients identified in the department. Wants to compare our BiLevel devices to Philips solutions. Technical discussion on masks and adherence.`,
+    /^Entretien avec (.+?) (.+?) sur l'insulinothérapie.*?(\d+) patients candidats/,
+    (m) => `Discussion with ${m[1]} ${m[2]} on insulin therapy. ${m[3]} candidate patients identified in the department. Wants to compare our connected insulin pens to Novo Nordisk solutions. Technical discussion on dosing and adherence.`,
   ],
   [
-    /^Email de (.+?) (.+?) demandant des informations sur nos programmes de réhabilitation/,
-    (m) => `Email from ${m[1]} ${m[2]} requesting information about our home pulmonary rehabilitation programs. Stage II COPD patient with deconditioning. Interest in an integrated O2 + adapted physical activity approach.`,
+    /^Email de (.+?) (.+?) demandant des informations sur nos programmes de rééducation nutritionnelle/,
+    (m) => `Email from ${m[1]} ${m[2]} requesting information about our home nutritional rehabilitation programs. T2D patient with metabolic deconditioning. Interest in an integrated antidiabetic + adapted nutrition approach.`,
   ],
   [
-    /^Rencontre fortuite avec (.+?) (.+?) au congrès SPLF/,
-    (m) => `Chance meeting with ${m[1]} ${m[2]} at the SPLF congress. Informal discussion on advances in short-term oxygen therapy (STOT). Expressed interest in connected nebulization. Very involved in clinical research.`,
+    /^Rencontre fortuite avec (.+?) (.+?) au congrès SFD/,
+    (m) => `Chance meeting with ${m[1]} ${m[2]} at the SFD congress. Informal discussion on advances in GLP-1 receptor agonists. Expressed interest in connected glucose monitoring. Very involved in clinical research.`,
   ],
   [
     /^Appel de (.+?) (.+?) pour signaler le transfert de (\d+) patients/,
-    (m) => `Call from ${m[1]} ${m[2]} to report the transfer of ${m[3]} patients to another pulmonologist in the city. Reason: partial retirement. Ensure service continuity and identify the practitioner taking over follow-up.`,
+    (m) => `Call from ${m[1]} ${m[2]} to report the transfer of ${m[3]} patients to another endocrinologist in the city. Reason: partial retirement. Ensure service continuity and identify the practitioner taking over follow-up.`,
   ],
   [
-    /^Visite avec démonstration du nouvel oxymètre connecté\. (.+?) (.+?) impressionné.*?(\d+) unités en test/,
-    (m) => `Visit with demonstration of the new connected pulse oximeter. ${m[1]} ${m[2]} impressed by the accuracy and automatic SpO2 data transmission. Wants to integrate it into the LTOT patient monitoring protocol. Requests ${m[3]} test units.`,
+    /^Visite avec démonstration du nouveau glucomètre connecté\. (.+?) (.+?) impressionné.*?(\d+) unités en test/,
+    (m) => `Visit with demonstration of the new connected glucose meter. ${m[1]} ${m[2]} impressed by the accuracy and automatic HbA1c data transmission. Wants to integrate it into the T2D patient monitoring protocol. Requests ${m[3]} test units.`,
   ],
   [
     /^Discussion stratégique avec (.+?) (.+?) sur la transition des patients/,
-    (m) => `Strategic discussion with ${m[1]} ${m[2]} on transitioning patients to concentrated vs liquid oxygen. Cost-benefit analysis presented. The practitioner confirms that mobility remains the #1 criterion for active patients.`,
+    (m) => `Strategic discussion with ${m[1]} ${m[2]} on transitioning patients from oral antidiabetics to injectable therapies. Cost-benefit analysis presented. The practitioner confirms that glycemic control remains the #1 criterion for complex patients.`,
   ],
   [
-    /^Entretien téléphonique suite à la publication récente de (.+?) (.+?) dans l'European/,
-    (m) => `Phone call following the recent publication by ${m[1]} ${m[2]} in the European Respiratory Journal. Discussion on clinical implications. Proposal to co-organize a webinar on the topic with our medical teams.`,
+    /^Entretien téléphonique suite à la publication récente de (.+?) (.+?) dans Diabetes Care/,
+    (m) => `Phone call following the recent publication by ${m[1]} ${m[2]} in Diabetes Care. Discussion on clinical implications. Proposal to co-organize a webinar on the topic with our medical teams.`,
   ],
   [
-    /^(.+?) (.+?) mentionne des retours négatifs sur le bruit du concentrateur fixe chez (\d+) patients/,
-    (m) => `${m[1]} ${m[2]} mentions negative feedback about stationary concentrator noise from ${m[3]} patients. Discussion on solutions: switching to the quiet model or portable liquid for nighttime. Priority patient identified.`,
+    /^(.+?) (.+?) mentionne des retours négatifs sur les effets secondaires des antidiabétiques chez (\d+) patients/,
+    (m) => `${m[1]} ${m[2]} mentions negative feedback about antidiabetic side effects from ${m[3]} patients. Discussion on solutions: dose adjustment or switching to a better-tolerated molecule. Priority patient identified.`,
   ],
   [
     /^Formation continue organisée dans le service de (.+?) (.+?)\./,
-    (m) => `Continuing education organized in the department of ${m[1]} ${m[2]}. 12 nurses and 3 residents trained on concentrator use and remote monitoring protocol. Excellent reception. The practitioner requests a refresher session in 6 months.`,
+    (m) => `Continuing education organized in the department of ${m[1]} ${m[2]}. 12 nurses and 3 residents trained on insulin pen use and glycemic remote monitoring protocol. Excellent reception. The practitioner requests a refresher session in 6 months.`,
   ],
 ];
 
 const generalisteNotePatterns: NotePattern[] = [
   [
     /^Visite de présentation chez (.+?) (.+?)\. Le médecin suit actuellement (\d+) patient/,
-    (m) => `Introduction visit at ${m[1]} ${m[2]}'s office. The physician currently manages ${m[3]} patient(s) on long-term oxygen therapy. Good knowledge of our services but not well informed about recent remote monitoring developments. Marked interest.`,
+    (m) => `Introduction visit at ${m[1]} ${m[2]}'s office. The physician currently manages ${m[3]} patient(s) on long-term antidiabetic therapy. Good knowledge of our services but not well informed about recent remote monitoring developments. Marked interest.`,
   ],
   [
-    /^Appel de (.+?) (.+?) pour une première prescription d'oxygénothérapie/,
-    (m) => `Call from ${m[1]} ${m[2]} for a first oxygen therapy prescription. Recently diagnosed COPD patient with PaO2 < 55 mmHg. Support with LPPR administrative procedures. Setup planned within 48 hours.`,
+    /^Appel de (.+?) (.+?) pour une première prescription d'antidiabétiques/,
+    (m) => `Call from ${m[1]} ${m[2]} for a first antidiabetic prescription. Recently diagnosed T2D patient with HbA1c > 9%. Support with administrative procedures. Treatment initiation planned within 48 hours.`,
   ],
   [
-    /^Discussion avec (.+?) (.+?) sur le suivi de (\d+) patients sous O2/,
-    (m) => `Discussion with ${m[1]} ${m[2]} on monitoring ${m[3]} patients on home O2. Everything going well, no technical issues reported. The physician appreciates our delivery service and technician punctuality.`,
+    /^Discussion avec (.+?) (.+?) sur le suivi de (\d+) patients sous antidiabétiques/,
+    (m) => `Discussion with ${m[1]} ${m[2]} on monitoring ${m[3]} patients on antidiabetics at home. Everything going well, no adverse effects reported. The physician appreciates our delivery service and support team punctuality.`,
   ],
   [
     /^Passage rapide au cabinet de (.+?) (.+?)\. En retard sur ses consultations/,
-    (m) => `Quick stop at ${m[1]} ${m[2]}'s office. Running late on consultations, brief but friendly exchange. Mentioned a patient whose condition is worsening and who may need to switch from gaseous O2 to portable liquid.`,
+    (m) => `Quick stop at ${m[1]} ${m[2]}'s office. Running late on consultations, brief but friendly exchange. Mentioned a patient whose condition is worsening and who may need to switch from oral antidiabetics to injectable insulin.`,
   ],
   [
     /^(.+?) (.+?) m'a signalé par email un problème de remboursement CPAM/,
-    (m) => `${m[1]} ${m[2]} reported by email a CPAM reimbursement issue for a patient on a concentrator. Renewal prescription problem. Administrative support provided. Resolved in 3 days.`,
+    (m) => `${m[1]} ${m[2]} reported by email a CPAM reimbursement issue for a patient on insulin therapy. Renewal prescription problem. Administrative support provided. Resolved in 3 days.`,
   ],
   [
     /^Visite de courtoisie chez (.+?) (.+?)\. Discussion sur l'éducation thérapeutique/,
-    (m) => `Courtesy visit at ${m[1]} ${m[2]}'s office. Discussion on therapeutic education for COPD patients. Interested in our patient training program and educational kit. Documentation provided.`,
+    (m) => `Courtesy visit at ${m[1]} ${m[2]}'s office. Discussion on therapeutic education for T2D patients. Interested in our patient training program and educational kit. Documentation provided.`,
   ],
   [
-    /^Échange avec (.+?) (.+?) sur le sevrage tabagique.*?(\d+) patients fumeurs/,
-    (m) => `Discussion with ${m[1]} ${m[2]} on smoking cessation and its impact on patients on O2. ${m[3]} smoking patients identified. Discussion on the complementary support we can offer.`,
+    /^Échange avec (.+?) (.+?) sur l'éducation nutritionnelle.*?(\d+) patients en surpoids/,
+    (m) => `Discussion with ${m[1]} ${m[2]} on nutritional education and its impact on T2D patients. ${m[3]} overweight patients identified. Discussion on the complementary support we can offer.`,
   ],
   [
     /^Contact téléphonique de (.+?) (.+?) : question sur la conduite à tenir/,
-    (m) => `Phone contact from ${m[1]} ${m[2]}: question about what to do when a patient on O2 travels abroad. Information on the MedVantis Pharma international assistance service provided.`,
+    (m) => `Phone contact from ${m[1]} ${m[2]}: question about what to do when a T2D patient on insulin travels abroad. Information on the MedVantis Pharma international assistance service provided.`,
   ],
   [
     /^(.+?) (.+?) mentionne avoir été démarché\(e\) par GenBio/,
     (m) => `${m[1]} ${m[2]} mentions being approached by GenBio. Lower price announced but limited service. I presented our added value: remote monitoring, 24/7 on-call, patient training. The physician remains loyal.`,
   ],
   [
-    /^Visite chez (.+?) (.+?) avec présentation du nouveau kit éducation.*?(\d+) patients sous O2/,
-    (m) => `Visit at ${m[1]} ${m[2]}'s office with presentation of the new patient therapeutic education kit. Very well received. The physician wants to distribute them to their ${m[3]} patients on O2 during upcoming consultations.`,
+    /^Visite chez (.+?) (.+?) avec présentation du nouveau kit éducation.*?(\d+) patients sous antidiabétiques/,
+    (m) => `Visit at ${m[1]} ${m[2]}'s office with presentation of the new patient therapeutic education kit. Very well received. The physician wants to distribute them to their ${m[3]} patients on antidiabetics during upcoming consultations.`,
   ],
   [
-    /^Appel de suivi après installation d'un concentrateur chez un patient de (.+?) (.+?)\./,
-    (m) => `Follow-up call after concentrator installation for a patient of ${m[1]} ${m[2]}. The patient is satisfied. The physician confirms symptom improvement after 2 weeks. Good feedback on equipment quality.`,
+    /^Appel de suivi après mise en place d'une insulinothérapie chez un patient de (.+?) (.+?)\./,
+    (m) => `Follow-up call after insulin therapy initiation for a patient of ${m[1]} ${m[2]}. The patient is satisfied. The physician confirms glycemic improvement after 2 weeks. Good feedback on treatment quality.`,
   ],
   [
     /^(.+?) (.+?) signale un patient isolé géographiquement/,
-    (m) => `${m[1]} ${m[2]} reports a geographically isolated patient having difficulties with liquid O2 deliveries. Discussion on switching to a concentrator with backup cylinder. Solution accepted by the practitioner.`,
+    (m) => `${m[1]} ${m[2]} reports a geographically isolated patient having difficulties with insulin deliveries. Discussion on switching to a long-acting insulin with less frequent injections. Solution accepted by the practitioner.`,
   ],
   [
     /^Première visite après la prise de contact initiale\. (.+?) (.+?) prescrit occasionnellement.*?(\d+) patient/,
-    (m) => `First visit after initial contact. ${m[1]} ${m[2]} occasionally prescribes O2 (approximately ${m[3]} patient(s)/year). Interested in our simplified offer for occasional prescribers. Good development potential.`,
+    (m) => `First visit after initial contact. ${m[1]} ${m[2]} occasionally prescribes antidiabetics (approximately ${m[3]} patient(s)/year). Interested in our simplified offer for occasional prescribers. Good development potential.`,
   ],
 ];
 
-const allNotePatterns = [...pneumoNotePatterns, ...generalisteNotePatterns];
+const allNotePatterns = [...diabetoNotePatterns, ...generalisteNotePatterns];
 
 export function localizeNoteContent(content: string): string {
   if (getLanguage() !== 'en') return content;
@@ -800,42 +800,42 @@ export function localizeNoteContent(content: string): string {
 
 // ─── Note NextAction translations ────────────────────────────
 const noteNextActionMap: Record<string, string> = {
-  // Pneumo note nextActions
-  "Planifier démonstration FreeStyle en cabinet sous 15 jours":
-    "Schedule FreeStyle demonstration in office within 15 days",
+  // Diabeto note nextActions
+  "Planifier démonstration glucomètre connecté en cabinet sous 15 jours":
+    "Schedule connected glucose meter demonstration in office within 15 days",
   "Envoyer documentation technique télésuivi + tarifs":
     "Send remote monitoring technical documentation + pricing",
   "Préparer convention de partenariat télésuivi":
     "Prepare remote monitoring partnership agreement",
   "Suivi qualité dans 1 semaine":
     "Quality follow-up in 1 week",
-  "Organiser essai comparatif BiLevel vs Philips":
-    "Organize BiLevel vs Philips comparative trial",
-  "Répondre avec brochure programme réhabilitation":
-    "Reply with rehabilitation program brochure",
+  "Organiser essai comparatif stylos connectés vs Novo Nordisk":
+    "Organize connected pens vs Novo Nordisk comparative trial",
+  "Répondre avec brochure programme rééducation nutritionnelle":
+    "Reply with nutritional rehabilitation program brochure",
   "Inviter au prochain symposium MedVantis Pharma":
     "Invite to the next MedVantis Pharma symposium",
-  "Contacter le pneumologue successeur pour présentation":
-    "Contact the successor pulmonologist for an introduction",
+  "Contacter l'endocrinologue successeur pour présentation":
+    "Contact the successor endocrinologist for an introduction",
   "Proposer date pour webinaire conjoint":
     "Propose a date for joint webinar",
-  "Échange concentrateur bruyant chez M. [patient] sous 5 jours":
-    "Replace noisy concentrator at Mr. [patient]'s within 5 days",
+  "Ajuster traitement antidiabétique chez M. [patient] sous 5 jours":
+    "Adjust antidiabetic treatment for Mr. [patient] within 5 days",
   "Planifier session de rappel formation dans 6 mois":
     "Schedule refresher training session in 6 months",
   // Generaliste note nextActions
   "Envoyer plaquette télésuivi et rappeler dans 3 semaines":
     "Send remote monitoring brochure and call back in 3 weeks",
-  "Coordonner installation O2 chez le patient sous 48h":
-    "Coordinate O2 setup at the patient's home within 48h",
+  "Coordonner mise en place insulinothérapie chez le patient sous 48h":
+    "Coordinate insulin therapy setup at the patient's home within 48h",
   "Rappeler pour évaluation patient avec dégradation":
     "Call back for patient evaluation regarding deterioration",
-  "Fournir documentation programme sevrage tabagique":
-    "Provide smoking cessation program documentation",
+  "Fournir documentation programme éducation thérapeutique DT2":
+    "Provide T2D therapeutic education program documentation",
   "Surveillance concurrentielle GenBio sur ce secteur":
     "Competitive monitoring of GenBio in this area",
-  "Organiser changement d'équipement chez patient isolé":
-    "Organize equipment change for isolated patient",
+  "Organiser changement de traitement chez patient isolé":
+    "Organize treatment change for isolated patient",
   "Envoyer offre simplifiée prescripteurs occasionnels":
     "Send simplified offer for occasional prescribers",
 };
@@ -843,8 +843,8 @@ const noteNextActionMap: Record<string, string> = {
 // Handle nextActions that contain {count} variable (already substituted at generation time)
 const noteNextActionPatterns: NotePattern[] = [
   [
-    /^Livrer (\d+) oxymètres connectés en test sous 10 jours$/,
-    (m) => `Deliver ${m[1]} connected pulse oximeters for testing within 10 days`,
+    /^Livrer (\d+) glucomètres connectés en test sous 10 jours$/,
+    (m) => `Deliver ${m[1]} connected glucose meters for testing within 10 days`,
   ],
   [
     /^Livrer (\d+) kits éducation thérapeutique$/,
@@ -869,26 +869,26 @@ export function localizeNoteNextAction(action: string): string {
 
 // ─── Visit History Note translations ─────────────────────────
 // Replaces the old simple visitNoteMap with comprehensive regex-based visit note translation.
-const visitNotePneumoPatterns: NotePattern[] = [
+const visitNoteDiabetoPatterns: NotePattern[] = [
   [
     /^Présentation des résultats du télésuivi sur le trimestre\. (\d+) patients suivis.*?(.+?) (.+?) très satisfait/,
     (m) => `Presentation of quarterly remote monitoring results. ${m[1]} patients monitored remotely with 0 avoidable hospitalizations. ${m[2]} ${m[3]} very satisfied.`,
   ],
   [
-    /^Discussion sur les critères d'éligibilité à l'O2 de déambulation\. Revue de (\d+) dossiers/,
-    (m) => `Discussion on eligibility criteria for ambulatory O2. Review of ${m[1]} patient files. 2 candidates identified for switching to portable.`,
+    /^Discussion sur les critères d'éligibilité aux iSGLT2\. Revue de (\d+) dossiers/,
+    (m) => `Discussion on eligibility criteria for SGLT2 inhibitors. Review of ${m[1]} patient files. 2 candidates identified for treatment switch.`,
   ],
   [
-    /^Évaluation conjointe de la satisfaction des patients sous concentrateur/,
-    () => `Joint evaluation of patient satisfaction with concentrators. Satisfaction rate > 90%. Discussion on possible improvements to the delivery service.`,
+    /^Évaluation conjointe de la satisfaction des patients sous pompe à insuline/,
+    () => `Joint evaluation of patient satisfaction with insulin pumps. Satisfaction rate > 90%. Discussion on possible improvements to the support service.`,
   ],
   [
-    /^Présentation des nouvelles gammes de masques pour VNI.*?(.+?) (.+?) retient/,
-    (m) => `Presentation of the new NIV mask ranges. Testing of 3 models on a mannequin. ${m[1]} ${m[2]} selects the ComfortGel model for their patients.`,
+    /^Présentation des nouvelles gammes de stylos à insuline connectés.*?(.+?) (.+?) retient/,
+    (m) => `Presentation of the new connected insulin pen ranges. Testing of 3 models. ${m[1]} ${m[2]} selects the SmartPen model for their patients.`,
   ],
   [
-    /^Visite de suivi post-installation chez (\d+) patients/,
-    (m) => `Post-installation follow-up visit for ${m[1]} patients. All equipment functioning properly. One patient requests a delivery schedule change.`,
+    /^Visite de suivi post-initiation chez (\d+) patients/,
+    (m) => `Post-initiation follow-up visit for ${m[1]} patients. All treatments well tolerated. One patient requests a dosing schedule change.`,
   ],
   [
     /^Réunion de coordination avec l'équipe paramédicale/,
@@ -899,35 +899,35 @@ const visitNotePneumoPatterns: NotePattern[] = [
     (m) => `Update on upcoming prescription renewals. ${m[1]} patients due for renewal in the next 30 days. Schedule established with the secretariat.`,
   ],
   [
-    /^Entretien avec (.+?) (.+?) sur un cas complexe.*?patient sous O2 \+ VNI/,
-    (m) => `Discussion with ${m[1]} ${m[2]} on a complex case: patient on O2 + NIV with obesity hypoventilation syndrome. Proposal for enhanced monitoring with adapted BiPAP.`,
+    /^Entretien avec (.+?) (.+?) sur un cas complexe.*?patient DT2 avec complications/,
+    (m) => `Discussion with ${m[1]} ${m[2]} on a complex case: T2D patient with cardio-renal complications. Proposal for enhanced monitoring with combined iSGLT2 + GLP-1 RA therapy.`,
   ],
 ];
 
 const visitNoteGeneralistePatterns: NotePattern[] = [
   [
     /^Visite de suivi chez (.+?) (.+?)\. Discussion sur le patient/,
-    (m) => `Follow-up visit at ${m[1]} ${m[2]}'s. Discussion about patient Mrs. D. on O2 for 3 months. Clear symptom improvement. No flow rate adjustment needed.`,
+    (m) => `Follow-up visit at ${m[1]} ${m[2]}'s. Discussion about patient Mrs. D. on antidiabetics for 3 months. Clear glycemic improvement. No dosage adjustment needed.`,
   ],
   [
     /^Échange bref mais efficace\. (.+?) (.+?) confirme la bonne observance/,
-    (m) => `Brief but effective exchange. ${m[1]} ${m[2]} confirms good adherence of patient Mr. L. on stationary concentrator. Requests safety instructions documentation.`,
+    (m) => `Brief but effective exchange. ${m[1]} ${m[2]} confirms good adherence of patient Mr. L. on antidiabetic therapy. Requests treatment guidance documentation.`,
   ],
   [
     /^Passage au cabinet pour présenter la nouvelle plaquette.*?(.+?) (.+?) apprécie/,
-    (m) => `Visit to the office to present the new COPD therapeutic education brochure. ${m[1]} ${m[2]} appreciates the simplified format for patients.`,
+    (m) => `Visit to the office to present the new T2D therapeutic education brochure. ${m[1]} ${m[2]} appreciates the simplified format for patients.`,
   ],
   [
-    /^Accompagnement pour une première mise sous O2\. Patient anxieux, (.+?) (.+?) demande/,
-    (m) => `Support for a first O2 setup. Anxious patient, ${m[1]} ${m[2]} requests a follow-up call at D+7 by our team. Setup completed without incident.`,
+    /^Accompagnement pour une première mise sous insuline\. Patient anxieux, (.+?) (.+?) demande/,
+    (m) => `Support for a first insulin therapy initiation. Anxious patient, ${m[1]} ${m[2]} requests a follow-up call at D+7 by our team. Initiation completed without incident.`,
   ],
   [
     /^Visite de courtoisie\. Pas de nouveau patient.*?(.+?) (.+?) mentionne une formation/,
-    (m) => `Courtesy visit. No new patients to equip. ${m[1]} ${m[2]} mentions an upcoming CPD training on respiratory diseases. Offer to participate as a partner.`,
+    (m) => `Courtesy visit. No new patients to treat. ${m[1]} ${m[2]} mentions an upcoming CPD training on metabolic diseases. Offer to participate as a partner.`,
   ],
   [
-    /^Discussion sur les critères d'alerte pour les patients BPCO en médecine de ville/,
-    () => `Discussion on alert criteria for COPD patients in community practice. Provided a simplified dyspnea assessment protocol (mMRC scale).`,
+    /^Discussion sur les critères d'alerte pour les patients DT2 en médecine de ville/,
+    () => `Discussion on alert criteria for T2D patients in community practice. Provided a simplified HbA1c monitoring protocol.`,
   ],
 ];
 
@@ -939,7 +939,7 @@ const visitNoteSimpleMap: Record<string, string> = {
   'Visite de réactivation - Praticien à risque': 'Reactivation visit - At-risk practitioner',
 };
 
-const allVisitNotePatterns = [...visitNotePneumoPatterns, ...visitNoteGeneralistePatterns];
+const allVisitNotePatterns = [...visitNoteDiabetoPatterns, ...visitNoteGeneralistePatterns];
 
 export function localizeVisitNote(note: string): string {
   if (getLanguage() !== 'en') return note;
@@ -958,11 +958,11 @@ export function localizeVisitNote(note: string): string {
 
 // ─── Sub-specialty translations ──────────────────────────────
 const subSpecialtyMap: Record<string, string> = {
-  "Allergologie respiratoire": "Respiratory Allergology",
-  "Oncologie thoracique": "Thoracic Oncology",
-  "Réhabilitation respiratoire": "Pulmonary Rehabilitation",
-  "Sommeil et ventilation": "Sleep and Ventilation",
-  "Pneumologie interventionnelle": "Interventional Pulmonology",
+  "Diabétologie avancée": "Advanced Diabetology",
+  "Complications cardiovasculaires du diabète": "Cardiovascular Complications of Diabetes",
+  "Rééducation nutritionnelle": "Nutritional Rehabilitation",
+  "Diabète et obésité": "Diabetes and Obesity",
+  "Endocrinologie interventionnelle": "Interventional Endocrinology",
 };
 
 export function localizeSubSpecialty(sub: string): string {

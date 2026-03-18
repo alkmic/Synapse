@@ -895,7 +895,7 @@ function generateVolumeHistory(annualVolume: number) {
     : ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
   const monthlyBase = annualVolume / 12;
   const vingtileAvg = monthlyBase * 0.95;
-  // Deterministic seasonal pattern (winter peak for respiratory)
+  // Deterministic seasonal pattern (winter peak for metabolic consultations)
   const seasonalFactors = [0.92, 0.88, 0.95, 1.0, 1.02, 0.98, 0.90, 0.88, 0.95, 1.05, 1.10, 1.08];
 
   return months.map((month, i) => ({
