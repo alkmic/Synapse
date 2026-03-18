@@ -714,7 +714,7 @@ export function getFullDatabaseContext(): string {
 
 STATISTIQUES GLOBALES:
 • Total praticiens: ${stats.totalPractitioners}
-• Pneumologues: ${stats.pneumologues}
+• Endocrinologues: ${stats.pneumologues}
 • Médecins généralistes: ${stats.generalistes}
 • KOLs: ${stats.totalKOLs}
 • Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an

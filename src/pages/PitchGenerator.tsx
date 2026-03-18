@@ -55,13 +55,13 @@ const SECTION_STYLES: Record<string, { gradient: string; bg: string; icon: strin
 // Produits MedVantis Pharma disponibles (descriptions are translated inside the component)
 const PRODUCT_IDS = ['vitalaire', 'freestyle', 'telesuivi', 'extracteur', 'portable', 'vni', 'ppc', 'service247', 'formation'] as const;
 const PRODUCT_NAMES: Record<string, string> = {
-  vitalaire: 'GlucoStab Pro',
-  freestyle: 'InsuFlex Comfort',
-  telesuivi: 'Telesuivi DT2',
-  extracteur: 'Antidiabétique oral',
-  portable: 'Insuline portable',
-  vni: 'GlucoSense Monitor',
-  ppc: 'InsuPatch Connect',
+  vitalaire: 'GlucoStay XR',
+  freestyle: 'InsuPen Flex',
+  telesuivi: 'DiabConnect CGM',
+  extracteur: 'CardioGlu',
+  portable: 'GLP-Vita',
+  vni: 'DiabConnect App Pro',
+  ppc: 'GlucoStay XR 750mg',
   service247: 'Service 24/7',
   formation: 'Formation patients',
 };
