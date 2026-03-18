@@ -205,7 +205,7 @@ export default function PractitionerProfile() {
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <span className="text-slate-600">{t('practitioners.volumeLabel', { period: periodLabelShort })}</span>
                 <span className="font-semibold text-slate-800">
-                  {(practitioner.volumeL / 1000).toFixed(0)}K L
+                  {(practitioner.volumeL / 1000).toFixed(0)}K
                 </span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
@@ -865,7 +865,7 @@ function MetricsTab({ volumeHistory, practitioner, periodLabel, periodLabelShort
         <div className="glass-card p-4 text-center">
           <p className="text-sm text-slate-600 mb-1">{t('practitioners.volumePeriod', { period: periodLabelShort })}</p>
           <p className="text-2xl font-bold text-slate-800">
-            {(practitioner.volumeL / 1000).toFixed(0)}K L
+            {(practitioner.volumeL / 1000).toFixed(0)}K
           </p>
           <p className="text-sm text-success mt-1">{t('practitioners.vsPreviousPeriod')}</p>
         </div>

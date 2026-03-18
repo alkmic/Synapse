@@ -205,7 +205,7 @@ export const Dashboard: React.FC = () => {
           iconBgColor="bg-cyan-500"
           label={t('dashboard.prescribedVolume')}
           value={periodMetrics.totalVolume / 1000}
-          suffix="K L"
+          suffix="K"
           decimals={0}
           trend={Math.round(periodMetrics.volumeGrowth)}
           delay={0.2}

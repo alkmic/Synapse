@@ -27,11 +27,11 @@ export const formatRelativeTime = (date: string | Date, lang?: Language): string
 
 export const formatVolume = (volumeL: number): string => {
   if (volumeL >= 1000000) {
-    return `${(volumeL / 1000000).toFixed(1)}M L`;
+    return `${(volumeL / 1000000).toFixed(1)}M`;
   } else if (volumeL >= 1000) {
-    return `${(volumeL / 1000).toFixed(0)}K L`;
+    return `${(volumeL / 1000).toFixed(0)}K`;
   }
-  return `${volumeL} L`;
+  return `${volumeL}`;
 };
 
 export const formatNumber = (num: number, lang?: Language): string => {

@@ -605,7 +605,7 @@ export function PitchGenerator() {
               <div className="grid grid-cols-2 gap-4 mt-6">
                 <div className="bg-slate-50 rounded-lg p-3">
                   <div className="text-xs text-slate-500">{t('pitch.annualVolume')}</div>
-                  <div className="text-lg font-bold text-slate-800">{(selectedPractitioner.volumeL / 1000).toFixed(0)}K L</div>
+                  <div className="text-lg font-bold text-slate-800">{(selectedPractitioner.volumeL / 1000).toFixed(0)}K</div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3">
                   <div className="text-xs text-slate-500">{t('pitch.loyalty')}</div>

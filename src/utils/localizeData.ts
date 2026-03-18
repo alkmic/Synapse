@@ -192,16 +192,16 @@ const newsTitleMap: Record<string, string> = {
   "Participation à un congrès": "Conference participation",
   "Événement médical local": "Local medical event",
   // New practitioner override titles
-  "Nomination comme chef de service pneumologie au CHU Lyon-Sud": "Appointed as head of pulmonology department at CHU Lyon-Sud",
-  "Publication dans The Lancet Respiratory Medicine": "Publication in The Lancet Respiratory Medicine",
-  "Ouverture d'un cabinet de pneumologie à Grenoble Europole": "Opening of a pulmonology practice in Grenoble Europole",
-  "DIU Sommeil et Ventilation obtenu à Paris-Descartes": "Inter-university diploma in Sleep and Ventilation obtained at Paris-Descartes",
+  "Nomination comme chef de service diabétologie au CHU Lyon-Sud": "Appointed as head of diabetology department at CHU Lyon-Sud",
+  "Publication dans The Lancet Diabetes & Endocrinology": "Publication in The Lancet Diabetes & Endocrinology",
+  "Ouverture d'un cabinet d'endocrinologie-diabétologie à Grenoble Europole": "Opening of an endocrinology-diabetology practice in Grenoble Europole",
+  "DIU Diabétologie et Maladies Métaboliques obtenu à Paris-Descartes": "Inter-university diploma in Diabetology and Metabolic Diseases obtained at Paris-Descartes",
   "Création d'une maison de santé pluriprofessionnelle à Annecy-le-Vieux": "Creation of a multi-professional health center in Annecy-le-Vieux",
-  "Recrutement au CHU de Saint-Étienne — Service pneumo-oncologie": "Recruitment at CHU de Saint-Étienne — Pulmonary oncology department",
-  "Communication orale au Congrès de Pneumologie de Langue Française 2025": "Oral presentation at the French-Language Pulmonology Congress 2025",
+  "Recrutement au CHU de Saint-Étienne — Service endocrinologie-diabétologie": "Recruitment at CHU de Saint-Étienne — Endocrinology-diabetology department",
+  "Communication orale au Congrès de la Société Francophone du Diabète 2025": "Oral presentation at the Francophone Diabetes Society Congress 2025",
   "Reprise du cabinet du Dr Maurin à Valence (départ en retraite)": "Takeover of Dr Maurin's practice in Valence (retirement)",
-  "Lancement du réseau Respir'Alpes (réseau sentinelle BPCO)": "Launch of the Respir'Alpes network (COPD sentinel network)",
-  "Étude dans la Revue des Maladies Respiratoires": "Study in the Revue des Maladies Respiratoires",
+  "Lancement du réseau DiabèteConnect Rhône-Alpes (réseau de dépistage DT2)": "Launch of the DiabèteConnect Rhône-Alpes network (T2D screening network)",
+  "Étude dans Médecine des Maladies Métaboliques": "Study in Médecine des Maladies Métaboliques",
 };
 
 export function localizeNewsTitle(title: string): string {

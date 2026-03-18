@@ -294,7 +294,7 @@ export default function TerritoryMap() {
                         {p.title} {p.lastName}
                         {p.isKOL && ' KOL'}
                       </p>
-                      <p className="text-xs text-slate-500">{p.city} • {(p.volumeL / 1000).toFixed(0)}K L</p>
+                      <p className="text-xs text-slate-500">{p.city} • {(p.volumeL / 1000).toFixed(0)}K</p>
                     </div>
                   </label>
                 ))}
@@ -417,7 +417,7 @@ export default function TerritoryMap() {
                         V{p.vingtile}
                       </span>
                       <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
-                        {(p.volumeL / 1000).toFixed(0)}K L
+                        {(p.volumeL / 1000).toFixed(0)}K
                       </span>
                     </div>
                     <button
