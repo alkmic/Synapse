@@ -1,0 +1,1963 @@
+/**
+ * SYNAPSE AI Coach Engine v3 — Architecture LLM-First
+ *
+ * Remplace l'ancien système de routage par regex par une architecture en 2 phases :
+ *   Phase 1 : Routage LLM — Classification d'intention + extraction de paramètres
+ *   Phase 2 : Réponse LLM — Génération contextuelle avec données ciblées
+ *
+ * Principes :
+ * - Le LLM route TOUTES les questions (zéro regex pour le routage)
+ * - Le contexte de données est ciblé selon l'intention détectée
+ * - Format de sortie unifié (texte + graphique optionnel)
+ * - WebLLM dans le navigateur si aucune API externe configurée
+ * - Fallback automatique vers le LLM local si l'API externe échoue
+ */
+
+import { webLlmService } from './webLlmService';
+import { getStoredApiKey, getStoredLLMConfig, resolveProvider, getProviderDef, isReasoningModel } from './apiKeyService';
+import { DataService } from './dataService';
+import { getLanguage } from '../i18n/LanguageContext';
+import {
+  DATA_SCHEMA,
+  parseLLMChartResponse,
+  generateChartFromSpec,
+  addToChartHistory,
+  getChartHistory,
+  type ChartSpec,
+  type ChartDataPoint,
+  type ChartHistory,
+} from './agenticChartEngine';
+import { universalSearch } from './universalSearch';
+import { calculatePeriodMetrics, getTopPractitioners, getPerformanceDataForPeriod } from './metricsCalculator';
+import { retrieveKnowledge, shouldUseRAG } from './ragService';
+import { generateIntelligentActions } from './actionIntelligence';
+import { getCompletePractitionerContextWithReports, getAllRecentReportsForLLM } from './practitionerDataBridge';
+import type { Practitioner, UpcomingVisit } from '../types';
+import { adaptPractitionerProfile } from './dataAdapter';
+
+// User CRM data from Zustand store (visit reports, notes) — injected by the UI
+export interface UserCRMData {
+  visitReports: Array<{
+    practitionerId: string;
+    practitionerName: string;
+    date: string;
+    extractedInfo: {
+      topics: string[];
+      sentiment: string;
+      keyPoints: string[];
+      nextActions: string[];
+      productsDiscussed: string[];
+      competitorsMentioned: string[];
+    };
+  }>;
+  userNotes: Array<{
+    practitionerId: string;
+    content: string;
+    type: string;
+    createdAt: string;
+  }>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  hasChart?: boolean;
+  chartSummary?: string;
+}
+
+export interface AICoachResult {
+  textContent: string;
+  chart?: {
+    spec: ChartSpec;
+    data: ChartDataPoint[];
+    insights: string[];
+    suggestions: string[];
+    generatedByLLM: boolean;
+  };
+  practitioners?: (Practitioner & { daysSinceVisit?: number })[];
+  suggestions?: string[];
+  source: 'llm' | 'local';
+  ragSources?: { title: string; sourceUrl: string; source: string }[];
+  usedRAG?: boolean;
+}
+
+interface RouterResult {
+  intent: 'chart_create' | 'chart_modify' | 'data_query' | 'practitioner_info' | 'strategic_advice' | 'knowledge_query' | 'follow_up' | 'general';
+  needsChart: boolean;
+  chartModification: string | null;
+  dataScope: 'specific' | 'filtered' | 'aggregated' | 'full' | 'knowledge';
+  searchTerms: {
+    names: string[];
+    cities: string[];
+    specialties: string[];
+    isKOL: boolean | null;
+  };
+  chartParams: {
+    chartType: 'bar' | 'pie' | 'line' | 'composed' | 'radar' | null;
+    groupBy: string | null;
+    metrics: string[];
+    limit: number | null;
+    sortOrder: 'asc' | 'desc' | null;
+    filters: { field: string; operator: string; value: string | number | boolean }[];
+  };
+  responseGuidance: string;
+}
+
+interface LLMMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface LLMCallOptions {
+  temperature?: number;
+  maxTokens?: number;
+  jsonMode?: boolean;
+  model?: string;
+  useRouterModel?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MULTI-PROVIDER LLM — Auto-détection depuis le format de clé API
+// + WebLLM navigateur comme fallback
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type LLMProvider = 'groq' | 'gemini' | 'openai' | 'anthropic' | 'openrouter';
+
+interface ProviderConfig {
+  name: string;
+  provider: LLMProvider;
+  apiUrl: (model: string, apiKey: string) => string;
+  mainModel: string;
+  routerModel: string;
+  headers: (apiKey: string) => Record<string, string>;
+  buildBody: (messages: LLMMessage[], model: string, temperature: number, maxTokens: number, jsonMode: boolean) => unknown;
+  parseResponse: (data: Record<string, unknown>) => string | null;
+  parseError: (data: Record<string, unknown>, status: number) => string;
+}
+
+function getCustomBaseUrl(): string | null {
+  const url = import.meta.env.VITE_LLM_BASE_URL;
+  if (!url || url.includes('your_') || url.length < 10) return null;
+  return url.replace(/\/+$/, '');
+}
+
+function detectProvider(apiKey: string): ProviderConfig {
+  // Custom base URL: OpenAI-compatible endpoint (Mistral, Azure, local, etc.)
+  const customUrl = getCustomBaseUrl();
+  if (customUrl) {
+    let hostname = 'custom';
+    try { hostname = new URL(customUrl).hostname; } catch { /* ignore */ }
+    return {
+      ...PROVIDERS.openai,
+      name: `Custom (${hostname})`,
+      apiUrl: () => `${customUrl}/chat/completions`,
+    };
+  }
+
+  // Auto-detect from key format (order matters: sk-ant- and sk-or- before sk-)
+  if (apiKey.startsWith('gsk_')) return PROVIDERS.groq;
+  if (apiKey.startsWith('AIzaSy')) return PROVIDERS.gemini;
+  if (apiKey.startsWith('sk-ant-')) return PROVIDERS.anthropic;
+  if (apiKey.startsWith('sk-or-')) return PROVIDERS.openrouter;
+  if (apiKey.startsWith('sk-')) return PROVIDERS.openai;
+  // Default: OpenAI-compatible format
+  return PROVIDERS.openai;
+}
+
+const PROVIDERS: Record<LLMProvider, ProviderConfig> = {
+  groq: {
+    name: 'Groq',
+    provider: 'groq',
+    apiUrl: () => 'https://api.groq.com/openai/v1/chat/completions',
+    mainModel: 'llama-3.3-70b-versatile',
+    routerModel: 'llama-3.1-8b-instant',
+    headers: (apiKey) => ({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    }),
+    buildBody: (messages, model, temperature, maxTokens, jsonMode) => {
+      const body: Record<string, unknown> = {
+        model, messages, temperature, max_tokens: maxTokens, stream: false,
+      };
+      if (jsonMode) body.response_format = { type: 'json_object' };
+      return body;
+    },
+    parseResponse: (data) =>
+      (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content || null,
+    parseError: (data, status) =>
+      (data as { error?: { message?: string } }).error?.message || `Groq API error: ${status}`,
+  },
+
+  gemini: {
+    name: 'Google Gemini',
+    provider: 'gemini',
+    apiUrl: (model, apiKey) =>
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    mainModel: 'gemini-1.5-flash',
+    routerModel: 'gemini-1.5-flash',
+    headers: () => ({
+      'Content-Type': 'application/json',
+    }),
+    buildBody: (messages, _model, temperature, maxTokens, jsonMode) => {
+      // Gemini: separate system instructions from conversation
+      const systemParts = messages
+        .filter(m => m.role === 'system')
+        .map(m => ({ text: m.content }));
+      const contents = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        }));
+      // Gemini requires alternating user/model — merge consecutive same-role messages
+      const merged: { role: string; parts: { text: string }[] }[] = [];
+      for (const msg of contents) {
+        if (merged.length > 0 && merged[merged.length - 1].role === msg.role) {
+          merged[merged.length - 1].parts.push(...msg.parts);
+        } else {
+          merged.push(msg);
+        }
+      }
+      const body: Record<string, unknown> = {
+        contents: merged,
+        generationConfig: {
+          temperature,
+          maxOutputTokens: maxTokens,
+          ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
+        },
+      };
+      if (systemParts.length > 0) {
+        body.systemInstruction = { parts: systemParts };
+      }
+      return body;
+    },
+    parseResponse: (data) => {
+      const candidates = (data as { candidates?: { content?: { parts?: { text?: string }[] } }[] }).candidates;
+      return candidates?.[0]?.content?.parts?.[0]?.text || null;
+    },
+    parseError: (data, status) =>
+      (data as { error?: { message?: string } }).error?.message || `Gemini API error: ${status}`,
+  },
+
+  openai: {
+    name: 'OpenAI',
+    provider: 'openai',
+    apiUrl: () => import.meta.env.DEV
+      ? '/llm-proxy/openai/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions',
+    mainModel: 'gpt-4o-mini',
+    routerModel: 'gpt-4o-mini',
+    headers: (apiKey) => ({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    }),
+    buildBody: (messages, model, temperature, maxTokens, jsonMode) => {
+      const body: Record<string, unknown> = {
+        model, messages, temperature, max_tokens: maxTokens, stream: false,
+      };
+      if (jsonMode) body.response_format = { type: 'json_object' };
+      return body;
+    },
+    parseResponse: (data) =>
+      (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content || null,
+    parseError: (data, status) =>
+      (data as { error?: { message?: string } }).error?.message || `OpenAI API error: ${status}`,
+  },
+
+  anthropic: {
+    name: 'Anthropic (Claude)',
+    provider: 'anthropic',
+    apiUrl: () => 'https://api.anthropic.com/v1/messages',
+    mainModel: 'claude-sonnet-4-5-20250929',
+    routerModel: 'claude-haiku-4-5-20251001',
+    headers: (apiKey) => ({
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    }),
+    buildBody: (messages, model, temperature, maxTokens, _jsonMode) => {
+      // Anthropic: system prompt is top-level, not in messages array
+      const systemContent = messages
+        .filter(m => m.role === 'system')
+        .map(m => m.content)
+        .join('\n\n');
+      const chatMessages = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({ role: m.role as string, content: m.content }));
+      // Anthropic requires alternating user/assistant, must start with user
+      const merged: { role: string; content: string }[] = [];
+      for (const msg of chatMessages) {
+        if (merged.length > 0 && merged[merged.length - 1].role === msg.role) {
+          merged[merged.length - 1].content += '\n\n' + msg.content;
+        } else {
+          merged.push({ ...msg });
+        }
+      }
+      if (merged.length === 0 || merged[0].role !== 'user') {
+        merged.unshift({ role: 'user', content: '...' });
+      }
+      const body: Record<string, unknown> = {
+        model,
+        max_tokens: maxTokens,
+        messages: merged,
+      };
+      if (systemContent) body.system = systemContent;
+      if (temperature !== undefined) body.temperature = temperature;
+      return body;
+    },
+    parseResponse: (data) => {
+      const content = (data as { content?: { type: string; text?: string }[] }).content;
+      const textBlock = content?.find(c => c.type === 'text');
+      return textBlock?.text || null;
+    },
+    parseError: (data, status) =>
+      (data as { error?: { message?: string } }).error?.message || `Anthropic API error: ${status}`,
+  },
+
+  openrouter: {
+    name: 'OpenRouter',
+    provider: 'openrouter',
+    apiUrl: () => 'https://openrouter.ai/api/v1/chat/completions',
+    mainModel: 'meta-llama/llama-3.3-70b-instruct',
+    routerModel: 'meta-llama/llama-3.1-8b-instruct',
+    headers: (apiKey) => ({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    }),
+    buildBody: (messages, model, temperature, maxTokens, jsonMode) => {
+      const body: Record<string, unknown> = {
+        model, messages, temperature, max_tokens: maxTokens, stream: false,
+      };
+      if (jsonMode) body.response_format = { type: 'json_object' };
+      return body;
+    },
+    parseResponse: (data) =>
+      (data as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content || null,
+    parseError: (data, status) =>
+      (data as { error?: { message?: string } }).error?.message || `OpenRouter API error: ${status}`,
+  },
+
+};
+
+// Cached provider detection (cached per config hash to handle hot-reload)
+let _cachedProvider: ProviderConfig | null = null;
+let _cachedConfigHash: string | null = null;
+function getProvider(): ProviderConfig {
+  // 1. Try explicit config from Settings UI
+  const config = getStoredLLMConfig();
+  if (config) {
+    const hash = `${config.provider}:${config.apiKey.substring(0, 8)}:${config.model}`;
+    if (_cachedProvider && _cachedConfigHash === hash) return _cachedProvider;
+
+    const resolved = resolveProvider(config);
+    // Pick base provider for buildBody / parseResponse / parseError methods
+    let base: ProviderConfig;
+    if (resolved.apiFormat === 'gemini') base = PROVIDERS.gemini;
+    else if (resolved.apiFormat === 'anthropic') base = PROVIDERS.anthropic;
+    else base = PROVIDERS.groq; // any openai-compat base works
+
+    _cachedProvider = {
+      ...base,
+      name: resolved.providerName,
+      mainModel: resolved.model,
+      routerModel: resolved.model,
+      apiUrl: resolved.apiFormat === 'gemini'
+        ? (model, key) => {
+            const bUrl = resolved.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+            return `${bUrl}/models/${model}:generateContent?key=${key}`;
+          }
+        : () => resolved.url,
+      headers: () => resolved.headers,
+      buildBody: (messages, model, temperature, maxTokens, jsonMode) => {
+        // o-series reasoning models: no temperature, use max_completion_tokens
+        if (resolved.apiFormat === 'openai-compat' && isReasoningModel(model)) {
+          // Azure o-series: system role → developer role (required by Azure API for reasoning models)
+          const processedMessages = resolved.providerType === 'azure'
+            ? messages.map(m => m.role === 'system' ? { role: 'developer', content: m.content } : m)
+            : messages;
+          // max_completion_tokens includes BOTH reasoning tokens AND output tokens.
+          // Reasoning models can use 2000+ tokens internally, so we need a generous budget
+          // to avoid empty responses when the model exhausts its budget on reasoning.
+          const reasoningBudget = Math.max(maxTokens * 4, 8192);
+          const body: Record<string, unknown> = {
+            messages: processedMessages, max_completion_tokens: reasoningBudget, stream: false,
+          };
+          // Azure: model is in the deployment URL, but safe to send for others
+          if (resolved.providerType !== 'azure') body.model = model;
+          return body;
+        }
+        return base.buildBody(messages, model, temperature, maxTokens, jsonMode);
+      },
+    };
+    _cachedConfigHash = hash;
+    console.log(`[AICoachEngine] Provider from config: ${resolved.providerName} (model: ${resolved.model})`);
+    return _cachedProvider;
+  }
+
+  // 2. Env var fallback (legacy key-prefix detection)
+  const key = getApiKey();
+  if (!key) {
+    // No API key and no config — callLLM will fall through to WebLLM
+    return null as unknown as ProviderConfig;
+  }
+  const prefix = key.substring(0, 6);
+  if (_cachedProvider && _cachedConfigHash === prefix) return _cachedProvider;
+  _cachedProvider = detectProvider(key);
+  _cachedConfigHash = prefix;
+  console.log(`[AICoachEngine] Provider detected: ${_cachedProvider.name} (model: ${_cachedProvider.mainModel})`);
+  return _cachedProvider;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROMPTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const ROUTER_SYSTEM_PROMPT = `Routeur SYNAPSE Coach — CRM pharma MedVantis Pharma (DT2). Classifie la question (FR ou EN). Retourne UNIQUEMENT du JSON brut (premier caractère = {, dernier = }).
+
+Intents: chart_create (nouvelle visu), chart_modify (modifier graphique précédent), data_query (question factuelle sur données CRM des praticiens/visites/territoire), practitioner_info (info sur un praticien nommé), strategic_advice (conseil/priorité/stratégie), knowledge_query (question métier: produits, services, catalogue, DT2, diabétologie, MedVantis, réglementation, concurrence, ADA/EASD, HAS, LPPR, épidémiologie, antidiabétiques), follow_up (suite de la conversation), general (salutations/hors sujet).
+
+ATTENTION — Routage produits/services/catalogue :
+- Questions sur les produits, services, catalogue, gamme, offres, solutions, antidiabétiques, matériel de MedVantis → knowledge_query (PAS data_query, PAS general)
+- "quels produits/combien de produits/que vend/que propose/catalogue/gamme/offre/solution" → knowledge_query
+- "what products/how many products/what does it sell/catalog/range/offering/solution" → knowledge_query
+- "quels services" / "what services" → knowledge_query
+
+Routage (FR et EN / French and English):
+- "graphique/montre-moi/affiche/diagramme/camembert/barres/courbe" / "chart/show me/display/diagram/pie chart/bar chart/curve/graph" → chart_create
+- "en camembert/en radar/change en/transforme en/mets ça en/plutôt en" / "as a pie/as a radar/change to/transform to/switch to" → chart_modify (si graphique précédent)
+- Nom propre identifiable de praticien / Identifiable proper name of practitioner → practitioner_info
+- Questions sur données CRM praticiens (volumes, visites, fidélité, vingtile, villes, KOL) / Questions about CRM data (volumes, visits, loyalty, vingtile, cities, KOL) → data_query
+- "publication/publié/article/actualité/conférence/certification/distinction/événement" / "publication/published/article/news/conference/certification/award/event" + nom de praticien → practitioner_info (avec le nom dans searchTerms.names)
+- "toutes les publications/liste les publications/qui a publié/publications des" / "all publications/list publications/who published" (question globale sans nom spécifique) → data_query (dataScope: "full")
+- "priorité/stratégie/recommandation/que faire" / "priority/strategy/recommendation/what should I do" → strategic_advice
+- Questions sur DT2, diabétologie, ADA/EASD, HAS, réglementation, LPPR, concurrence, NovaPharm, MedVantis (organisation, produits, services), ALD30, ROSP, HbA1c, traitements, classification, complications, télésuivi, antidiabétiques, stylos, capteurs, CGM / Questions about T2D, type 2 diabetes, ADA/EASD, HAS, regulations, LPPR, competition, treatments, devices → knowledge_query
+- "qu'est-ce que/c'est quoi/explique/définition/comment fonctionne" / "what is/explain/definition/how does it work" → knowledge_query
+- Référence implicite au contexte précédent / Implicit reference to previous context → follow_up
+
+groupBy: "city"|"specialty"|"vingtile"|"vingtileBucket"|"loyaltyBucket"|"riskLevel"|"visitBucket"|"isKOL"
+chartType: "bar"|"pie"|"line"|"composed"|"radar"
+dataScope: "specific" (1 praticien), "filtered" (sous-ensemble), "aggregated" (stats), "full" (question ouverte), "knowledge" (base de connaissances métier)
+needsChart = true pour chart_create et chart_modify.
+
+JSON STRICT:
+{"intent":"...","needsChart":false,"chartModification":null,"dataScope":"...","searchTerms":{"names":[],"cities":[],"specialties":[],"isKOL":null},"chartParams":{"chartType":null,"groupBy":null,"metrics":[],"limit":null,"sortOrder":null,"filters":[]},"responseGuidance":"..."}`;
+
+const COACH_SYSTEM_PROMPT_FR = `Tu es **SYNAPSE Coach**, l'assistant stratégique expert pour les délégués pharmaceutiques de MedVantis Pharma, spécialité diabète de type 2.
+
+## Ton Identité
+Tu combines quatre expertises rares :
+1. **Expertise médicale** — Diabétologie, diabète de type 2 (metformine, insuline, iSGLT2, GLP-1 RA, CGM), pathologies métaboliques (DT2, complications cardio-rénales, obésité), recommandations ADA/EASD et HAS
+2. **Intelligence commerciale** — Gestion de portefeuille prescripteurs, planification territoriale, analyse concurrentielle (NovaPharm, Seralis, GenBio), scoring de potentiel (vingtiles), fidélisation KOL
+3. **Maîtrise analytique** — Interprétation de données CRM, détection de signaux faibles, modélisation de risque de churn, identification d'opportunités de croissance
+4. **Connaissances réglementaires & marché** — LPPR/LPP, remboursement ALD30, remboursement, arrêtés Légifrance, données épidémiologiques DT2 France & monde
+
+## Principes Directeurs
+- **Précision data-driven** : Chaque affirmation s'appuie sur des données réelles. Cite les chiffres exacts et les sources quand ils proviennent de la base de connaissances.
+- **Pertinence stratégique** : Priorise par impact business → KOL > Volume élevé > Urgence (risque churn) > Fidélité en baisse
+- **Proactivité** : N'attends pas qu'on te pose la bonne question. Si tu détectes un risque ou une opportunité dans les données, signale-le.
+- **Concision actionable** : Réponds de façon concise mais complète. Termine par des recommandations concrètes quand c'est pertinent.
+- **Sources fiables** : Quand tu cites des connaissances métier (DT2, réglementation, concurrence), mentionne la source (ex: "selon les recommandations ADA/EASD 2025", "d'après la HAS").
+
+## Ce que tu CONNAIS (ton périmètre)
+**Données CRM :**
+- Les **praticiens** (médecins prescripteurs) : endocrinologues et médecins généralistes
+- Leurs **métriques** : volumes de prescription, fidélité, vingtile, statut KOL, risque de churn
+- Leurs **coordonnées** : adresse, téléphone, email
+- Leurs **publications scientifiques**, actualités académiques, conférences, certifications et distinctions — tu peux chercher les publications d'un praticien spécifique ou lister toutes les publications par type/prénom
+- L'**historique de visites** et notes de visite
+- Les **statistiques du territoire** : objectifs, répartitions géographiques
+
+**Base de connaissances métier (RAG) :**
+- **MedVantis Pharma — Produits & Services** : gamme complète (metformine XR, insuline basale, iSGLT2, GLP-1 RA, CGM connecté), dispositifs MedVantis (stylos, capteurs, application mobile), antidiabétiques MedVantis, catalogue MedVantis
+- **MedVantis Pharma — Organisation** : chiffres clés, filiales, DiabConnect, positionnement stratégique
+- **DT2** : recommandations ADA/EASD 2025 (classification ABE, traitements metformine/iSGLT2/GLP-1 RA/insuline), recommandations HAS (parcours de soins, 10 messages clés), données épidémiologiques
+- **Diabétologie** : ALD30 vs ROSP, seuils HbA1c, traitements (comprimés, stylos injectables, capteurs CGM), indications, forfaits LPPR
+- **Concurrence** : NovaPharm, Seralis, NovaPharm, paysage concurrentiel, 3 concurrents principaux
+- **Réglementation** : LPPR/LPP, tarifs, arrêtés Légifrance, LEEM
+- **Épidémiologie** : 4,16M patients DT2 en France, 50% HbA1c non à l'objectif, 9,5 milliards € coût annuel, +3-5% prévalence/an
+
+## Ce que tu NE CONNAIS PAS (hors périmètre)
+Tu n'as PAS accès à :
+- Les **données de facturation** ou commandes internes (prix exacts, bons de commande, factures)
+- Les **données d'autres territoires** ou d'autres délégués
+- Les **données en temps réel** (tes données CRM sont un snapshot)
+- Les **codes LPPR exacts** ou les prix unitaires des dispositifs
+
+**RÈGLES CRITIQUES :**
+- Si l'utilisateur pose une question hors périmètre, dis-le clairement. Ne fabrique JAMAIS de données.
+- **NE DIS JAMAIS "hors périmètre"** pour des questions sur les produits, services, catalogue, gamme, antidiabétiques, ou l'organisation de MedVantis — tu CONNAIS ces sujets grâce à ta base de connaissances.
+- Si la base de connaissances fournit des informations pertinentes, utilise-les avec confiance.
+
+## Vocabulaire Métier
+- **Vingtile** : Segmentation des prescripteurs de 1 (meilleur) à 20 (plus faible). V1-V5 = Top prescripteurs à prioriser.
+- **KOL** (Key Opinion Leader) : Prescripteur influent, leader d'opinion. Impact disproportionné sur les pratiques locales.
+- **Fidélité** : Score de 0 à 10 mesurant la régularité des prescriptions en faveur de MedVantis.
+- **Volume** : Volume annuel de prescription en boîtes (K boîtes/an).
+- **Churn risk** : Risque de perte du prescripteur (low/medium/high).
+- **ALD30** : Diabète de type 2 sous ALD (traitement chronique, HbA1c ≥ 7%).
+- **ROSP** : Rémunération sur Objectifs de Santé Publique (contrôle glycémique).
+- **LPPR/LPP** : Liste des Produits et Prestations Remboursables.
+- **réseau de délégués** : Laboratoire pharmaceutique concurrent.
+- **ADA/EASD** : American Diabetes Association / European Association for the Study of Diabetes (référentiel international DT2).
+- **HbA1c** : Hémoglobine glyquée (contrôle glycémique).
+
+## Format de Réponse
+- Utilise le **Markdown** : **gras** pour les chiffres clés et noms, *italique* pour les nuances
+- Structure avec des listes à puces pour la clarté
+- Fournis TOUJOURS des chiffres précis quand ils sont disponibles dans le contexte
+- Adapte la longueur : court pour les questions simples, détaillé pour les analyses
+- Ne mentionne jamais le fonctionnement interne de ton système (routage, contexte, API, RAG)
+- Pour les salutations : réponds brièvement et propose ton aide
+- Si la question est ambiguë, demande une clarification plutôt que deviner
+- Réponds TOUJOURS en français.`;
+
+const COACH_SYSTEM_PROMPT_EN = `You are **SYNAPSE Coach**, the expert strategic assistant for MedVantis Pharma pharmaceutical sales representatives, specializing in type 2 diabetes.
+
+## Your Identity
+You combine four rare areas of expertise:
+1. **Medical expertise** — Diabetology, type 2 diabetes (metformine, insuline, iSGLT2, GLP-1 RA, CGM), metabolic diseases (T2D, cardio-renal complications, obesity), ADA/EASD and HAS guidelines
+2. **Commercial intelligence** — Prescriber portfolio management, territory planning, competitive analysis (NovaPharm, Seralis, GenBio), potential scoring (vingtiles), KOL retention
+3. **Analytical mastery** — CRM data interpretation, weak signal detection, churn risk modeling, growth opportunity identification
+4. **Regulatory & market knowledge** — LPPR/LPP, ALD30 reimbursement, reimbursement, Legifrance decrees, T2D epidemiological data France & worldwide
+
+## Guiding Principles
+- **Data-driven precision**: Every assertion is backed by real data. Cite exact figures and sources when they come from the knowledge base.
+- **Strategic relevance**: Prioritize by business impact → KOL > High Volume > Urgency (churn risk) > Declining loyalty
+- **Proactivity**: Don't wait to be asked the right question. If you detect a risk or opportunity in the data, flag it.
+- **Actionable conciseness**: Respond concisely but completely. End with concrete recommendations when relevant.
+- **Reliable sources**: When citing business knowledge (T2D, regulations, competition), mention the source (e.g., "according to ADA/EASD 2025 guidelines", "per HAS recommendations").
+
+## What you KNOW (your scope)
+**CRM Data:**
+- **Practitioners** (prescribing physicians): endocrinologists and general practitioners
+- Their **metrics**: prescription volumes, loyalty, vingtile, KOL status, churn risk
+- Their **contact details**: address, phone, email
+- Their **scientific publications**, academic news, conferences, certifications and awards — you can search a specific practitioner's publications or list all publications by type/name
+- **Visit history** and visit notes
+- **Territory statistics**: objectives, geographic distributions
+
+**Business Knowledge Base (RAG):**
+- **MedVantis Pharma — Products & Services**: complete range (metformine XR, insuline basale, iSGLT2, GLP-1 RA, CGM connecté), MedVantis devices (stylos, capteurs, application mobile), MedVantis antidiabétiques, MedVantis catalog
+- **MedVantis Pharma — Organization**: key figures, subsidiaries, DiabConnect, strategic positioning
+- **T2D**: ADA/EASD 2025 guidelines (ABE classification, metformine/iSGLT2/GLP-1 RA/insuline treatments), HAS guidelines (care pathways, 10 key messages), epidemiological data
+- **Type 2 diabetes**: DT2 sous ALD vs ROSP, HbA1c thresholds, treatments (comprimés, stylos injectables, capteurs CGM), indications, LPPR packages
+- **Competition**: NovaPharm, Seralis, NovaPharm, competitive landscape, 3 main competitors
+- **Regulations**: LPPR/LPP, tariffs, Legifrance decrees, LEEM
+- **Epidemiology**: 4.16M T2D patients in France, 50% HbA1c not at target, €9.5B annual cost, +3-5% prevalence/year
+
+## What you DON'T KNOW (out of scope)
+You do NOT have access to:
+- **Billing data** or internal orders (exact prices, purchase orders, invoices)
+- **Data from other territories** or other sales representatives
+- **Real-time data** (your CRM data is a snapshot)
+- **Exact LPPR codes** or unit prices of devices
+
+**CRITICAL RULES:**
+- If the user asks an out-of-scope question, say so clearly. NEVER fabricate data.
+- **NEVER say "out of scope"** for questions about products, services, catalog, range, devices, or the organization of MedVantis — you DO KNOW these subjects through your knowledge base.
+- If the knowledge base provides relevant information, use it with confidence.
+
+## Business Vocabulary
+- **Vingtile**: Prescriber segmentation from 1 (best) to 20 (weakest). V1-V5 = Top prescribers to prioritize.
+- **KOL** (Key Opinion Leader): Influential prescriber, opinion leader. Disproportionate impact on local practices.
+- **Loyalty**: Score from 0 to 10 measuring the regularity of prescriptions in favor of MedVantis.
+- **Volume**: Annual prescription volume in boxes (K boxes/year).`;
+
+const COACH_SYSTEM_PROMPT_EN_SUFFIX = `
+- **Churn risk**: Risk of losing the prescriber (low/medium/high).
+- **DT2 sous ALD**: Type 2 diabetes under ALD (traitement chronique, HbA1c ≥ 7%).
+- **DT2 compliqué**: Complicated type 2 diabetes (temporary, post-hospitalization).
+- **LPPR/LPP**: List of Reimbursable Products and Services.
+- **réseau de délégués**: Competing pharmaceutical laboratory.
+- **ADA/EASD**: American Diabetes Association / European Association for the Study of Diabetes (international T2D reference).
+- **HbA1c**: Glycated hemoglobin (glycemic control).
+
+## Response Format
+- Use **Markdown**: **bold** for key figures and names, *italic* for nuances
+- Structure with bullet points for clarity
+- ALWAYS provide precise figures when available in the context
+- Adapt length: short for simple questions, detailed for analyses
+- Never mention the internal workings of your system (routing, context, API, RAG)
+- For greetings: respond briefly and offer your help
+- If the question is ambiguous, ask for clarification rather than guessing
+- ALWAYS respond in English.`;
+
+function getCoachSystemPrompt(): string {
+  return getLanguage() === 'en'
+    ? COACH_SYSTEM_PROMPT_EN + COACH_SYSTEM_PROMPT_EN_SUFFIX
+    : COACH_SYSTEM_PROMPT_FR;
+}
+
+const CHART_SYSTEM_PROMPT_FR = `Tu es un expert en visualisation de données pour le CRM pharmaceutique SYNAPSE (MedVantis Pharma, diabétologie).
+
+${DATA_SCHEMA}
+
+## Ta Mission
+Génère une spécification JSON PRÉCISE pour créer le graphique demandé à partir des données disponibles.
+
+## RÈGLES CRITIQUES
+
+1. **RESPECTE EXACTEMENT les paramètres demandés** :
+   - Si l'utilisateur demande "15 praticiens" → limit: 15
+   - Si l'utilisateur demande "top 20" → limit: 20
+   - Si l'utilisateur demande "KOLs" → filtre isKOL: true
+   - Si l'utilisateur demande "endocrinologues" → filtre specialty: "Endocrinologue-Diabétologue"
+
+2. **Choisis le type de graphique le PLUS approprié** :
+   - "bar" : classements, top N, comparaisons de valeurs (défaut quand pas de préférence)
+   - "pie" : répartitions, proportions, parts de marché (max 8 catégories)
+   - "composed" : comparaison de 2 métriques différentes (ex: volume ET fidélité) sur le même graphique
+   - "line" : évolutions temporelles, tendances
+   - "radar" : profils multi-dimensionnels, comparaison de plusieurs métriques pour un ou quelques éléments (ex: profil d'un praticien sur plusieurs axes)
+
+3. **Pour les comparaisons KOLs vs Autres** → groupBy: "isKOL"
+4. **Pour les répartitions par spécialité** → groupBy: "specialty"
+5. **Pour les répartitions par ville** → groupBy: "city"
+6. **Pour les niveaux de risque** → groupBy: "riskLevel"
+7. **Pour les segments de potentiel** → groupBy: "vingtileBucket"
+8. **Pour les niveaux de fidélité** → groupBy: "loyaltyBucket"
+9. **Pour les anciennetés de visite** → groupBy: "visitBucket"
+
+## Format de Sortie OBLIGATOIRE (JSON STRICT)
+\`\`\`json
+{
+  "chartType": "bar" | "pie" | "line" | "composed" | "radar",
+  "title": "Titre descriptif en français",
+  "description": "Description courte de ce que montre le graphique",
+  "query": {
+    "source": "practitioners",
+    "filters": [{ "field": "...", "operator": "eq|ne|gt|gte|lt|lte|contains|in", "value": ... }],
+    "groupBy": "..." | null,
+    "metrics": [{ "name": "Nom affiché", "field": "champ_source", "aggregation": "count|sum|avg|min|max", "format": "number|k|percent" }],
+    "sortBy": "Nom affiché de la métrique",
+    "sortOrder": "desc" | "asc",
+    "limit": number | null
+  },
+  "formatting": {
+    "showLegend": true,
+    "xAxisLabel": "...",
+    "yAxisLabel": "..."
+  }
+}
+\`\`\`
+
+## Exemples de Mapping
+
+| Demande | chartType | groupBy | metrics | filters |
+|---------|-----------|---------|---------|---------|
+| "Top 10 par volume" | bar | null | [sum(volumeL)/k] | [] | limit:10 |
+| "Répartition par ville" | bar/pie | city | [count, sum(volumeL)/k] | [] |
+| "Compare KOLs vs autres" | bar | isKOL | [sum(volumeL)/k, count] | [] |
+| "KOLs par spécialité" | pie | specialty | [count] | [isKOL=true] |
+| "Distribution par risque" | pie | riskLevel | [count, sum(volumeL)/k] | [] |
+| "Fidélité vs volume top 15" | composed | null | [sum(volumeL)/k, avg(loyaltyScore)] | [] | limit:15 |
+| "Segments par vingtile" | bar | vingtileBucket | [count, sum(volumeL)/k] | [] |
+
+Réponds UNIQUEMENT avec le JSON brut (pas de texte, pas de markdown, pas de \`\`\`). Le premier caractère doit être { et le dernier }.`;
+
+const CHART_SYSTEM_PROMPT_EN = `You are a data visualization expert for the SYNAPSE pharmaceutical CRM (MedVantis Pharma, type 2 diabetes).
+
+${DATA_SCHEMA}
+
+## Your Mission
+Generate a PRECISE JSON specification to create the requested chart from the available data.
+
+## CRITICAL RULES
+
+1. **RESPECT EXACTLY the requested parameters**:
+   - If the user asks for "15 practitioners" → limit: 15
+   - If the user asks for "top 20" → limit: 20
+   - If the user asks for "KOLs" → filter isKOL: true
+   - If the user asks for "endocrinologists" → filter specialty: "Endocrinologue-Diabétologue"
+
+2. **Choose the MOST appropriate chart type**:
+   - "bar": rankings, top N, value comparisons (default when no preference)
+   - "pie": distributions, proportions, market shares (max 8 categories)
+   - "composed": comparing 2 different metrics (e.g., volume AND loyalty) on the same chart
+   - "line": time series, trends only
+   - "radar": multi-dimensional profiles, comparing multiple metrics for one or a few elements
+
+3. **For KOLs vs Others comparisons** → groupBy: "isKOL"
+4. **For distributions by specialty** → groupBy: "specialty"
+5. **For distributions by city** → groupBy: "city"
+6. **For risk levels** → groupBy: "riskLevel"
+7. **For potential segments** → groupBy: "vingtileBucket"
+8. **For loyalty levels** → groupBy: "loyaltyBucket"
+9. **For visit recency** → groupBy: "visitBucket"
+
+## MANDATORY Output Format (STRICT JSON)
+\`\`\`json
+{
+  "chartType": "bar" | "pie" | "line" | "composed" | "radar",
+  "title": "Descriptive title in English",
+  "description": "Short description of what the chart shows",
+  "query": {
+    "source": "practitioners",
+    "filters": [{ "field": "...", "operator": "eq|ne|gt|gte|lt|lte|contains|in", "value": ... }],
+    "groupBy": "..." | null,
+    "metrics": [{ "name": "Display Name", "field": "source_field", "aggregation": "count|sum|avg|min|max", "format": "number|k|percent" }],
+    "sortBy": "Display Name of the metric",
+    "sortOrder": "desc" | "asc",
+    "limit": number | null
+  },
+  "formatting": {
+    "showLegend": true,
+    "xAxisLabel": "...",
+    "yAxisLabel": "..."
+  }
+}
+\`\`\`
+
+## Mapping Examples
+
+| Request | chartType | groupBy | metrics | filters |
+|---------|-----------|---------|---------|---------|
+| "Top 10 by volume" | bar | null | [sum(volumeL)/k] | [] | limit:10 |
+| "Distribution by city" | bar/pie | city | [count, sum(volumeL)/k] | [] |
+| "Compare KOLs vs others" | bar | isKOL | [sum(volumeL)/k, count] | [] |
+| "KOLs by specialty" | pie | specialty | [count] | [isKOL=true] |
+| "Distribution by risk" | pie | riskLevel | [count, sum(volumeL)/k] | [] |
+| "Loyalty vs volume top 15" | composed | null | [sum(volumeL)/k, avg(loyaltyScore)] | [] | limit:15 |
+| "Segments by vingtile" | bar | vingtileBucket | [count, sum(volumeL)/k] | [] |
+
+Respond ONLY with raw JSON (no text, no markdown, no \`\`\`). The first character must be { and the last }.`;
+
+function getChartSystemPrompt(): string {
+  return getLanguage() === 'en' ? CHART_SYSTEM_PROMPT_EN : CHART_SYSTEM_PROMPT_FR;
+}
+
+const CHART_MODIFY_PROMPT_FR = `Tu es un expert en modification de visualisations de données CRM.
+
+## Graphique Actuel
+{CURRENT_CHART}
+
+## Modification Demandée
+{MODIFICATION}
+
+## Instructions
+Modifie la spécification du graphique actuel selon la demande. Conserve les données et filtres existants sauf si la modification les affecte directement.
+
+Règles :
+- "En camembert/pie" → change chartType en "pie"
+- "En barres/bar" → change chartType en "bar"
+- "En ligne/courbe" → change chartType en "line"
+- "En radar/toile d'araignée" → change chartType en "radar"
+- "Top X" → change limit à X
+- "Ajoute la fidélité/le volume" → ajoute une métrique
+- "Par ville/spécialité/..." → change le groupBy
+- "Seulement les KOLs" → ajoute filtre isKOL=true
+- "Seulement les endocrinologues" → ajoute filtre specialty="Endocrinologue-Diabétologue"
+
+${DATA_SCHEMA}
+
+Réponds UNIQUEMENT avec le JSON complet de la nouvelle spécification (même format que l'original). Le premier caractère doit être { et le dernier }.`;
+
+const CHART_MODIFY_PROMPT_EN = `You are an expert in modifying CRM data visualizations.
+
+## Current Chart
+{CURRENT_CHART}
+
+## Requested Modification
+{MODIFICATION}
+
+## Instructions
+Modify the current chart specification according to the request. Keep existing data and filters unless the modification directly affects them.
+
+Rules:
+- "As pie chart" → change chartType to "pie"
+- "As bar chart" → change chartType to "bar"
+- "As line chart" → change chartType to "line"
+- "As radar chart" → change chartType to "radar"
+- "Top X" → change limit to X
+- "Add loyalty/volume" → add a metric
+- "By city/specialty/..." → change groupBy
+- "Only KOLs" → add filter isKOL=true
+- "Only endocrinologists" → add filter specialty="Endocrinologue-Diabétologue"
+
+${DATA_SCHEMA}
+
+Respond ONLY with the complete JSON of the new specification (same format as the original). The first character must be { and the last }.`;
+
+function getChartModifyPrompt(): string {
+  return getLanguage() === 'en' ? CHART_MODIFY_PROMPT_EN : CHART_MODIFY_PROMPT_FR;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LLM API CLIENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Extrait un objet JSON d'une réponse LLM brute.
+ * Les modèles de raisonnement (o-series) peuvent préfixer/suffixer le JSON avec
+ * du texte de réflexion. Cette fonction gère tous les cas :
+ *   1. ```json ... ```  (markdown code block)
+ *   2. ``` ... ```      (generic code block)
+ *   3. JSON brut avec du texte autour
+ * Retourne l'objet parsé ou null.
+ */
+function extractJSONFromResponse(response: string): Record<string, unknown> | null {
+  // Pattern 1: ```json ... ```
+  const jsonBlockMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonBlockMatch) {
+    try { return JSON.parse(jsonBlockMatch[1].trim()); } catch { /* continue */ }
+  }
+
+  // Pattern 2: ``` ... ```
+  const codeBlockMatch = response.match(/```\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    try { return JSON.parse(codeBlockMatch[1].trim()); } catch { /* continue */ }
+  }
+
+  // Pattern 3: direct JSON.parse on full response
+  try { return JSON.parse(response.trim()); } catch { /* continue */ }
+
+  // Pattern 4: find the first balanced { ... } using bracket counting
+  // This handles reasoning models that prefix "Let me think... " before the JSON
+  const firstBrace = response.indexOf('{');
+  if (firstBrace === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = firstBrace; i < response.length; i++) {
+    const ch = response[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\' && inString) { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        try {
+          return JSON.parse(response.substring(firstBrace, i + 1));
+        } catch {
+          // Malformed JSON — try to continue looking for another object
+          break;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function getApiKey(): string | null {
+  return getStoredApiKey();
+}
+
+// Last error captured for diagnostic display
+let lastLLMError: string | null = null;
+
+/** Appelle un provider LLM spécifique (sans fallback) */
+async function callProvider(
+  provider: ProviderConfig,
+  apiKey: string,
+  messages: LLMMessage[],
+  options: LLMCallOptions & { model?: string },
+  retries = 1
+): Promise<string | null> {
+  const {
+    temperature = 0.3,
+    maxTokens = 2048,
+    jsonMode = false,
+    model = options.useRouterModel ? provider.routerModel : provider.mainModel,
+  } = options;
+
+  const resolvedModel = model;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const url = provider.apiUrl(resolvedModel, apiKey);
+      const headers = provider.headers(apiKey);
+      const body = provider.buildBody(messages, resolvedModel, temperature, maxTokens, jsonMode);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = provider.parseError(errorData as Record<string, unknown>, response.status);
+        lastLLMError = `[${provider.name}] HTTP ${response.status}: ${errorMsg}`;
+        // Rate limit or server error — worth retrying
+        if (response.status === 429 || response.status >= 500) {
+          let waitMs = 2000 * (attempt + 1);
+          if (response.status === 429) {
+            const waitMatch = errorMsg.match(/try again in (\d+\.?\d*)/i);
+            if (waitMatch) {
+              waitMs = Math.min(Math.ceil(parseFloat(waitMatch[1]) * 1000) + 500, 45000);
+            }
+          }
+          console.warn(`[AICoachEngine] ${provider.name} attempt ${attempt + 1} failed (${response.status}), ${attempt < retries ? `retrying in ${waitMs}ms...` : 'giving up'}`);
+          if (attempt < retries) {
+            await new Promise(r => setTimeout(r, waitMs));
+            continue;
+          }
+        }
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      const parsed = provider.parseResponse(data as Record<string, unknown>);
+      if (parsed) {
+        lastLLMError = null;
+        return parsed;
+      }
+      // 200 OK but empty/null content — treat as failure
+      lastLLMError = `[${provider.name}] Réponse vide (200 OK mais pas de contenu)`;
+      console.warn(`[AICoachEngine] ${provider.name} returned 200 but parseResponse got null`, JSON.stringify(data).substring(0, 500));
+      throw new Error('Empty response content');
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      lastLLMError = lastLLMError || `[${provider.name}] ${errMsg}`;
+      if (attempt < retries) {
+        console.warn(`[AICoachEngine] ${provider.name} attempt ${attempt + 1} error, retrying...`, err);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      console.error(`[AICoachEngine] ${provider.name} call failed after retries:`, err);
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Appelle le LLM avec fallback automatique vers WebLLM navigateur.
+ * 1. Si une clé API externe est configurée → essaie le provider externe
+ * 2. Si l'appel externe échoue ou pas de clé → fallback vers WebLLM navigateur
+ */
+async function callLLM(
+  messages: LLMMessage[],
+  options: LLMCallOptions = {},
+  retries = 1
+): Promise<string | null> {
+  const apiKey = getApiKey();
+  const provider = getProvider();
+
+  // Reset error at the start of each callLLM invocation so stale errors don't carry over
+  lastLLMError = null;
+
+  // 1. Essayer le provider API configuré (si disponible)
+  if (provider && apiKey) {
+    const result = await callProvider(provider, apiKey, messages, options, retries);
+    if (result) return result;
+  }
+
+  // Capture the API provider error before WebLLM fallback overwrites it
+  const apiError = lastLLMError;
+
+  // 2. Fallback : WebLLM dans le navigateur
+  if (webLlmService.isWebGPUSupported()) {
+    console.warn('[AICoachEngine] Falling back to WebLLM browser...');
+    try {
+      await webLlmService.ensureLoaded();
+      const webResult = await webLlmService.complete(messages, {
+        temperature: options.temperature ?? 0.3,
+        maxTokens: options.maxTokens ?? 2048,
+      });
+      if (webResult) {
+        lastLLMError = null;
+        return webResult;
+      }
+    } catch (webErr) {
+      console.warn('[AICoachEngine] WebLLM failed:', webErr);
+    }
+  }
+
+  // Tout a échoué — restore the API error (most relevant to the user)
+  lastLLMError = apiError || lastLLMError || 'Aucun LLM disponible. Configurez une clé API dans Paramètres ou chargez le modèle WebLLM.';
+
+  return null;
+}
+
+export async function streamLLM(
+  messages: LLMMessage[],
+  onChunk: (chunk: string) => void,
+  options: LLMCallOptions = {}
+): Promise<void> {
+  const apiKey = getApiKey();
+  const provider = getProvider();
+  const { temperature = 0.3, maxTokens = 2048 } = options;
+
+  // Gemini and Anthropic use different streaming formats — use non-streaming fallback
+  if (provider.provider === 'gemini' || provider.provider === 'anthropic') {
+    const result = await callLLM(messages, { temperature, maxTokens });
+    if (result) onChunk(result);
+    return;
+  }
+
+  // OpenAI-compatible streaming (Groq, OpenAI, OpenRouter, Azure)
+  try {
+    const streamModel = provider.mainModel;
+    const reasoning = isReasoningModel(streamModel);
+    // Azure o-series: system → developer role
+    const config = getStoredLLMConfig();
+    const isAzure = config?.provider === 'azure';
+    const streamMessages = (reasoning && isAzure)
+      ? messages.map(m => m.role === 'system' ? { role: 'developer' as const, content: m.content } : m)
+      : messages;
+    const streamBody: Record<string, unknown> = { model: streamModel, messages: streamMessages, stream: true };
+    if (reasoning) {
+      streamBody.max_completion_tokens = maxTokens;
+    } else {
+      streamBody.temperature = temperature;
+      streamBody.max_tokens = maxTokens;
+    }
+    const response = await fetch(provider.apiUrl(provider.mainModel, apiKey || ''), {
+      method: 'POST',
+      headers: provider.headers(apiKey || ''),
+      body: JSON.stringify(streamBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(provider.parseError(errorData as Record<string, unknown>, response.status));
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No reader available');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ')) {
+          const data = trimmed.slice(6);
+          if (data === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) onChunk(content);
+          } catch {
+            // Ignore incomplete chunks
+          }
+        }
+      }
+    }
+    return;
+  } catch (streamErr) {
+    console.warn('[AICoachEngine] Stream failed, trying WebLLM...', streamErr);
+  }
+
+  // Fallback: WebLLM streaming dans le navigateur
+  if (webLlmService.isWebGPUSupported()) {
+    try {
+      await webLlmService.ensureLoaded();
+      await webLlmService.streamComplete(messages, onChunk, { temperature, maxTokens });
+      return;
+    } catch (webErr) {
+      console.warn('[AICoachEngine] WebLLM stream failed:', webErr);
+    }
+  }
+
+  // Dernier recours: non-streaming via callLLM (qui a ses propres fallbacks)
+  const result = await callLLM(messages, { temperature, maxTokens });
+  if (result) onChunk(result);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 1 : LLM ROUTER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function routeQuestion(
+  question: string,
+  chartHistory: ChartHistory[],
+  lastAssistantMessage?: string
+): Promise<RouterResult | null> {
+  // Build chart context for the router
+  let chartContext = 'Aucun graphique précédent.';
+  if (chartHistory.length > 0) {
+    const last = chartHistory[0];
+    const dataPreview = last.data.slice(0, 5).map(d => {
+      const metrics = Object.entries(d)
+        .filter(([k]) => k !== 'name' && !k.startsWith('_'))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+      return `  ${d.name}: ${metrics}`;
+    }).join('\n');
+    chartContext = `Dernier graphique: "${last.question}"
+Type: ${last.spec.chartType} | Titre: ${last.spec.title}
+Données: \n${dataPreview}`;
+  }
+
+  const routerPrompt = ROUTER_SYSTEM_PROMPT.replace('{CHART_CONTEXT}', chartContext);
+
+  let userContext = question;
+  if (lastAssistantMessage) {
+    userContext = `[Dernier message assistant: "${lastAssistantMessage.substring(0, 200)}..."]\n\nQuestion: ${question}`;
+  }
+
+  const result = await callLLM(
+    [
+      { role: 'system', content: routerPrompt },
+      { role: 'user', content: userContext },
+    ],
+    { temperature: 0.0, maxTokens: 500, jsonMode: true, useRouterModel: true }
+  );
+
+  if (!result) return null;
+
+  try {
+    // Use robust JSON extraction — reasoning models (o-series) may wrap
+    // the JSON in thinking/reasoning text
+    const parsed = extractJSONFromResponse(result);
+    if (!parsed) {
+      console.error('[AICoachEngine] Router: could not extract JSON from response:', result.substring(0, 300));
+      return null;
+    }
+    // Validate and normalize
+    const validIntents = ['chart_create', 'chart_modify', 'data_query', 'practitioner_info', 'strategic_advice', 'knowledge_query', 'follow_up', 'general'];
+    if (!validIntents.includes(parsed.intent as string)) {
+      parsed.intent = 'general';
+    }
+    return parsed as unknown as RouterResult;
+  } catch (err) {
+    console.error('[AICoachEngine] Router parse error:', err);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SMART CONTEXT BUILDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function buildTargetedContext(
+  routing: RouterResult,
+  question: string,
+  periodLabel: string,
+  practitioners: Practitioner[],
+  upcomingVisits: UpcomingVisit[]
+): string {
+  const stats = DataService.getGlobalStats();
+  const periodMetrics = calculatePeriodMetrics(practitioners, upcomingVisits, 'month');
+
+  // Base context always included: territory overview
+  let context = `## Territoire (${periodLabel})
+- ${stats.totalPractitioners} praticiens (${stats.pneumologues} endocrino, ${stats.generalistes} MG)
+- Répartition par exercice : ${stats.praticienVille} ville, ${stats.praticienHospitalier} hospitaliers, ${stats.praticienMixte} mixtes
+- ${stats.totalKOLs} KOLs | Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an | Fidélité moy: ${stats.averageLoyalty.toFixed(1)}/10
+- Visites ${periodLabel}: ${periodMetrics.visitsCount}/${periodMetrics.visitsObjective} (${((periodMetrics.visitsCount / periodMetrics.visitsObjective) * 100).toFixed(0)}%)
+- Croissance volume: +${periodMetrics.volumeGrowth.toFixed(1)}% | Nouveaux prescripteurs: ${periodMetrics.newPrescribers}\n`;
+
+  const allPractitioners = DataService.getAllPractitioners();
+
+  switch (routing.dataScope) {
+    case 'specific': {
+      // Fetch full profiles for specific practitioners (enriched with visit reports)
+      if (routing.searchTerms.names.length > 0) {
+        const matches = allPractitioners.filter(p => {
+          const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+          return routing.searchTerms.names.some(name =>
+            fullName.includes(name.toLowerCase()) ||
+            p.firstName.toLowerCase().includes(name.toLowerCase()) ||
+            p.lastName.toLowerCase().includes(name.toLowerCase())
+          );
+        });
+
+        if (matches.length > 0) {
+          context += `\n## Praticiens Trouvés (${matches.length})\n`;
+          for (const p of matches.slice(0, 10)) {
+            // Use enriched context with visit reports and user notes
+            context += getCompletePractitionerContextWithReports(p.id);
+          }
+        } else {
+          // Fuzzy search fallback
+          for (const name of routing.searchTerms.names) {
+            const fuzzy = DataService.fuzzySearchPractitioner(name);
+            if (fuzzy.length > 0) {
+              context += `\n## Résultats pour "${name}" (${fuzzy.length})\n`;
+              for (const p of fuzzy.slice(0, 5)) {
+                context += getCompletePractitionerContextWithReports(p.id);
+              }
+            }
+          }
+        }
+      }
+      break;
+    }
+
+    case 'filtered': {
+      // Use universal search for filtered results
+      const searchResult = universalSearch(question);
+      if (searchResult.results.length > 0) {
+        context += searchResult.context;
+      } else {
+        // Fallback: build filtered list manually
+        let filtered = allPractitioners;
+        if (routing.searchTerms.cities.length > 0) {
+          filtered = filtered.filter(p =>
+            routing.searchTerms.cities.some(c => p.address.city.toLowerCase().includes(c.toLowerCase()))
+          );
+        }
+        if (routing.searchTerms.specialties.length > 0) {
+          filtered = filtered.filter(p =>
+            routing.searchTerms.specialties.some(s => p.specialty.toLowerCase().includes(s.toLowerCase()))
+          );
+        }
+        if (routing.searchTerms.isKOL !== null) {
+          filtered = filtered.filter(p => p.metrics.isKOL === routing.searchTerms.isKOL);
+        }
+
+        context += `\n## Praticiens Filtrés (${filtered.length})\n`;
+        for (const p of filtered.slice(0, 20)) {
+          const pubCount = p.news?.filter(n => n.type === 'publication').length || 0;
+          context += `- ${p.title} ${p.firstName} ${p.lastName} | ${p.specialty} | ${p.address.city} | V:${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | F:${p.metrics.loyaltyScore}/10 | V${p.metrics.vingtile}${p.metrics.isKOL ? ' | KOL' : ''}${pubCount > 0 ? ` | ${pubCount} pub` : ''}\n`;
+        }
+        if (filtered.length > 20) {
+          context += `... et ${filtered.length - 20} autres\n`;
+        }
+
+        // Aggregated stats for the filtered set
+        const totalVol = filtered.reduce((s, p) => s + p.metrics.volumeL, 0);
+        const kolCount = filtered.filter(p => p.metrics.isKOL).length;
+        const avgLoy = filtered.reduce((s, p) => s + p.metrics.loyaltyScore, 0) / (filtered.length || 1);
+        context += `\nStats filtrées: Volume total ${(totalVol / 1000).toFixed(0)}K boîtes/an | ${kolCount} KOLs | Fidélité moy ${avgLoy.toFixed(1)}/10\n`;
+      }
+      break;
+    }
+
+    case 'aggregated': {
+      // Send aggregated stats + key lists
+      const kols = DataService.getKOLs();
+      const atRisk = DataService.getAtRiskPractitioners();
+      const topPractitioners = getTopPractitioners(practitioners, 'year', 10);
+
+      context += `\n## Top 10 Prescripteurs (volume annuel)\n`;
+      topPractitioners.forEach((p, i) => {
+        context += `${i + 1}. ${p.title} ${p.firstName} ${p.lastName} — ${p.specialty}, ${p.city} | ${(p.volumeL / 1000).toFixed(0)}K boîtes/an | F:${p.loyaltyScore}/10 | V${p.vingtile}${p.isKOL ? ' | KOL' : ''}\n`;
+      });
+
+      context += `\n## KOLs (${kols.length})\n`;
+      kols.slice(0, 10).forEach(p => {
+        context += `- ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) — ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | F:${p.metrics.loyaltyScore}/10\n`;
+      });
+
+      if (atRisk.length > 0) {
+        context += `\n## Praticiens à Risque (${atRisk.length})\n`;
+        atRisk.slice(0, 8).forEach(p => {
+          context += `- ${p.title} ${p.firstName} ${p.lastName} (${p.address.city}) — F:${p.metrics.loyaltyScore}/10 | ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | Risque: ${p.metrics.churnRisk}${p.metrics.isKOL ? ' | KOL!' : ''}\n`;
+        });
+      }
+
+      // By city distribution
+      const byCity: Record<string, number> = {};
+      allPractitioners.forEach(p => { byCity[p.address.city] = (byCity[p.address.city] || 0) + 1; });
+      context += `\n## Répartition par Ville\n`;
+      Object.entries(byCity).sort((a, b) => b[1] - a[1]).forEach(([city, count]) => {
+        context += `- ${city}: ${count}\n`;
+      });
+      break;
+    }
+
+    case 'full':
+    default: {
+      // Search-based context — find relevant practitioners instead of sending all 150
+      const searchResult = universalSearch(question);
+      if (searchResult.results.length > 0) {
+        context += searchResult.context;
+      }
+
+      // Top 20 practitioners summary (not all 150 — saves ~3000 tokens)
+      context += `\n## Praticiens Principaux (top 20 sur ${allPractitioners.length})\n`;
+      const sorted = [...allPractitioners].sort((a, b) => b.metrics.volumeL - a.metrics.volumeL);
+      sorted.slice(0, 20).forEach(p => {
+        context += `- ${p.title} ${p.firstName} ${p.lastName} | ${p.specialty} | ${p.address.city} | V:${(p.metrics.volumeL / 1000).toFixed(0)}K | F:${p.metrics.loyaltyScore}/10 | V${p.metrics.vingtile}${p.metrics.isKOL ? ' | KOL' : ''}\n`;
+      });
+      break;
+    }
+  }
+
+  // ── AI Actions Injection ────────────────────────────────────────────────
+  // Inject top AI-generated actions for strategic queries
+  const actionKeywords = ['action', 'priorité', 'priorite', 'recommandation', 'que faire', 'quoi faire', 'prochaine', 'prochain', 'urgent', 'planifier', 'stratégie', 'strategie', 'agenda', 'semaine', 'planning'];
+  const lowerQuestion = question.toLowerCase();
+  const isActionQuery = actionKeywords.some(kw => lowerQuestion.includes(kw)) || routing.intent === 'strategic_advice';
+
+  if (isActionQuery) {
+    try {
+      const actions = generateIntelligentActions({ maxActions: 8 });
+      if (actions.length > 0) {
+        const priorityLabels: Record<string, string> = { critical: 'CRITIQUE', high: 'Haute', medium: 'Moyenne', low: 'Faible' };
+        context += `\n## Actions IA Recommandées (${actions.length})\n`;
+        actions.forEach((a, i) => {
+          const practitioner = DataService.getPractitionerById(a.practitionerId);
+          const pName = practitioner ? `${practitioner.title} ${practitioner.firstName} ${practitioner.lastName}` : a.practitionerId;
+          context += `${i + 1}. [${priorityLabels[a.priority] || a.priority}] ${a.title} — ${pName}\n`;
+          context += `   Raison: ${a.reason} | Score: ${a.scores.overall}/100 | Date suggérée: ${a.suggestedDate}\n`;
+        });
+      }
+    } catch { /* ignore action generation errors */ }
+  }
+
+  // ── Upcoming Visits Injection ──────────────────────────────────────────
+  const visitKeywords = ['visite', 'visites', 'rendez-vous', 'rdv', 'agenda', 'aujourd', 'demain', 'semaine', 'planning', 'tournée', 'tournee', 'jour'];
+  const isVisitQuery = visitKeywords.some(kw => lowerQuestion.includes(kw));
+
+  if (isVisitQuery && upcomingVisits.length > 0) {
+    context += `\n## Visites Planifiées (${upcomingVisits.length} prochaines)\n`;
+    upcomingVisits.slice(0, 10).forEach(v => {
+      const p = v.practitioner;
+      context += `- ${v.date} ${v.time} — ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.city})\n`;
+    });
+  }
+
+  // ── Performance Trends Injection ───────────────────────────────────────
+  const perfKeywords = ['performance', 'résultat', 'resultat', 'volume', 'tendance', 'trend', 'progression', 'évolution', 'evolution', 'objectif', 'atteinte', 'kpi'];
+  const isPerfQuery = perfKeywords.some(kw => lowerQuestion.includes(kw));
+
+  if (isPerfQuery) {
+    const perfData = getPerformanceDataForPeriod('month');
+    if (perfData.length > 0) {
+      const totalVol = perfData.reduce((s, d) => s + d.yourVolume, 0);
+      const totalObj = perfData.reduce((s, d) => s + (d.objective || 0), 0);
+      const totalTeam = perfData.reduce((s, d) => s + (d.teamAverage || 0), 0);
+      context += `\n## Performance Mensuelle\n`;
+      context += `- Volume total mois: ${(totalVol / 1000).toFixed(0)}K boîtes\n`;
+      if (totalObj > 0) context += `- Vs Objectif: ${((totalVol / totalObj - 1) * 100).toFixed(1)}%\n`;
+      if (totalTeam > 0) context += `- Vs Moyenne équipe: ${((totalVol / totalTeam - 1) * 100).toFixed(1)}%\n`;
+      context += `- Détail: ${perfData.map(d => `${d.month}: ${(d.yourVolume / 1000).toFixed(0)}K`).join(', ')}\n`;
+    }
+  }
+
+  // ── News/Publications Injection ─────────────────────────────────────────
+  // For questions about publications, actualités, news across practitioners
+  const newsKeywords = ['publication', 'publié', 'article', 'actualité', 'actualites', 'news', 'conférence', 'conference', 'certification', 'distinction', 'award', 'événement', 'evenement', 'dernière publication', 'derniere publication', 'publications des', 'a publié', 'a publie'];
+  const isNewsQuery = newsKeywords.some(kw => lowerQuestion.includes(kw));
+
+  if (isNewsQuery) {
+    // If the question targets a specific practitioner, their news is already in context via getCompletePractitionerContext
+    // But for cross-practitioner queries ("toutes les publications des Bernard"), we need the full digest
+    const hasSpecificName = routing.searchTerms.names.length > 0;
+
+    if (!hasSpecificName || routing.dataScope === 'filtered' || routing.dataScope === 'full') {
+      // Full news digest for cross-practitioner queries
+      context += DataService.getNewsDigestForLLM(60);
+    } else {
+      // For specific names, also search news specifically in case the context missed something
+      for (const name of routing.searchTerms.names) {
+        const newsResults = DataService.searchNews(name);
+        if (newsResults.length > 0) {
+          context += `\n## ${getLanguage() === 'en' ? 'News found for' : 'Actualités trouvées pour'} "${name}" (${newsResults.length})\n`;
+          for (const item of newsResults.slice(0, 10)) {
+            const dateStr = new Date(item.news.date).toLocaleDateString(getLanguage() === 'en' ? 'en-US' : 'fr-FR');
+            context += `- [${dateStr}] ${item.practitioner.title} ${item.practitioner.firstName} ${item.practitioner.lastName} : "${item.news.title}" (${item.news.type})`;
+            if (item.news.content) context += ` — ${item.news.content}`;
+            if (item.news.source) context += ` | Source: ${item.news.source}`;
+            context += '\n';
+          }
+        }
+      }
+    }
+  }
+
+  // ── Recent Visit Reports Injection (cross-practitioner) ─────────────────
+  // Inject recent visit reports for strategic/action/global queries
+  const reportKeywords = ['compte-rendu', 'compte rendu', 'rapport', 'crv', 'dernière visite', 'derniere visite', 'retour visite', 'bilan visite'];
+  const isReportQuery = reportKeywords.some(kw => lowerQuestion.includes(kw));
+  if (isReportQuery || isActionQuery || isPerfQuery) {
+    context += getAllRecentReportsForLLM(90);
+  }
+
+  // ── RAG Knowledge Injection ──────────────────────────────────────────────
+  // For knowledge queries or when the question touches métier topics,
+  // retrieve relevant chunks from the knowledge base and append them.
+  if (routing.dataScope === 'knowledge' || routing.intent === 'knowledge_query' || shouldUseRAG(question)) {
+    const ragResult = retrieveKnowledge(question, 5, 10);
+    if (ragResult.chunks.length > 0) {
+      context += ragResult.context;
+    }
+  }
+
+  return context;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 2A : CHART GENERATION / MODIFICATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function generateChart(
+  question: string,
+  routing: RouterResult,
+  chartHistory: ChartHistory[]
+): Promise<AICoachResult['chart'] | null> {
+  const dataContext = buildChartDataContext();
+
+  let messages: LLMMessage[];
+
+  if (routing.intent === 'chart_modify' && chartHistory.length > 0) {
+    // Chart modification: pass current spec + modification request
+    const currentChart = chartHistory[0];
+    const currentSpec = JSON.stringify(currentChart.spec, null, 2);
+    const modPrompt = getChartModifyPrompt()
+      .replace('{CURRENT_CHART}', currentSpec)
+      .replace('{MODIFICATION}', routing.chartModification || question);
+
+    messages = [
+      { role: 'system', content: modPrompt },
+      { role: 'user', content: `Question originale: "${currentChart.question}"\nModification demandée: "${question}"\n\n${dataContext}` },
+    ];
+  } else {
+    // New chart creation
+    let paramHints = '';
+    if (routing.chartParams.limit) {
+      paramHints += `\nATTENTION: L'utilisateur demande EXACTEMENT ${routing.chartParams.limit} éléments.`;
+    }
+    if (routing.chartParams.chartType) {
+      paramHints += `\nATTENTION: L'utilisateur veut un graphique de type "${routing.chartParams.chartType}".`;
+    }
+    if (routing.chartParams.groupBy) {
+      paramHints += `\nATTENTION: Grouper par "${routing.chartParams.groupBy}".`;
+    }
+    if (routing.searchTerms.isKOL === true) {
+      paramHints += `\nATTENTION: Filtrer uniquement les KOLs.`;
+    }
+
+    messages = [
+      { role: 'system', content: getChartSystemPrompt() },
+      { role: 'user', content: `${dataContext}\n\nDEMANDE: "${question}"${paramHints}\n\nGénère la spécification JSON du graphique.` },
+    ];
+  }
+
+  const chartResponse = await callLLM(messages, {
+    temperature: 0.0,
+    maxTokens: 1000,
+  });
+
+  if (!chartResponse) return null;
+
+  let spec = parseLLMChartResponse(chartResponse);
+  if (!spec) return null;
+
+  // Force limit from router if LLM didn't respect it
+  if (routing.chartParams.limit && spec.query.limit !== routing.chartParams.limit) {
+    spec.query.limit = routing.chartParams.limit;
+  }
+
+  // Force chart type from router if specified
+  if (routing.chartParams.chartType && spec.chartType !== routing.chartParams.chartType) {
+    spec.chartType = routing.chartParams.chartType;
+  }
+
+  const chartResult = generateChartFromSpec(spec);
+
+  // Save to history
+  addToChartHistory({
+    question,
+    spec: chartResult.spec,
+    data: chartResult.data,
+    insights: chartResult.insights,
+    timestamp: new Date(),
+  });
+
+  return {
+    spec: chartResult.spec,
+    data: chartResult.data,
+    insights: chartResult.insights,
+    suggestions: chartResult.suggestions,
+    generatedByLLM: true,
+  };
+}
+
+function buildChartDataContext(): string {
+  const stats = DataService.getGlobalStats();
+  const allPractitioners = DataService.getAllPractitioners();
+  const cities = [...new Set(allPractitioners.map(p => p.address.city))];
+
+  const kolsBySpecialty = allPractitioners
+    .filter(p => p.metrics.isKOL)
+    .reduce((acc, p) => {
+      acc[p.specialty] = (acc[p.specialty] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  return `DONNÉES ACTUELLES :
+- ${stats.totalPractitioners} praticiens (${stats.pneumologues} Endocrinologues, ${stats.generalistes} MG)
+- ${stats.totalKOLs} KOLs (Endocrino: ${kolsBySpecialty['Endocrinologue-Diabétologue'] || 0}, MG: ${kolsBySpecialty['Médecin généraliste'] || 0})
+- Volume total: ${Math.round(stats.totalVolume / 1000)}K boîtes/an
+- Fidélité moyenne: ${stats.averageLoyalty.toFixed(1)}/10
+- Villes: ${cities.join(', ')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 2B : TEXT RESPONSE GENERATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function generateTextResponse(
+  question: string,
+  routing: RouterResult,
+  dataContext: string,
+  conversationHistory: ConversationMessage[],
+  chartResult: AICoachResult['chart'] | null,
+  periodLabel: string
+): Promise<string | null> {
+  const messages: LLMMessage[] = [
+    { role: 'system', content: getCoachSystemPrompt() },
+  ];
+
+  // Add data context as a system message (clear separation from conversation)
+  messages.push({
+    role: 'system',
+    content: `## ${getLanguage() === 'en' ? 'Available Data' : 'Données Disponibles'} (${periodLabel})\n${dataContext}`,
+  });
+
+  // Add chart context if a chart was just generated
+  if (chartResult) {
+    const chartSummary = chartResult.data.slice(0, 8).map(d => {
+      const metrics = Object.entries(d)
+        .filter(([k]) => k !== 'name' && !k.startsWith('_'))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+      return `  ${d.name}: ${metrics}`;
+    }).join('\n');
+
+    messages.push({
+      role: 'system',
+      content: `## Graphique Généré
+Titre: ${chartResult.spec.title}
+Type: ${chartResult.spec.chartType}
+Données:\n${chartSummary}
+Insights: ${chartResult.insights.join(' | ')}
+
+INSTRUCTIONS: Un graphique a été généré et sera affiché. Ta réponse textuelle doit COMPLÉTER le graphique avec une analyse, pas le décrire entièrement. Sois synthétique — le graphique parle de lui-même.`,
+    });
+  }
+
+  // Add conversation history (last 10 turns max)
+  const recentHistory = conversationHistory.slice(-10);
+  for (const msg of recentHistory) {
+    messages.push({
+      role: msg.role,
+      content: msg.content,
+    });
+  }
+
+  // Add current question
+  messages.push({
+    role: 'user',
+    content: question,
+  });
+
+  // Adjust temperature based on intent
+  let temperature = 0.3;
+  if (routing.intent === 'strategic_advice') temperature = 0.5;
+  if (routing.intent === 'general') temperature = 0.6;
+
+  return callLLM(messages, { temperature, maxTokens: 2048 });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DIRECT LLM RESPONSE (Resilient fallback — bypasses routing)
+// Used when the router fails but the LLM API is still reachable
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function buildGeneralContext(
+  periodLabel: string,
+  practitioners: Practitioner[],
+  upcomingVisits: UpcomingVisit[],
+  question: string
+): string {
+  const stats = DataService.getGlobalStats();
+  const periodMetrics = calculatePeriodMetrics(practitioners, upcomingVisits, 'month');
+  const allPractitioners = DataService.getAllPractitioners();
+  const kols = DataService.getKOLs();
+  const atRisk = DataService.getAtRiskPractitioners();
+  const topPractitioners = getTopPractitioners(practitioners, 'year', 10);
+
+  // Try universal search for relevant context
+  const searchResult = universalSearch(question);
+  const searchContext = searchResult.results.length > 0 ? searchResult.context : '';
+
+  // By city distribution
+  const byCity: Record<string, number> = {};
+  allPractitioners.forEach(p => { byCity[p.address.city] = (byCity[p.address.city] || 0) + 1; });
+
+  let context = `## Territoire (${periodLabel})
+- ${stats.totalPractitioners} praticiens (${stats.pneumologues} endocrino, ${stats.generalistes} MG)
+- ${stats.totalKOLs} KOLs | Volume total: ${(stats.totalVolume / 1000).toFixed(0)}K boîtes/an | Fidélité moy: ${stats.averageLoyalty.toFixed(1)}/10
+- Visites ${periodLabel}: ${periodMetrics.visitsCount}/${periodMetrics.visitsObjective} (${((periodMetrics.visitsCount / periodMetrics.visitsObjective) * 100).toFixed(0)}%)
+- Croissance volume: +${periodMetrics.volumeGrowth.toFixed(1)}% | Nouveaux prescripteurs: ${periodMetrics.newPrescribers}
+
+## Top 10 Prescripteurs
+${topPractitioners.map((p, i) => `${i + 1}. ${p.title} ${p.firstName} ${p.lastName} — ${p.specialty}, ${p.city} | ${(p.volumeL / 1000).toFixed(0)}K boîtes/an | F:${p.loyaltyScore}/10 | V${p.vingtile}${p.isKOL ? ' | KOL' : ''}`).join('\n')}
+
+## KOLs (${kols.length})
+${kols.slice(0, 10).map(p => `- ${p.title} ${p.firstName} ${p.lastName} (${p.specialty}, ${p.address.city}) — ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | F:${p.metrics.loyaltyScore}/10`).join('\n')}
+
+## Praticiens à Risque (${atRisk.length})
+${atRisk.slice(0, 8).map(p => `- ${p.title} ${p.firstName} ${p.lastName} (${p.address.city}) — F:${p.metrics.loyaltyScore}/10 | ${(p.metrics.volumeL / 1000).toFixed(0)}K boîtes/an | Risque: ${p.metrics.churnRisk}${p.metrics.isKOL ? ' | KOL!' : ''}`).join('\n')}
+
+## Répartition par Ville
+${Object.entries(byCity).sort((a, b) => b[1] - a[1]).map(([city, count]) => `- ${city}: ${count}`).join('\n')}
+${searchContext}`;
+
+  // ── AI Actions Injection (fallback path) ────────────────────────────────
+  const actionKeywords = ['action', 'priorité', 'priorite', 'recommandation', 'que faire', 'quoi faire', 'prochaine', 'prochain', 'urgent', 'planifier', 'stratégie', 'strategie'];
+  const lowerQ = question.toLowerCase();
+  if (actionKeywords.some(kw => lowerQ.includes(kw))) {
+    try {
+      const actions = generateIntelligentActions({ maxActions: 5 });
+      if (actions.length > 0) {
+        context += `\n## Actions IA Recommandées (${actions.length})\n`;
+        actions.forEach((a, i) => {
+          const practitioner = DataService.getPractitionerById(a.practitionerId);
+          const pName = practitioner ? `${practitioner.title} ${practitioner.firstName} ${practitioner.lastName}` : a.practitionerId;
+          context += `${i + 1}. [${a.priority}] ${a.title} — ${pName} | Score: ${a.scores.overall}/100\n`;
+        });
+      }
+    } catch { /* ignore */ }
+  }
+
+  // ── Upcoming Visits Injection (fallback path) ──────────────────────────
+  const visitKeywords = ['visite', 'visites', 'rendez-vous', 'rdv', 'agenda', 'aujourd', 'demain', 'semaine', 'planning', 'tournée', 'tournee'];
+  if (visitKeywords.some(kw => lowerQ.includes(kw)) && upcomingVisits.length > 0) {
+    context += `\n## Visites Planifiées (${upcomingVisits.length})\n`;
+    upcomingVisits.slice(0, 8).forEach(v => {
+      const p = v.practitioner;
+      context += `- ${v.date} ${v.time} — ${p.title} ${p.firstName} ${p.lastName}\n`;
+    });
+  }
+
+  // ── News/Publications Injection (fallback path) ────────────────────────
+  const newsKeywords = ['publication', 'publié', 'article', 'actualité', 'actualites', 'news', 'conférence', 'conference', 'certification', 'distinction', 'événement', 'evenement', 'dernière publication', 'derniere publication', 'a publié', 'a publie'];
+  if (newsKeywords.some(kw => lowerQ.includes(kw))) {
+    context += DataService.getNewsDigestForLLM(40);
+  }
+
+  // ── Recent Visit Reports Injection (fallback path) ──────────────────────
+  const reportKeywords2 = ['compte-rendu', 'compte rendu', 'rapport', 'crv', 'dernière visite', 'derniere visite', 'bilan'];
+  if (reportKeywords2.some(kw => lowerQ.includes(kw)) || actionKeywords.some(kw => lowerQ.includes(kw))) {
+    context += getAllRecentReportsForLLM(90);
+  }
+
+  // ── RAG Knowledge Injection (fallback path) ────────────────────────────
+  if (shouldUseRAG(question)) {
+    const ragResult = retrieveKnowledge(question, 5, 10);
+    if (ragResult.chunks.length > 0) {
+      context += ragResult.context;
+    }
+  }
+
+  return context;
+}
+
+async function generateDirectResponse(
+  question: string,
+  conversationHistory: ConversationMessage[],
+  periodLabel: string,
+  practitioners: Practitioner[],
+  upcomingVisits: UpcomingVisit[]
+): Promise<string | null> {
+  const context = buildGeneralContext(periodLabel, practitioners, upcomingVisits, question);
+
+  const messages: LLMMessage[] = [
+    { role: 'system', content: getCoachSystemPrompt() },
+    { role: 'system', content: `## ${getLanguage() === 'en' ? 'Available Data' : 'Données Disponibles'} (${periodLabel})\n${context}` },
+  ];
+
+  // Add conversation history (excluding current question — it will be added separately)
+  const recentHistory = conversationHistory.slice(-10);
+  for (const msg of recentHistory) {
+    messages.push({ role: msg.role, content: msg.content });
+  }
+
+  messages.push({ role: 'user', content: question });
+
+  return callLLM(messages, { temperature: 0.4, maxTokens: 2048 }, 1);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN PIPELINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER CRM DATA CONTEXT — Inject visit reports and notes from user's session
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function formatUserCRMContext(data: UserCRMData, question: string): string {
+  if (!data.visitReports.length && !data.userNotes.length) return '';
+
+  const lowerQ = question.toLowerCase();
+  let context = '\n\n## Données CRM Utilisateur (comptes-rendus de visite et notes)\n';
+
+  // Include recent visit reports (last 10)
+  if (data.visitReports.length > 0) {
+    context += `\n### Comptes-rendus de visite récents (${data.visitReports.length} total)\n`;
+    const relevantReports = data.visitReports
+      .filter(r => {
+        // If question mentions a specific practitioner name, prioritize their reports
+        const nameParts = r.practitionerName.toLowerCase().split(' ');
+        const nameMatch = nameParts.some(part => part.length > 2 && lowerQ.includes(part));
+        return nameMatch || data.visitReports.indexOf(r) < 5;
+      })
+      .slice(0, 8);
+
+    const en = getLanguage() === 'en';
+    relevantReports.forEach(r => {
+      context += `- [${r.date}] ${r.practitionerName} (${r.extractedInfo.sentiment}) : `;
+      if (r.extractedInfo.keyPoints.length > 0) {
+        context += `${en ? 'Key points' : 'Points clés'}: ${r.extractedInfo.keyPoints.join('; ')}. `;
+      }
+      if (r.extractedInfo.productsDiscussed.length > 0) {
+        context += `${en ? 'Products' : 'Produits'}: ${r.extractedInfo.productsDiscussed.join(', ')}. `;
+      }
+      if (r.extractedInfo.competitorsMentioned.length > 0) {
+        context += `${en ? 'Competitors' : 'Concurrents'}: ${r.extractedInfo.competitorsMentioned.join(', ')}. `;
+      }
+      if (r.extractedInfo.nextActions.length > 0) {
+        context += `Actions: ${r.extractedInfo.nextActions.join('; ')}. `;
+      }
+      context += '\n';
+    });
+  }
+
+  // Include user notes (last 10)
+  if (data.userNotes.length > 0) {
+    context += `\n### ${getLanguage() === 'en' ? 'User notes' : 'Notes utilisateur'} (${data.userNotes.length} total)\n`;
+    data.userNotes.slice(0, 10).forEach(n => {
+      const date = new Date(n.createdAt).toLocaleDateString(getLanguage() === 'en' ? 'en-US' : 'fr-FR');
+      context += `- [${date}] (${n.type}) ${n.content.substring(0, 200)}${n.content.length > 200 ? '...' : ''}\n`;
+    });
+  }
+
+  return context;
+}
+
+export async function processQuestion(
+  question: string,
+  conversationHistory: ConversationMessage[],
+  periodLabel: string,
+  practitioners: Practitioner[],
+  upcomingVisits: UpcomingVisit[],
+  _userObjectives: { visitsMonthly: number; visitsCompleted: number },
+  userCRMData?: UserCRMData
+): Promise<AICoachResult> {
+  // ─── Early diagnostic: is any LLM configured? ─────────────────────────────
+  const savedConfig = getStoredLLMConfig();
+  const savedApiKey = getApiKey();
+  console.log('[AICoachEngine] processQuestion diagnostic:', {
+    configSaved: !!savedConfig,
+    configProvider: savedConfig?.provider,
+    configModel: savedConfig?.model,
+    apiKeyPresent: !!savedApiKey,
+    apiKeyLength: savedApiKey?.length,
+  });
+
+  if (!savedConfig && !savedApiKey) {
+    return {
+      textContent: getLanguage() === 'en'
+        ? `**LLM Configuration not found.**\n\nThe connection may have been tested but not saved.\n\n**Solution:** Go to **Settings** → **LLM / AI** section and click **"Save & Test"** (the blue button).\n\n_The green "Test connection" button checks the connection but does not always save it._`
+        : `**Configuration LLM non trouvée.**\n\nLa connexion a peut-être été testée mais pas sauvegardée.\n\n**Solution :** Retournez dans **Paramètres** → section **LLM / IA** et cliquez sur **"Sauvegarder & Tester"** (le bouton bleu).\n\n_Le bouton vert "Tester la connexion" vérifie la connexion mais ne l'enregistre pas toujours._`,
+      source: 'llm',
+    };
+  }
+
+  const chartHistory = getChartHistory();
+  const lastAssistant = conversationHistory.filter(m => m.role === 'assistant').slice(-1)[0]?.content;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PIPELINE 100% LLM : Router → Targeted LLM → Direct LLM → Error
+  //
+  // Si Phase 1 (routeur) échoue → on essaie quand même le LLM direct
+  // Si Phase 2 (réponse) échoue → on essaie le LLM direct sans routing
+  // Si tout échoue → message d'erreur explicite (PAS de fallback local)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ─── Phase 1: LLM Routing ────────────────────────────────────────────────
+  const routing = await routeQuestion(question, chartHistory, lastAssistant);
+
+  if (routing) {
+    console.log('[AICoachEngine] Router:', routing.intent, routing.dataScope, routing.needsChart ? '📊' : '💬');
+
+    // ─── Build Targeted Context ────────────────────────────────────────────
+    let dataContext = buildTargetedContext(routing, question, periodLabel, practitioners, upcomingVisits);
+
+    // ─── Inject User CRM Data (visit reports, notes) ─────────────────────
+    if (userCRMData) {
+      dataContext += formatUserCRMContext(userCRMData, question);
+    }
+
+    // ─── Track RAG usage ───────────────────────────────────────────────────
+    let ragSources: AICoachResult['ragSources'] = undefined;
+    let usedRAG = false;
+    if (routing.intent === 'knowledge_query' || routing.dataScope === 'knowledge' || shouldUseRAG(question)) {
+      const ragResult = retrieveKnowledge(question, 5, 10);
+      if (ragResult.chunks.length > 0) {
+        usedRAG = true;
+        ragSources = ragResult.chunks.map(c => ({
+          title: c.chunk.title,
+          sourceUrl: c.chunk.sourceUrl,
+          source: c.chunk.source,
+        }));
+        console.log(`[AICoachEngine] RAG: ${ragResult.chunks.length} chunks retrieved (scores: ${ragResult.chunks.map(c => c.score.toFixed(0)).join(', ')})`);
+      }
+    }
+
+    // ─── Phase 2A: Chart Generation (if needed) ────────────────────────────
+    let chartResult: AICoachResult['chart'] | null = null;
+    if (routing.needsChart) {
+      chartResult = await generateChart(question, routing, chartHistory);
+      if (!chartResult) {
+        console.warn('[AICoachEngine] Chart LLM failed — no local fallback, chart will be skipped');
+      }
+    }
+
+    // ─── Phase 2B: Text Response Generation ────────────────────────────────
+    const textResponse = await generateTextResponse(
+      question,
+      routing,
+      dataContext,
+      conversationHistory,
+      chartResult,
+      periodLabel
+    );
+
+    if (textResponse) {
+      // ─── SUCCESS: Full pipeline worked ────────────────────────────────
+      const result: AICoachResult = {
+        textContent: textResponse,
+        source: 'llm',
+        usedRAG,
+        ragSources,
+      };
+
+      if (chartResult) {
+        result.chart = chartResult;
+        result.suggestions = chartResult.suggestions;
+      }
+
+      // For practitioner_info intent, extract matching practitioners for card display
+      if (routing.intent === 'practitioner_info' && routing.searchTerms.names.length > 0) {
+        result.practitioners = findPractitionerCards(routing.searchTerms.names);
+      }
+
+      return result;
+    }
+
+    // Text response failed — fall through to direct LLM
+    console.log('[AICoachEngine] Text LLM failed after routing, trying direct LLM...');
+  } else {
+    console.log('[AICoachEngine] Router failed, trying direct LLM...');
+  }
+
+  // ─── FALLBACK: Direct LLM (no routing) ──────────────────────────────────
+  // The router or text response failed, but the API might still work.
+  // Try a direct call with general context.
+  const directResponse = await generateDirectResponse(
+    question,
+    conversationHistory,
+    periodLabel,
+    practitioners,
+    upcomingVisits
+  );
+
+  if (directResponse) {
+    console.log('[AICoachEngine] Direct LLM succeeded');
+    // Check if RAG was used in the direct path
+    let directRAGSources: AICoachResult['ragSources'] = undefined;
+    let directUsedRAG = false;
+    if (shouldUseRAG(question)) {
+      const ragResult = retrieveKnowledge(question, 5, 10);
+      if (ragResult.chunks.length > 0) {
+        directUsedRAG = true;
+        directRAGSources = ragResult.chunks.map(c => ({
+          title: c.chunk.title,
+          sourceUrl: c.chunk.sourceUrl,
+          source: c.chunk.source,
+        }));
+      }
+    }
+    return {
+      textContent: directResponse,
+      source: 'llm',
+      usedRAG: directUsedRAG,
+      ragSources: directRAGSources,
+    };
+  }
+
+  // ─── ALL LLM CALLS FAILED: Explicit error with diagnostic ──────────────
+  const errorDetail = lastLLMError || (getLanguage() === 'en' ? 'No server response' : 'Aucune réponse du serveur');
+  const providerName = savedConfig ? `${savedConfig.provider} / ${savedConfig.model}` : (getLanguage() === 'en' ? 'none' : 'aucun');
+  console.error('[AICoachEngine] All LLM calls failed:', { errorDetail, provider: providerName, configSaved: !!savedConfig, apiKey: !!savedApiKey });
+  return {
+    textContent: getLanguage() === 'en'
+      ? `**Sorry, the AI service is unavailable.**\n\n**Error:** \`${errorDetail}\`\n\n**Config:** ${providerName}\n\n**Actions:**\n1. Go to **Settings** → **"Save & Test"** (blue button)\n2. Or load the **WebLLM** model in Settings (runs directly in your browser)`
+      : `**Désolé, le service d'intelligence artificielle est indisponible.**\n\n**Erreur :** \`${errorDetail}\`\n\n**Config :** ${providerName}\n\n**Actions :**\n1. Allez dans **Paramètres** → **"Sauvegarder & Tester"** (bouton bleu)\n2. Ou chargez le modèle **WebLLM** dans Paramètres (fonctionne directement dans le navigateur)`,
+    source: 'llm',
+  };
+}
+
+// Helper: find practitioner cards for display
+function findPractitionerCards(names: string[]): (Practitioner & { daysSinceVisit?: number })[] {
+  const allPractitioners = DataService.getAllPractitioners();
+  const matches = allPractitioners.filter(p => {
+    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+    return names.some(name =>
+      fullName.includes(name.toLowerCase()) ||
+      p.firstName.toLowerCase().includes(name.toLowerCase()) ||
+      p.lastName.toLowerCase().includes(name.toLowerCase())
+    );
+  });
+
+  if (matches.length === 0) return [];
+
+  const today = new Date();
+  return matches.slice(0, 5).map(p => {
+    const adapted = adaptPractitionerProfile(p);
+    const lastVisit = p.lastVisitDate ? new Date(p.lastVisitDate) : null;
+    const daysSinceVisit = lastVisit
+      ? Math.floor((today.getTime() - lastVisit.getTime()) / (1000 * 60 * 60 * 24))
+      : 999;
+    return { ...adapted, daysSinceVisit };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function isLLMConfigured(): boolean {
+  // Toujours true: soit API externe, soit WebLLM navigateur
+  return true;
+}
+
+export function hasExternalLLMKey(): boolean {
+  return getApiKey() !== null;
+}
+
+export function getLLMProviderName(): string {
+  const config = getStoredLLMConfig();
+  if (config) {
+    const def = getProviderDef(config.provider);
+    return `${def?.name || config.provider} (${config.model})`;
+  }
+  const key = getApiKey();
+  if (!key) {
+    if (webLlmService.isReady()) {
+      const modelId = webLlmService.getCurrentModelId();
+      return `WebLLM navigateur (${modelId})`;
+    }
+    return 'Aucun LLM configuré';
+  }
+  return detectProvider(key).name;
+}
+
+export { getRAGStats, getKnowledgeSources, getDownloadableSources } from './ragService';
+export type { KnowledgeSource } from '../data/ragKnowledgeBase';
