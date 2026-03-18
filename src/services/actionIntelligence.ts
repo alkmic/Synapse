@@ -92,7 +92,7 @@ function analyzePractitionerContext(p: PractitionerProfile): ActionContext {
 
   // Mentions concurrents
   const competitorMentions: string[] = [];
-  const competitors = ['Vivisol', 'Linde', 'SOS Oxygène', 'Bastide'];
+  const competitors = ['NovaPharm', 'Seralis', 'GenBio'];
   recentNotes.forEach(n => {
     competitors.forEach(c => {
       if (n.content.toLowerCase().includes(c.toLowerCase()) && !competitorMentions.includes(c)) {
@@ -277,7 +277,7 @@ function generateAIJustification(
   switch (type) {
     case 'visit_kol':
       suggestedApproach = context.recentPublications > 0
-        ? txt(`Abordez ses récentes publications pour créer un échange de valeur. Préparez une présentation des innovations Air Liquide qui pourraient l'intéresser.`, `Discuss their recent publications to create a value exchange. Prepare a presentation of Air Liquide innovations that may interest them.`)
+        ? txt(`Abordez ses récentes publications pour créer un échange de valeur. Préparez une présentation des innovations MedVantis Pharma qui pourraient l'intéresser.`, `Discuss their recent publications to create a value exchange. Prepare a presentation of MedVantis Pharma innovations that may interest them.`)
         : txt(`Planifiez une visite de qualité avec présentation des dernières innovations. Proposez une invitation à un événement médical.`, `Plan a quality visit with a presentation of the latest innovations. Propose an invitation to a medical event.`);
       break;
     case 'visit_urgent':
@@ -493,7 +493,7 @@ export function generateIntelligentActions(
             risks: [
               isExplicitlyNew
                 ? txt(`URGENT : Chaque jour de retard augmente le risque de captation par un concurrent`, `URGENT: Each day of delay increases the risk of capture by a competitor`)
-                : txt(`Risque d'être capté en premier par un concurrent (Vivisol, Linde)`, `Risk of being captured first by a competitor (Vivisol, Linde)`),
+                : txt(`Risque d'être capté en premier par un concurrent (NovaPharm, Seralis)`, `Risk of being captured first by a competitor (NovaPharm, Seralis)`),
               txt(`Pas de relation établie — aucun levier de fidélisation en place`, `No established relationship — no loyalty leverage in place`),
               txt(`Volume potentiel non capté: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/an`, `Uncaptured potential volume: ${(p.metrics.volumeL / 1000).toFixed(0)}K L/year`),
               ...(p.previousProvider
@@ -505,13 +505,13 @@ export function generateIntelligentActions(
               p.metrics.isKOL
                 ? txt(`KOL identifié — fort potentiel d'influence sur ${p.address.city} et sa zone`, `KOL identified — strong influence potential in ${p.address.city} and surrounding area`)
                 : txt(`Développer un nouveau prescripteur stratégique sur le territoire`, `Develop a new strategic prescriber in the territory`),
-              txt(`Présenter la gamme complète Air Liquide Santé dès la première visite`, `Present the full Air Liquide Healthcare range from the first visit`),
+              txt(`Présenter la gamme complète MedVantis Pharma Santé dès la première visite`, `Present the full MedVantis Pharma Healthcare range from the first visit`),
               ...(recentNews.length > 0 ? [txt(`Actualité récente : utiliser comme point d'accroche`, `Recent news: use as conversation starter`)] : []),
               txt(`Proposer un kit de bienvenue avec documentation et démonstration produits`, `Offer a welcome kit with documentation and product demonstration`),
             ],
             suggestedApproach: isExplicitlyNew && recentNews.length > 0
-              ? txt(`Contact urgent dans les 48h. Préparez une visite de découverte personnalisée en utilisant l'actualité récente du praticien comme accroche. ${newsContext ? `\n\nActualités du praticien :\n${newsContext}` : ''}\n\nApportez le kit de démonstration complet adapté à ${p.specialty === 'Pneumologue' ? 'un pneumologue' : 'un médecin généraliste'}, la documentation LPPR, et si possible un cas patient anonymisé montrant les bénéfices du télésuivi. L'objectif est d'établir Air Liquide comme partenaire de référence AVANT la concurrence.`, `Urgent contact within 48h. Prepare a personalized discovery visit using the practitioner's recent news as a hook. ${newsContext ? `\n\nPractitioner news:\n${newsContext}` : ''}\n\nBring the complete demo kit adapted for ${p.specialty === 'Pneumologue' ? 'a pulmonologist' : 'a general practitioner'}, LPPR documentation, and if possible an anonymized patient case showing telemonitoring benefits. The goal is to establish Air Liquide as the reference partner BEFORE the competition.`)
-              : txt(`Préparez une visite de découverte complète : présentation Air Liquide Santé, gamme de produits adaptée à la spécialité (${p.specialty}), et proposition de mise en place d'un premier patient test. Apportez le kit de démonstration et la documentation LPPR. L'objectif est d'établir une relation de confiance et de positionner Air Liquide comme partenaire de référence.`, `Prepare a complete discovery visit: Air Liquide Healthcare presentation, product range adapted to the specialty (${locSpec(p.specialty)}), and proposal to set up a first test patient. Bring the demo kit and LPPR documentation. The goal is to build a trusted relationship and position Air Liquide as the reference partner.`),
+              ? txt(`Contact urgent dans les 48h. Préparez une visite de découverte personnalisée en utilisant l'actualité récente du praticien comme accroche. ${newsContext ? `\n\nActualités du praticien :\n${newsContext}` : ''}\n\nApportez le kit de démonstration complet adapté à ${p.specialty === 'Pneumologue' ? 'un pneumologue' : 'un médecin généraliste'}, la documentation LPPR, et si possible un cas patient anonymisé montrant les bénéfices du télésuivi. L'objectif est d'établir MedVantis Pharma comme partenaire de référence AVANT la concurrence.`, `Urgent contact within 48h. Prepare a personalized discovery visit using the practitioner's recent news as a hook. ${newsContext ? `\n\nPractitioner news:\n${newsContext}` : ''}\n\nBring the complete demo kit adapted for ${p.specialty === 'Pneumologue' ? 'a pulmonologist' : 'a general practitioner'}, LPPR documentation, and if possible an anonymized patient case showing telemonitoring benefits. The goal is to establish MedVantis Pharma as the reference partner BEFORE the competition.`)
+              : txt(`Préparez une visite de découverte complète : présentation MedVantis Pharma Santé, gamme de produits adaptée à la spécialité (${p.specialty}), et proposition de mise en place d'un premier patient test. Apportez le kit de démonstration et la documentation LPPR. L'objectif est d'établir une relation de confiance et de positionner MedVantis Pharma comme partenaire de référence.`, `Prepare a complete discovery visit: MedVantis Pharma Healthcare presentation, product range adapted to the specialty (${locSpec(p.specialty)}), and proposal to set up a first test patient. Bring the demo kit and LPPR documentation. The goal is to build a trusted relationship and position MedVantis Pharma as the reference partner.`),
             competitorAlert: p.previousProvider
               ? txt(`⚠️ Ancien prestataire : ${p.previousProvider}. Préparez des arguments différenciants spécifiques. Le praticien connaît déjà l'offre concurrente — focalisez sur nos avantages uniques.`, `⚠️ Previous provider: ${locComp(p.previousProvider)}. Prepare specific differentiating arguments. The practitioner already knows the competitor's offering — focus on our unique advantages.`)
               : txt(`⚠️ Nouveau praticien non affilié — les concurrents pourraient aussi l'avoir identifié. Rapidité d'action recommandée.`, `⚠️ Unaffiliated new practitioner — competitors may have also identified them. Speed of action recommended.`),
